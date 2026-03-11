@@ -28,6 +28,10 @@
 #include <ctime>
 #include <cmath>
 
+#ifndef IM_PI
+#define IM_PI 3.14159265358979323846f
+#endif
+
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "dwmapi.lib")
