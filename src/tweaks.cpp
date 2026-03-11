@@ -11,10 +11,10 @@
 
 namespace fs = std::filesystem;
 
-// ─── Catalogue: Système ───────────────────────────────────────────────────
+// ─── System Tweaks ────────────────────────────────────────────────────────
 std::vector<TweakGroup> g_systemTweaks = {
     {
-        "Desactiver services inutiles",
+        "Disable Unnecessary Services",
         {
             "sc config \"DiagTrack\" start= disabled",
             "sc stop \"DiagTrack\"",
@@ -27,10 +27,14 @@ std::vector<TweakGroup> g_systemTweaks = {
             "sc config \"MapsBroker\" start= disabled",
             "sc config \"PcaSvc\" start= disabled",
             "sc config \"WerSvc\" start= disabled",
+            "sc config \"RetailDemo\" start= disabled",
+            "sc config \"Fax\" start= disabled",
+            "sc config \"PrintNotify\" start= disabled",
+            "sc config \"RemoteRegistry\" start= disabled",
         }
     },
     {
-        "Plan d'alimentation Haute performance",
+        "High Performance Power Plan",
         {
             "powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
             "powercfg /change monitor-timeout-ac 0",
@@ -42,60 +46,190 @@ std::vector<TweakGroup> g_systemTweaks = {
         }
     },
     {
-        "Desactiver Xbox Game Bar & DVR",
+        "Import Power Plan",
+        {
+            "powercfg /duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61",
+            "powercfg /setactive e9a42b02-d5df-448d-aa00-03f14749eb61",
+        }
+    },
+    {
+        "Remove Default Power Plans",
+        {
+            "powercfg /delete 381b4222-f694-41f0-9685-ff5bb260df2e",
+            "powercfg /delete a1841308-3541-4fab-bc81-f71556f20b4a",
+        }
+    },
+    {
+        "Disable USB Power-Saving",
+        {
+            "powercfg /setacvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 0",
+            "powercfg /s SCHEME_CURRENT",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\USB\\Parameters\" /v \"DisableSelectiveSuspend\" /t REG_DWORD /d 1 /f",
+        }
+    },
+    {
+        "Disable Hibernate",
+        {
+            "powercfg /hibernate off",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power\" /v \"HiberbootEnabled\" /t REG_DWORD /d 0 /f",
+        }
+    },
+    {
+        "Disable Sleep Study",
+        {
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power\" /v \"SleeperEnabled\" /t REG_DWORD /d 0 /f",
+            "powercfg /change standby-timeout-ac 0",
+            "powercfg /change hibernate-timeout-ac 0",
+        }
+    },
+    {
+        "Disable Xbox Game Bar",
         {
             "reg add \"HKCU\\Software\\Microsoft\\GameBar\" /v \"AllowAutoGameMode\" /t REG_DWORD /d 0 /f",
             "reg add \"HKCU\\Software\\Microsoft\\GameBar\" /v \"ShowStartupPanel\" /t REG_DWORD /d 0 /f",
             "reg add \"HKCU\\System\\GameConfigStore\" /v \"GameDVR_Enabled\" /t REG_DWORD /d 0 /f",
             "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR\" /v \"AllowGameDVR\" /t REG_DWORD /d 0 /f",
+            "reg add \"HKCU\\System\\GameConfigStore\" /v \"GameDVR_FSEBehaviorMode\" /t REG_DWORD /d 2 /f",
+            "reg add \"HKCU\\System\\GameConfigStore\" /v \"GameDVR_HonorUserFSEBehaviorMode\" /t REG_DWORD /d 1 /f",
         }
     },
     {
-        "Priorite CPU haute pour les jeux",
-        {
-            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v \"GPU Priority\" /t REG_DWORD /d 8 /f",
-            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v \"Priority\" /t REG_DWORD /d 6 /f",
-            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v \"Scheduling Category\" /t REG_SZ /d \"High\" /f",
-            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v \"SystemResponsiveness\" /t REG_DWORD /d 0 /f",
-            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v \"NetworkThrottlingIndex\" /t REG_DWORD /d 4294967295 /f",
-        }
-    },
-    {
-        "Optimiser memoire virtuelle",
-        {
-            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v \"LargeSystemCache\" /t REG_DWORD /d 0 /f",
-            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v \"DisablePagingExecutive\" /t REG_DWORD /d 1 /f",
-            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v \"ClearPageFileAtShutdown\" /t REG_DWORD /d 0 /f",
-        }
-    },
-    {
-        "Desactiver telemetrie Windows",
+        "Disable Windows Telemetry",
         {
             "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection\" /v \"AllowTelemetry\" /t REG_DWORD /d 0 /f",
             "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Privacy\" /v \"TailoredExperiencesWithDiagnosticDataEnabled\" /t REG_DWORD /d 0 /f",
+            "sc config \"DiagTrack\" start= disabled",
+            "sc stop \"DiagTrack\"",
         }
     },
     {
-        "Desactiver Windows Update automatique",
+        "Disable Windows Updates",
         {
             "sc config \"wuauserv\" start= disabled",
             "sc config \"UsoSvc\" start= disabled",
             "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU\" /v \"NoAutoUpdate\" /t REG_DWORD /d 1 /f",
+            "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU\" /v \"AUOptions\" /t REG_DWORD /d 1 /f",
         }
     },
     {
-        "Desactiver Nagle Algorithm (TCP latence)",
+        "Disable Windows Defender",
         {
-            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\" /v \"TcpAckFrequency\" /t REG_DWORD /d 1 /f",
-            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\" /v \"TCPNoDelay\" /t REG_DWORD /d 1 /f",
+            "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\" /v \"DisableAntiSpyware\" /t REG_DWORD /d 1 /f",
+            "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Real-Time Protection\" /v \"DisableBehaviorMonitoring\" /t REG_DWORD /d 1 /f",
+            "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Real-Time Protection\" /v \"DisableOnAccessProtection\" /t REG_DWORD /d 1 /f",
+            "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender\\Real-Time Protection\" /v \"DisableScanOnRealtimeEnable\" /t REG_DWORD /d 1 /f",
+        }
+    },
+    {
+        "Interface Tweaks",
+        {
+            "reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects\" /v \"VisualFXSetting\" /t REG_DWORD /d 2 /f",
+            "reg add \"HKCU\\Control Panel\\Desktop\" /v \"DragFullWindows\" /t REG_SZ /d \"0\" /f",
+            "reg add \"HKCU\\Control Panel\\Desktop\" /v \"MenuShowDelay\" /t REG_SZ /d \"0\" /f",
+            "reg add \"HKCU\\Control Panel\\Desktop\\WindowMetrics\" /v \"MinAnimate\" /t REG_SZ /d \"0\" /f",
+            "reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v \"TaskbarAnimations\" /t REG_DWORD /d 0 /f",
+            "reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced\" /v \"ListviewAlphaSelect\" /t REG_DWORD /d 0 /f",
+            "reg add \"HKCU\\Software\\Microsoft\\Windows\\DWM\" /v \"EnableAeroPeek\" /t REG_DWORD /d 0 /f",
+        }
+    },
+    {
+        "Storage Tweaks",
+        {
+            "fsutil behavior set DisableLastAccess 1",
+            "fsutil behavior set EncryptPagingFile 0",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters\" /v \"EnablePrefetcher\" /t REG_DWORD /d 0 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\\PrefetchParameters\" /v \"EnableSuperfetch\" /t REG_DWORD /d 0 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\" /v \"NtfsDisable8dot3NameCreation\" /t REG_DWORD /d 1 /f",
+        }
+    },
+    {
+        "BCDedit Tweaks",
+        {
+            "bcdedit /set disabledynamictick yes",
+            "bcdedit /set useplatformclock false",
+            "bcdedit /set tscsyncpolicy enhanced",
+            "bcdedit /set bootmenupolicy standard",
+            "bcdedit /set nx OptIn",
+        }
+    },
+    {
+        "Mouse Tweaks",
+        {
+            "reg add \"HKCU\\Control Panel\\Mouse\" /v \"MouseSpeed\" /t REG_SZ /d \"0\" /f",
+            "reg add \"HKCU\\Control Panel\\Mouse\" /v \"MouseThreshold1\" /t REG_SZ /d \"0\" /f",
+            "reg add \"HKCU\\Control Panel\\Mouse\" /v \"MouseThreshold2\" /t REG_SZ /d \"0\" /f",
+            "reg add \"HKCU\\Control Panel\\Mouse\" /v \"MouseHoverTime\" /t REG_SZ /d \"0\" /f",
+        }
+    },
+    {
+        "Keyboard Tweaks",
+        {
+            "reg add \"HKCU\\Control Panel\\Keyboard\" /v \"KeyboardDelay\" /t REG_SZ /d \"0\" /f",
+            "reg add \"HKCU\\Control Panel\\Keyboard\" /v \"KeyboardSpeed\" /t REG_SZ /d \"31\" /f",
+            "reg add \"HKCU\\Control Panel\\Accessibility\\KeyboardResponse\" /v \"AutoRepeatDelay\" /t REG_SZ /d \"250\" /f",
+            "reg add \"HKCU\\Control Panel\\Accessibility\\KeyboardResponse\" /v \"AutoRepeatRate\" /t REG_SZ /d \"6\" /f",
+        }
+    },
+    {
+        "Kernel Tweaks",
+        {
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v \"Win32PrioritySeparation\" /t REG_DWORD /d 38 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v \"GlobalTimerResolutionRequests\" /t REG_DWORD /d 1 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v \"DpcWatchdogProfileOffset\" /t REG_DWORD /d 0 /f",
+        }
+    },
+    {
+        "Memory Tweaks",
+        {
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v \"LargeSystemCache\" /t REG_DWORD /d 0 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v \"DisablePagingExecutive\" /t REG_DWORD /d 1 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v \"ClearPageFileAtShutdown\" /t REG_DWORD /d 0 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v \"IoPageLockLimit\" /t REG_DWORD /d 983040 /f",
+        }
+    },
+    {
+        "System Priority Tweaks",
+        {
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v \"SystemResponsiveness\" /t REG_DWORD /d 0 /f",
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v \"NetworkThrottlingIndex\" /t REG_DWORD /d 4294967295 /f",
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v \"GPU Priority\" /t REG_DWORD /d 8 /f",
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v \"Priority\" /t REG_DWORD /d 6 /f",
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v \"Scheduling Category\" /t REG_SZ /d \"High\" /f",
+        }
+    },
+    {
+        "CPU Priority for Games",
+        {
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\csgo.exe\\PerfOptions\" /v \"CpuPriorityClass\" /t REG_DWORD /d 3 /f",
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\RainbowSix.exe\\PerfOptions\" /v \"CpuPriorityClass\" /t REG_DWORD /d 3 /f",
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\destiny2.exe\\PerfOptions\" /v \"CpuPriorityClass\" /t REG_DWORD /d 3 /f",
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\EscapeFromTarkov.exe\\PerfOptions\" /v \"CpuPriorityClass\" /t REG_DWORD /d 3 /f",
+        }
+    },
+    {
+        "Smart Optimize",
+        {
+            // Combined best-of-all in one click
+            "powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+            "powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMIN 100",
+            "powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100",
+            "powercfg /s SCHEME_CURRENT",
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v \"SystemResponsiveness\" /t REG_DWORD /d 0 /f",
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v \"GPU Priority\" /t REG_DWORD /d 8 /f",
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v \"Priority\" /t REG_DWORD /d 6 /f",
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v \"Scheduling Category\" /t REG_SZ /d \"High\" /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl\" /v \"Win32PrioritySeparation\" /t REG_DWORD /d 38 /f",
+            "reg add \"HKCU\\Software\\Microsoft\\GameBar\" /v \"AllowAutoGameMode\" /t REG_DWORD /d 0 /f",
+            "reg add \"HKCU\\System\\GameConfigStore\" /v \"GameDVR_Enabled\" /t REG_DWORD /d 0 /f",
+            "bcdedit /set disabledynamictick yes",
         }
     },
 };
 
-// ─── Catalogue: Réseau ────────────────────────────────────────────────────
+// ─── Network Tweaks ───────────────────────────────────────────────────────
 std::vector<TweakGroup> g_networkTweaks = {
     {
-        "Optimiser TCP/IP Stack",
+        "Optimize TCP/IP Stack",
         {
             "netsh int tcp set global autotuninglevel=normal",
             "netsh int tcp set global chimney=disabled",
@@ -107,7 +241,7 @@ std::vector<TweakGroup> g_networkTweaks = {
         }
     },
     {
-        "Flush DNS + reset Winsock",
+        "Flush DNS & Reset Winsock",
         {
             "ipconfig /flushdns",
             "ipconfig /registerdns",
@@ -116,7 +250,7 @@ std::vector<TweakGroup> g_networkTweaks = {
         }
     },
     {
-        "DNS Cloudflare 1.1.1.1",
+        "Set Cloudflare DNS 1.1.1.1",
         {
             "netsh interface ip set dns name=\"Ethernet\" static 1.1.1.1",
             "netsh interface ip add dns name=\"Ethernet\" addr=1.0.0.1 index=2",
@@ -125,7 +259,7 @@ std::vector<TweakGroup> g_networkTweaks = {
         }
     },
     {
-        "Desactiver throttling reseau",
+        "Disable Network Throttling",
         {
             "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\" /v \"NetworkThrottlingIndex\" /t REG_DWORD /d 0xffffffff /f",
             "netsh int tcp set global initialRto=2000",
@@ -133,23 +267,30 @@ std::vector<TweakGroup> g_networkTweaks = {
         }
     },
     {
-        "QoS - Retirer limite bande passante",
+        "Remove QoS Bandwidth Limit",
         {
             "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Psched\" /v \"NonBestEffortLimit\" /t REG_DWORD /d 0 /f",
         }
     },
+    {
+        "Disable Nagle Algorithm",
+        {
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\" /v \"TcpAckFrequency\" /t REG_DWORD /d 1 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\" /v \"TCPNoDelay\" /t REG_DWORD /d 1 /f",
+        }
+    },
 };
 
-// ─── Catalogue: GPU ───────────────────────────────────────────────────────
+// ─── GPU Tweaks ───────────────────────────────────────────────────────────
 std::vector<TweakGroup> g_gpuTweaks = {
     {
-        "Hardware-Accelerated GPU Scheduling (HAGS)",
+        "Enable HAGS",
         {
             "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v \"HwSchMode\" /t REG_DWORD /d 2 /f",
         }
     },
     {
-        "Desactiver Xbox overlay & captures",
+        "Disable Xbox Overlay",
         {
             "reg add \"HKCU\\System\\GameConfigStore\" /v \"GameDVR_FSEBehaviorMode\" /t REG_DWORD /d 2 /f",
             "reg add \"HKCU\\System\\GameConfigStore\" /v \"GameDVR_HonorUserFSEBehaviorMode\" /t REG_DWORD /d 1 /f",
@@ -158,22 +299,30 @@ std::vector<TweakGroup> g_gpuTweaks = {
         }
     },
     {
-        "Optimiser DirectX 12 + shader cache",
+        "DirectX 12 & Shader Cache",
         {
             "reg add \"HKLM\\SOFTWARE\\Microsoft\\DirectX\" /v \"D3D12_ALLOW_TEARING\" /t REG_DWORD /d 1 /f",
             "reg add \"HKCU\\SOFTWARE\\Microsoft\\Direct3D\" /v \"ForceLatentSwapChain\" /t REG_DWORD /d 0 /f",
         }
     },
     {
-        "NVIDIA - optimisations registre",
+        "NVIDIA Registry Tweaks",
         {
             "reg add \"HKCU\\SOFTWARE\\NVIDIA Corporation\\Global\\NVTweak\" /v \"Anisotropic\" /t REG_DWORD /d 1 /f",
             "reg add \"HKLM\\SOFTWARE\\NVIDIA Corporation\\Global\\Startup\" /v \"SendTelemetryData\" /t REG_DWORD /d 0 /f",
         }
     },
+    {
+        "GPU Scheduling Priority",
+        {
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v \"TdrDelay\" /t REG_DWORD /d 10 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v \"TdrDdiDelay\" /t REG_DWORD /d 10 /f",
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v \"GPU Priority\" /t REG_DWORD /d 8 /f",
+        }
+    },
 };
 
-// ─── Catalogue: Jeux ─────────────────────────────────────────────────────
+// ─── Game Tweaks ──────────────────────────────────────────────────────────
 std::vector<GameTweak> g_gameTweaks = {
     {
         "Fortnite", "FN",
@@ -294,6 +443,47 @@ bool WriteConfigFile(const std::string& envPath, const std::string& content) {
     }
 }
 
+bool RegSetDWORD(HKEY root, const std::string& subKey,
+                 const std::string& valueName, DWORD data)
+{
+    HKEY hk;
+    if (RegCreateKeyExA(root, subKey.c_str(), 0, nullptr,
+        REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, nullptr, &hk, nullptr) != ERROR_SUCCESS)
+        return false;
+    bool ok = RegSetValueExA(hk, valueName.c_str(), 0, REG_DWORD,
+                              (const BYTE*)&data, sizeof(data)) == ERROR_SUCCESS;
+    RegCloseKey(hk);
+    return ok;
+}
+
+bool RegSetSZ(HKEY root, const std::string& subKey,
+              const std::string& valueName, const std::string& data)
+{
+    HKEY hk;
+    if (RegCreateKeyExA(root, subKey.c_str(), 0, nullptr,
+        REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, nullptr, &hk, nullptr) != ERROR_SUCCESS)
+        return false;
+    bool ok = RegSetValueExA(hk, valueName.c_str(), 0, REG_SZ,
+                              (const BYTE*)data.c_str(),
+                              (DWORD)(data.size() + 1)) == ERROR_SUCCESS;
+    RegCloseKey(hk);
+    return ok;
+}
+
+bool ConfigureService(const std::string& serviceName, DWORD startType) {
+    SC_HANDLE scm = OpenSCManagerA(nullptr, nullptr, SC_MANAGER_CONNECT);
+    if (!scm) return false;
+    SC_HANDLE svc = OpenServiceA(scm, serviceName.c_str(), SERVICE_CHANGE_CONFIG | SERVICE_STOP);
+    if (!svc) { CloseServiceHandle(scm); return false; }
+    ControlService(svc, SERVICE_CONTROL_STOP, nullptr);
+    bool ok = ChangeServiceConfigA(svc, SERVICE_NO_CHANGE, startType,
+                                   SERVICE_NO_CHANGE, nullptr, nullptr, nullptr,
+                                   nullptr, nullptr, nullptr, nullptr) != 0;
+    CloseServiceHandle(svc);
+    CloseServiceHandle(scm);
+    return ok;
+}
+
 // ─── High-level apply ─────────────────────────────────────────────────────
 void ApplyTweakGroups(const std::vector<TweakGroup>& groups,
                       std::atomic<float>& progress,
@@ -311,7 +501,7 @@ void ApplyTweakGroups(const std::vector<TweakGroup>& groups,
         {
             auto [code, out] = RunShellCmd(cmd);
             bool ok = (code == 0);
-            log(std::string(ok ? "  [OK] " : "  [??] ") + cmd.substr(0, 80), ok);
+            log(std::string(ok ? "  [OK] " : "  [!!] ") + cmd.substr(0, 80), ok);
             ++done;
             progress.store((float)done / (float)total);
         }
@@ -323,8 +513,8 @@ void ApplyGameTweak(const GameTweak& game,
                     LogCallback log)
 {
     log(">> " + game.name, true);
-    size_t steps  = game.files.size() + game.extraCmds.size() + 2;
-    size_t done   = 0;
+    size_t steps = game.files.size() + game.extraCmds.size() + 2;
+    size_t done  = 0;
 
     for (auto& f : game.files)
     {
@@ -338,7 +528,7 @@ void ApplyGameTweak(const GameTweak& game,
     if (!game.priorityCmd.empty())
     {
         auto [code, _] = RunShellCmd(game.priorityCmd);
-        log(std::string(code == 0 ? "  [OK] " : "  [!!] ") + "CPU Priority haute", code == 0);
+        log(std::string(code == 0 ? "  [OK] " : "  [!!] ") + "CPU priority set", code == 0);
         ++done;
         progress.store((float)done / (float)steps);
     }
@@ -355,18 +545,10 @@ void ApplyGameTweak(const GameTweak& game,
 
 void ApplyAllTweaks(std::atomic<float>& progress, LogCallback log)
 {
-    log("====  ULTRA MODE  ====", true);
-
-    // Weights: sys(40%) + net(20%) + gpu(10%) + games(20%) + clean(10%)
-    auto sub = [&](float from, float to, std::atomic<float>& subProg) {
-        return [&, from, to]() {
-            progress.store(from + subProg.load() * (to - from));
-        };
-    };
+    log("========  ULTRA OPTIMIZE  ========", true);
 
     std::atomic<float> p1 = 0.f;
-    auto groups1 = g_systemTweaks;
-    ApplyTweakGroups(groups1, p1, log);
+    ApplyTweakGroups(g_systemTweaks, p1, log);
     progress.store(0.40f);
 
     std::atomic<float> p2 = 0.f;
@@ -386,21 +568,22 @@ void ApplyAllTweaks(std::atomic<float>& progress, LogCallback log)
 
     CleanTempFiles(progress, log);
     progress.store(1.0f);
-    log("====  DONE — Redemarrez votre PC  ====", true);
+    log("========  DONE — Restart your PC  ========", true);
 }
 
 void CleanTempFiles(std::atomic<float>& progress, LogCallback log)
 {
-    log(">> Nettoyage fichiers temporaires", true);
+    log(">> Cleaning temporary files", true);
     std::vector<std::string> cmds = {
         "del /f /s /q \"%TEMP%\\*\"",
         "del /f /s /q \"C:\\Windows\\Temp\\*\"",
         "del /f /s /q \"C:\\Windows\\Prefetch\\*\"",
+        "del /f /s /q \"%LOCALAPPDATA%\\Temp\\*\"",
     };
     for (size_t i = 0; i < cmds.size(); i++)
     {
         RunShellCmd(cmds[i]);
-        log("  [OK] " + cmds[i].substr(0, 70), true);
+        log("  [OK] Cleaned: " + cmds[i].substr(10, 40), true);
         progress.store((float)(i + 1) / (float)cmds.size());
     }
 }
