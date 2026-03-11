@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <string>
 #include <vector>
+#include <atomic>
 #include <functional>
 
 // ─── Result of a single tweak command ─────────────────────────────────────
