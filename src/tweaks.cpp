@@ -224,6 +224,95 @@ std::vector<TweakGroup> g_systemTweaks = {
             "bcdedit /set disabledynamictick yes",
         }
     },
+    {
+        "Disable Spectre Mitigations",
+        {
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v FeatureSettingsOverride /t REG_DWORD /d 3 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management\" /v FeatureSettingsOverrideMask /t REG_DWORD /d 3 /f",
+        }
+    },
+    {
+        "Disable CPU C-States",
+        {
+            "powercfg /setacvalueindex scheme_current sub_processor IDLEDISABLE 1",
+            "powercfg /setacvalueindex scheme_current sub_processor CPMINCORES 100",
+            "powercfg /setactive scheme_current",
+        }
+    },
+    {
+        "Timer Resolution 1ms",
+        {
+            "bcdedit /set useplatformclock false",
+            "bcdedit /set disabledynamictick yes",
+            "bcdedit /set tscsyncpolicy enhanced",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v GlobalTimerResolutionRequests /t REG_DWORD /d 1 /f",
+        }
+    },
+    {
+        "Disable Xbox Services",
+        {
+            "sc config \"XblAuthManager\" start= disabled",
+            "sc config \"XblGameSave\" start= disabled",
+            "sc config \"XboxNetApiSvc\" start= disabled",
+            "sc config \"TabletInputService\" start= disabled",
+            "sc config \"WbioSrvc\" start= disabled",
+            "sc config \"WalletService\" start= disabled",
+            "sc config \"wisvc\" start= disabled",
+            "sc config \"PhoneSvc\" start= disabled",
+            "sc config \"SEMgrSvc\" start= disabled",
+            "sc config \"lfsvc\" start= disabled",
+        }
+    },
+    {
+        "Disable Notifications",
+        {
+            "reg add \"HKCU\\Software\\Policies\\Microsoft\\Windows\\Explorer\" /v DisableNotificationCenter /t REG_DWORD /d 1 /f",
+            "reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\PushNotifications\" /v ToastEnabled /t REG_DWORD /d 0 /f",
+        }
+    },
+    {
+        "Disable Background Apps",
+        {
+            "reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications\" /v GlobalUserDisabled /t REG_DWORD /d 1 /f",
+            "reg add \"HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Search\" /v BackgroundAppGlobalToggle /t REG_DWORD /d 0 /f",
+        }
+    },
+    {
+        "Disable Cortana & Search",
+        {
+            "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v AllowCortana /t REG_DWORD /d 0 /f",
+            "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v DisableWebSearch /t REG_DWORD /d 1 /f",
+            "sc config \"WSearch\" start= disabled",
+            "sc stop \"WSearch\"",
+        }
+    },
+    {
+        "Disable BSOD Auto Restart",
+        {
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\CrashControl\" /v AutoReboot /t REG_DWORD /d 0 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\CrashControl\" /v CrashDumpEnabled /t REG_DWORD /d 0 /f",
+        }
+    },
+    {
+        "Power Throttling Disable",
+        {
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerThrottling\" /v PowerThrottlingOff /t REG_DWORD /d 1 /f",
+        }
+    },
+    {
+        "Disable Remote Access",
+        {
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Remote Assistance\" /v fAllowToGetHelp /t REG_DWORD /d 0 /f",
+            "sc config \"RemoteRegistry\" start= disabled",
+            "sc config \"RemoteAccess\" start= disabled",
+        }
+    },
+    {
+        "Disable Auto Maintenance",
+        {
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\Maintenance\" /v MaintenanceDisabled /t REG_DWORD /d 1 /f",
+        }
+    },
 };
 
 // ─── Network Tweaks ───────────────────────────────────────────────────────
@@ -279,6 +368,24 @@ std::vector<TweakGroup> g_networkTweaks = {
             "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\" /v \"TCPNoDelay\" /t REG_DWORD /d 1 /f",
         }
     },
+    {
+        "Low Latency TCP",
+        {
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\" /v DefaultTTL /t REG_DWORD /d 64 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\" /v MaxUserPort /t REG_DWORD /d 65534 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\" /v TcpTimedWaitDelay /t REG_DWORD /d 30 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\" /v Tcp1323Opts /t REG_DWORD /d 1 /f",
+            "netsh int tcp set global fastopen=enabled",
+            "netsh int tcp set global rss=enabled",
+        }
+    },
+    {
+        "Disable IPv6",
+        {
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip6\\Parameters\" /v DisabledComponents /t REG_DWORD /d 255 /f",
+            "netsh interface ipv6 set global randomizeidentifiers=disabled",
+        }
+    },
 };
 
 // ─── GPU Tweaks ───────────────────────────────────────────────────────────
@@ -318,6 +425,51 @@ std::vector<TweakGroup> g_gpuTweaks = {
             "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v \"TdrDelay\" /t REG_DWORD /d 10 /f",
             "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\" /v \"TdrDdiDelay\" /t REG_DWORD /d 10 /f",
             "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Games\" /v \"GPU Priority\" /t REG_DWORD /d 8 /f",
+        }
+    },
+    {
+        "Disable GPU Preemption",
+        {
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\\Scheduler\" /v EnablePreemption /t REG_DWORD /d 0 /f",
+        }
+    },
+    {
+        "CPU Core Unparking",
+        {
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerSettings\\54533251-82be-4824-96c1-47b60b740d00\\0cc5b647-c1df-4637-891a-dec35c318583\" /v ValueMax /t REG_DWORD /d 100 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerSettings\\54533251-82be-4824-96c1-47b60b740d00\\0cc5b647-c1df-4637-891a-dec35c318583\" /v ValueMin /t REG_DWORD /d 100 /f",
+            "powercfg /setacvalueindex scheme_current 54533251-82be-4824-96c1-47b60b740d00 0cc5b647-c1df-4637-891a-dec35c318583 100",
+            "powercfg /setactive scheme_current",
+        }
+    },
+    {
+        "USB Polling Rate 1ms",
+        {
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\USBPORT\\Parameters\" /v IdleEnable /t REG_DWORD /d 0 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\HidUsb\\Parameters\" /v PollInterval /t REG_DWORD /d 1 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\mouclass\\Parameters\" /v MouseDataQueueSize /t REG_DWORD /d 20 /f",
+        }
+    },
+    {
+        "DPC Latency Tweaks",
+        {
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\kernel\" /v DpcWatchdogProfileOffset /t REG_DWORD /d 0 /f",
+            "bcdedit /set disabledynamictick yes",
+            "bcdedit /set useplatformclock false",
+        }
+    },
+    {
+        "Low Latency Audio",
+        {
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Audio\" /v \"Scheduling Category\" /t REG_SZ /d \"Medium\" /f",
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\Tasks\\Capture\" /v \"Scheduling Category\" /t REG_SZ /d \"High\" /f",
+        }
+    },
+    {
+        "Disable CPU PPM Driver",
+        {
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\intelppm\" /v Start /t REG_DWORD /d 4 /f",
+            "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Services\\amdppm\" /v Start /t REG_DWORD /d 4 /f",
         }
     },
 };
@@ -377,6 +529,22 @@ std::vector<GameTweak> g_gameTweaks = {
             "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\BlackOpsColdWar.exe\\PerfOptions\" /v \"CpuPriorityClass\" /t REG_DWORD /d 3 /f",
             "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\ModernWarfare.exe\\PerfOptions\" /v \"CpuPriorityClass\" /t REG_DWORD /d 3 /f",
             "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\Warzone.exe\\PerfOptions\" /v \"CpuPriorityClass\" /t REG_DWORD /d 3 /f",
+        }
+    },
+    {
+        "CS2", "CS2",
+        "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\cs2.exe\\PerfOptions\" /v \"CpuPriorityClass\" /t REG_DWORD /d 3 /f",
+        {},
+        {
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\cs2.exe\\PerfOptions\" /v \"IoPriority\" /t REG_DWORD /d 3 /f",
+        }
+    },
+    {
+        "Apex Legends", "APX",
+        "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\r5apex.exe\\PerfOptions\" /v \"CpuPriorityClass\" /t REG_DWORD /d 3 /f",
+        {},
+        {
+            "reg add \"HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\r5apex.exe\\PerfOptions\" /v \"IoPriority\" /t REG_DWORD /d 3 /f",
         }
     },
 };

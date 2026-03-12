@@ -135,6 +135,7 @@ struct AppState {
     }
 };
 static AppState g_app;
+static int      g_section = 0; // 0=System 1=Network 2=GPU 3=Games 4=Cleanup
 
 // ─── Forward decls ────────────────────────────────────────────────────────
 static bool CreateDeviceD3D(HWND); static void CleanupDeviceD3D();
@@ -437,38 +438,107 @@ static void DrawLog(float h) {
     ImGui::PopStyleVar(); ImGui::PopStyleColor();
 }
 
-// ─── Tweak 3-column grid ──────────────────────────────────────────────────
-static void DrawGrid(const std::vector<TweakGroup>& groups, float btnH=44.f) {
+// ─── Sidebar nav item ─────────────────────────────────────────────────────
+static bool NavItem(const char* label, bool active, float w) {
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    ImVec2 pos     = ImGui::GetCursorScreenPos();
+    const float h  = 42.f;
+    ImGui::InvisibleButton(label, {w, h});
+    bool hov     = ImGui::IsItemHovered();
+    bool clicked = ImGui::IsItemClicked();
+    if (active || hov) {
+        ImU32 bg = active ? IM_COL32(26,8,8,255) : IM_COL32(15,5,5,255);
+        dl->AddRectFilled(pos, {pos.x+w, pos.y+h}, bg);
+    }
+    if (active)
+        dl->AddRectFilled({pos.x, pos.y+8.f}, {pos.x+3.f, pos.y+h-8.f}, IC(C_RED));
+    else if (hov)
+        dl->AddRectFilled({pos.x, pos.y+10.f}, {pos.x+2.f, pos.y+h-10.f}, IC(C_REDD));
+    ImVec2 tsz = ImGui::CalcTextSize(label);
+    ImU32 tc = active ? ImGui::ColorConvertFloat4ToU32(C_TEXT)
+             : (hov   ? IM_COL32(200,175,172,255)
+                      : ImGui::ColorConvertFloat4ToU32(C_DIM));
+    dl->AddText({pos.x+16.f, pos.y+(h-tsz.y)*0.5f}, tc, label);
+    return clicked;
+}
+
+// ─── Clean card button ────────────────────────────────────────────────────
+static bool CardButton(const char* id, const char* label, ImVec2 sz, bool disabled=false) {
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    ImVec2 pos     = ImGui::GetCursorScreenPos();
+    bool clicked   = false, hov = false;
+    if (disabled) {
+        ImGui::Dummy(sz);
+    } else {
+        ImGui::InvisibleButton(id, sz);
+        clicked = ImGui::IsItemClicked();
+        hov     = ImGui::IsItemHovered();
+    }
+    float a   = disabled ? 0.42f : 1.f;
+    ImU32 bg  = hov ? IM_COL32(28,14,14,255) : IM_COL32(16,8,8,(int)(255*a));
+    ImU32 acc = hov ? IM_COL32(255,45,45,255) : IM_COL32(80,8,8,(int)(255*a));
+    ImU32 tc  = disabled ? IM_COL32(100,75,73,160)
+              : (hov     ? IM_COL32(240,235,232,255)
+                         : IM_COL32(196,185,182,255));
+    dl->AddRectFilled(pos, {pos.x+sz.x, pos.y+sz.y}, bg, 5.f);
+    dl->AddRectFilled(pos, {pos.x+3.f,  pos.y+sz.y}, acc, 3.f);
+    ImVec2 tsz = ImGui::CalcTextSize(label);
+    dl->AddText({pos.x+14.f, pos.y+(sz.y-tsz.y)*0.5f}, tc, label);
+    return clicked;
+}
+
+// ─── 2-column grid of tweak groups ───────────────────────────────────────
+static void DrawCleanGrid(const std::vector<TweakGroup>& groups) {
+    bool  busy  = g_app.running.load();
     float avail = ImGui::GetContentRegionAvail().x;
-    float gap = 8.f;
-    float btnW = (avail - gap*2.f) / 3.f;
-    bool busy = g_app.running.load();
-    int col = 0;
-    for (size_t i=0; i<groups.size(); i++) {
-        if (busy) ImGui::BeginDisabled();
-        if (RedButton(groups[i].name.c_str(), {btnW, btnH})) {
-            RunAsync([cmds = std::vector<TweakGroup>{groups[i]}]() {
-                std::atomic<float> p=0.f;
-                ApplyTweakGroups(cmds,p,MakeLog());
+    float gap   = 8.f;
+    float cardW = (avail - gap) / 2.f;
+    int   col   = 0;
+    for (size_t i = 0; i < groups.size(); i++) {
+        std::string id = "##cg" + std::to_string(i);
+        if (CardButton(id.c_str(), groups[i].name.c_str(), {cardW, 44.f}, busy)) {
+            RunAsync([grp = std::vector<TweakGroup>{groups[i]}]() {
+                std::atomic<float> p = 0.f;
+                ApplyTweakGroups(grp, p, MakeLog());
                 g_app.progress.store(1.f);
             });
         }
-        if (busy) ImGui::EndDisabled();
-        // Tooltip
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort)) {
-            ImGui::BeginTooltip();
-            ImGui::PushStyleColor(ImGuiCol_Text, C_RED2);
-            ImGui::Text("%s", groups[i].name.c_str());
-            ImGui::PopStyleColor();
-            ImGui::Separator();
-            for (size_t k=0; k<std::min(groups[i].cmds.size(),(size_t)5); k++)
-                ImGui::TextColored(C_DIM, "%s", groups[i].cmds[k].substr(0,72).c_str());
-            if (groups[i].cmds.size()>5)
-                ImGui::TextDisabled("...+%d more", (int)groups[i].cmds.size()-5);
-            ImGui::EndTooltip();
+        col++;
+        if (col < 2) ImGui::SameLine(0.f, gap); else { col=0; ImGui::Dummy({0.f,4.f}); }
+    }
+}
+
+// ─── Games grid ──────────────────────────────────────────────────────────
+static void DrawGamesGrid() {
+    bool  busy  = g_app.running.load();
+    float avail = ImGui::GetContentRegionAvail().x;
+    float gap   = 8.f;
+    float cardW = (avail - gap) / 2.f;
+    int   col   = 0;
+    for (size_t i = 0; i < g_gameTweaks.size(); i++) {
+        std::string id = "##gt" + std::to_string(i);
+        if (CardButton(id.c_str(), g_gameTweaks[i].name.c_str(), {cardW, 60.f}, busy)) {
+            RunAsync([n = g_gameTweaks[i].name]() {
+                for (auto& g : g_gameTweaks) if (g.name == n) {
+                    std::atomic<float> p = 0.f;
+                    ApplyGameTweak(g, p, MakeLog());
+                    g_app.progress.store(1.f); break;
+                }
+            });
         }
         col++;
-        if (col<3) ImGui::SameLine(0.f,gap); else { col=0; ImGui::Dummy({0,2.f}); }
+        if (col < 2) ImGui::SameLine(0.f, gap); else { col=0; ImGui::Dummy({0.f,4.f}); }
+    }
+    ImGui::Dummy({0.f, 10.f});
+    if (CardButton("##gtall", "Optimize ALL Games", {avail, 44.f}, busy)) {
+        RunAsync([]() {
+            float step = 1.f / (float)g_gameTweaks.size();
+            for (size_t i = 0; i < g_gameTweaks.size(); i++) {
+                std::atomic<float> p = 0.f;
+                ApplyGameTweak(g_gameTweaks[i], p, MakeLog());
+                g_app.progress.store((float)(i+1)*step);
+            }
+        });
     }
 }
 
@@ -583,213 +653,172 @@ static bool DrawTitleBar(HWND hwnd) {
     return cls;
 }
 
-// ─── Tab helper macro ─────────────────────────────────────────────────────
-static void PushTabStyle() {
-    ImGui::PushStyleColor(ImGuiCol_Tab,              C_BG2);
-    ImGui::PushStyleColor(ImGuiCol_TabActive,        C_CARD);
-    ImGui::PushStyleColor(ImGuiCol_TabHovered,       C_CARD_H);
-    ImGui::PushStyleColor(ImGuiCol_TabUnfocused,     C_BG);
-    ImGui::PushStyleColor(ImGuiCol_TabUnfocusedActive, C_BG2);
-}
-
 // ─── Main UI ─────────────────────────────────────────────────────────────
 static void DrawMainUI(HWND hwnd) {
     ImGuiIO& io = ImGui::GetIO();
     if (DrawTitleBar(hwnd)) g_wantClose = true;
 
-    const float TB = 50.f;
-    ImGui::SetNextWindowPos({0.f,TB});
-    ImGui::SetNextWindowSize({io.DisplaySize.x, io.DisplaySize.y-TB});
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, C_BG);
-    ImGui::Begin("##root",nullptr,
+    const float TB  = 50.f;
+    const float SBW = 198.f;
+    float sbH = io.DisplaySize.y - TB;
+
+    // ══ SIDEBAR ═══════════════════════════════════════════════════════════
+    ImGui::SetNextWindowPos({0.f, TB});
+    ImGui::SetNextWindowSize({SBW, sbH});
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.016f,0.007f,0.007f,1.f));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.f,0.f});
+    ImGui::Begin("##sb", nullptr,
         ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|
-        ImGuiWindowFlags_NoScrollbar|ImGuiWindowFlags_NoBringToFrontOnFocus|
-        ImGuiWindowFlags_NoSavedSettings);
+        ImGuiWindowFlags_NoScrollbar|ImGuiWindowFlags_NoScrollWithMouse|
+        ImGuiWindowFlags_NoBringToFrontOnFocus|ImGuiWindowFlags_NoSavedSettings);
+    ImGui::PopStyleVar(); ImGui::PopStyleColor();
+
+    ImDrawList* sdl = ImGui::GetWindowDrawList();
+    ImVec2 sbWP = ImGui::GetWindowPos();
+    sdl->AddLine({sbWP.x+SBW-1.f, sbWP.y}, {sbWP.x+SBW-1.f, sbWP.y+sbH}, IC(C_BORDER,0.9f));
+
+    // Logo
+    ImGui::Dummy({0.f, 14.f});
+    if (g_logoSRV) {
+        const float ls = 38.f;
+        ImGui::SetCursorPosX((SBW - ls) * 0.5f);
+        ImGui::Image((ImTextureID)g_logoSRV, {ls, ls});
+        ImGui::Dummy({0.f, 8.f});
+    } else {
+        ImGui::Dummy({0.f, 6.f});
+    }
+
+    // Separator line under logo
+    float sepY = sbWP.y + ImGui::GetCursorPosY();
+    sdl->AddLine({sbWP.x+12.f, sepY}, {sbWP.x+SBW-13.f, sepY}, IC(C_BORDER,0.55f));
+    ImGui::Dummy({0.f, 6.f});
+
+    // Nav items
+    const char* sections[] = {"System","Network","GPU","Games","Cleanup"};
+    for (int i = 0; i < 5; i++) {
+        ImGui::SetCursorPosX(0.f);
+        if (NavItem(sections[i], g_section==i, SBW-1.f)) g_section = i;
+    }
+
+    // Bottom fixed layout
+    bool busy = g_app.running.load();
+    float prog = g_app.progress.load();
+
+    // Status text
+    ImGui::SetCursorPos({10.f, sbH - 102.f});
+    ImGui::PushStyleColor(ImGuiCol_Text, busy ? C_RED : C_DIM2);
+    ImGui::TextUnformatted(busy ? "Running..." : "Ready");
     ImGui::PopStyleColor();
 
-    bool busy = g_app.running.load();
+    // Progress bar (3px thin, drawn via DrawList)
+    float pbY = sbWP.y + sbH - 82.f;
+    sdl->AddRectFilled({sbWP.x+10.f, pbY}, {sbWP.x+SBW-11.f, pbY+3.f}, IM_COL32(18,6,6,255), 2.f);
+    if (prog > 0.f) {
+        sdl->AddRectFilled({sbWP.x+10.f, pbY},
+            {sbWP.x+10.f+(SBW-21.f)*prog, pbY+3.f}, IM_COL32(205,25,25,255), 2.f);
+    }
 
-    // ── Apply All button ──────────────────────────────────────────────────
-    ImGui::Dummy({0,10.f});
-    float bw = 380.f;
-    ImGui::SetCursorPosX((io.DisplaySize.x - bw)*0.5f);
+    // OPTIMIZE ALL button
+    ImGui::SetCursorPos({8.f, sbH - 76.f});
     if (busy) ImGui::BeginDisabled();
-    if (PrimaryButton("    \xe2\x9a\xa1    APPLY ALL TWEAKS    \xe2\x9a\xa1    ", {bw,46.f})) {
+    ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.52f,0.05f,0.05f,1.f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.72f,0.08f,0.08f,1.f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.36f,0.03f,0.03f,1.f));
+    ImGui::PushStyleColor(ImGuiCol_Text,          C_TEXT);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.f);
+    if (ImGui::Button("OPTIMIZE ALL##oa", {SBW-16.f, 48.f})) {
         RunAsync([](){
             ApplyAllTweaks(g_app.progress, MakeLog());
             g_app.showRebootDlg = true;
         });
     }
+    ImGui::PopStyleVar();
+    ImGui::PopStyleColor(4);
     if (busy) ImGui::EndDisabled();
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("Applies ALL tweaks at once — system, network, GPU\nand game configs for Fortnite, Valorant & CoD.");
-
-    // ── Progress ──────────────────────────────────────────────────────────
-    float p = g_app.progress.load();
-    ImGui::Dummy({0,8.f});
-    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, C_RED);
-    ImGui::PushStyleColor(ImGuiCol_FrameBg, C_CARD);
-    ImGui::ProgressBar(p, {-1.f, 4.f}, "");
-    ImGui::PopStyleColor(2);
-    ImGui::PushStyleColor(ImGuiCol_Text, busy ? C_RED : C_DIM);
-    ImGui::Text(busy ? "  Running tweaks..." : "  Ready  \xe2\x80\x94  hover any button to preview changes");
-    ImGui::PopStyleColor();
-    ImGui::Dummy({0,4.f});
-    ImGui::Separator();
-
-    // ── Tabs ─────────────────────────────────────────────────────────────
-    PushTabStyle();
-    if (ImGui::BeginTabBar("##T")) {
-
-        // TWEAKS
-        if (ImGui::BeginTabItem("  Tweaks  ")) {
-            ImGui::PopStyleColor(5);
-            ImGui::Dummy({0,10.f});
-            float logH = 175.f;
-            float gridH = ImGui::GetContentRegionAvail().y - logH - 28.f;
-            ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding,0.f);
-            if (ImGui::BeginChild("##tg",{-1.f,gridH},false))
-                DrawGrid(g_systemTweaks);
-            ImGui::EndChild();
-            ImGui::PopStyleVar();
-            ImGui::Separator(); ImGui::Dummy({0,4.f});
-            ImGui::TextColored(C_DIM,"  Output");
-            ImGui::SameLine();
-            if (ImGui::SmallButton("Clear")) g_app.clearLog();
-            DrawLog(ImGui::GetContentRegionAvail().y-8.f);
-            ImGui::EndTabItem();
-        } else ImGui::PopStyleColor(5);
-
-        // GAMES
-        PushTabStyle();
-        if (ImGui::BeginTabItem("  Games  ")) {
-            ImGui::PopStyleColor(5);
-            ImGui::Dummy({0,12.f});
-            ImGui::TextColored(C_RED,"  Game-specific optimizations");
-            ImGui::Dummy({0,10.f});
-
-            float cW=260.f,cH=138.f,gap=12.f;
-            for (auto& gt : g_gameTweaks) {
-                ImGui::PushStyleColor(ImGuiCol_ChildBg, C_CARD);
-                ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding,8.f);
-                if (ImGui::BeginChild(gt.tag.c_str(),{cW,cH},true)) {
-                    ImVec2 p0=ImGui::GetCursorScreenPos();
-                    ImGui::GetWindowDrawList()->AddRectFilled(
-                        p0,{p0.x+cW,p0.y+3.f},IC(C_RED),2.f);
-                    ImGui::Dummy({0,6.f});
-                    ImGui::TextColored(C_RED2,"  %s",gt.name.c_str());
-                    ImGui::Separator(); ImGui::Dummy({0,4.f});
-                    ImGui::TextColored(C_DIM,"  Low settings  |  CPU priority");
-                    ImGui::TextColored(C_DIM,"  VSync OFF  |  Motion Blur OFF");
-                    ImGui::Dummy({0,8.f});
-                    std::string lbl="Optimize##"+gt.tag;
-                    if (busy) ImGui::BeginDisabled();
-                    if (RedButton(lbl.c_str(),{-1.f,30.f})) {
-                        RunAsync([n=gt.name](){
-                            for (auto& g:g_gameTweaks) if(g.name==n){
-                                std::atomic<float> p=0.f;
-                                ApplyGameTweak(g,p,MakeLog());
-                                g_app.progress.store(1.f); break;
-                            }
-                        });
-                    }
-                    if (busy) ImGui::EndDisabled();
-                    ImGui::EndChild();
-                }
-                ImGui::PopStyleVar(); ImGui::PopStyleColor();
-                ImGui::SameLine(0.f,gap);
-            }
-            ImGui::Dummy({0,14.f}); ImGui::Separator();
-            if (busy) ImGui::BeginDisabled();
-            if (PrimaryButton("  Optimize ALL Games  ",{260.f,36.f})) {
-                RunAsync([](){
-                    float step=1.f/g_gameTweaks.size();
-                    for (size_t i=0;i<g_gameTweaks.size();i++){
-                        std::atomic<float> p=0.f;
-                        ApplyGameTweak(g_gameTweaks[i],p,MakeLog());
-                        g_app.progress.store((i+1)*step);
-                    }
-                });
-            }
-            if (busy) ImGui::EndDisabled();
-            ImGui::Dummy({0,8.f});
-            DrawLog(ImGui::GetContentRegionAvail().y-8.f);
-            ImGui::EndTabItem();
-        } else ImGui::PopStyleColor(5);
-
-        // NETWORK
-        PushTabStyle();
-        if (ImGui::BeginTabItem("  Network  ")) {
-            ImGui::PopStyleColor(5);
-            ImGui::Dummy({0,8.f});
-            if (busy) ImGui::BeginDisabled();
-            if (PrimaryButton("  Apply ALL Network Tweaks  ",{300.f,36.f})) {
-                RunAsync([](){
-                    ApplyTweakGroups(g_networkTweaks,g_app.progress,MakeLog());
-                    g_app.progress.store(1.f);
-                });
-            }
-            if (busy) ImGui::EndDisabled();
-            ImGui::Dummy({0,10.f}); DrawGrid(g_networkTweaks);
-            ImGui::Dummy({0,8.f}); ImGui::Separator(); ImGui::Dummy({0,4.f});
-            DrawLog(ImGui::GetContentRegionAvail().y-8.f);
-            ImGui::EndTabItem();
-        } else ImGui::PopStyleColor(5);
-
-        // GPU
-        PushTabStyle();
-        if (ImGui::BeginTabItem("  GPU  ")) {
-            ImGui::PopStyleColor(5);
-            ImGui::Dummy({0,8.f});
-            if (busy) ImGui::BeginDisabled();
-            if (PrimaryButton("  Apply ALL GPU Tweaks  ",{280.f,36.f})) {
-                RunAsync([](){
-                    ApplyTweakGroups(g_gpuTweaks,g_app.progress,MakeLog());
-                    g_app.progress.store(1.f);
-                });
-            }
-            if (busy) ImGui::EndDisabled();
-            ImGui::Dummy({0,10.f}); DrawGrid(g_gpuTweaks);
-            ImGui::Dummy({0,8.f}); ImGui::Separator(); ImGui::Dummy({0,4.f});
-            DrawLog(ImGui::GetContentRegionAvail().y-8.f);
-            ImGui::EndTabItem();
-        } else ImGui::PopStyleColor(5);
-
-        // CLEANUP
-        PushTabStyle();
-        if (ImGui::BeginTabItem("  Cleanup  ")) {
-            ImGui::PopStyleColor(5);
-            ImGui::Dummy({0,18.f});
-            ImGui::TextColored(C_DIM,"  Removes temporary files to free space and improve load times.");
-            ImGui::Dummy({0,18.f});
-            if (busy) ImGui::BeginDisabled();
-            if (PrimaryButton("  Clean Temp Files  ",{230.f,44.f}))
-                RunAsync([](){CleanTempFiles(g_app.progress,MakeLog());});
-            if (busy) ImGui::EndDisabled();
-            ImGui::Dummy({0,14.f}); ImGui::Separator(); ImGui::Dummy({0,8.f});
-            ImGui::TextColored(C_DIM,"  Folders cleaned:");
-            const char* folders[] = {" %%TEMP%%"," C:\\Windows\\Temp"," C:\\Windows\\Prefetch"," %%LOCALAPPDATA%%\\Temp"};
-            for (auto f : folders) ImGui::TextColored(C_REDD,"   \xe2\x80\xa2 %s",f);
-            ImGui::Dummy({0,12.f}); ImGui::Separator();
-            DrawLog(ImGui::GetContentRegionAvail().y-8.f);
-            ImGui::EndTabItem();
-        } else ImGui::PopStyleColor(5);
-
-        // LOG
-        PushTabStyle();
-        if (ImGui::BeginTabItem("  Log  ")) {
-            ImGui::PopStyleColor(5);
-            ImGui::Dummy({0,6.f});
-            if (ImGui::SmallButton("  Clear  ")) g_app.clearLog();
-            ImGui::SameLine();
-            ImGui::TextColored(C_DIM,"%zu entries",(size_t)g_app.logLines.size());
-            ImGui::Dummy({0,4.f});
-            DrawLog(ImGui::GetContentRegionAvail().y-8.f);
-            ImGui::EndTabItem();
-        } else ImGui::PopStyleColor(5);
-
-        ImGui::EndTabBar();
+    if (ImGui::IsItemHovered()) {
+        float t  = (float)ImGui::GetTime();
+        float p2 = 0.38f + 0.28f*sinf(t*3.2f);
+        auto rm  = ImGui::GetItemRectMin(); auto rM = ImGui::GetItemRectMax();
+        ImGui::GetWindowDrawList()->AddRect(rm, rM, IC(C_RED2, p2), 5.f, 0, 2.f);
     }
+
+    // Discord link
+    ImGui::SetCursorPos({10.f, sbH - 22.f});
+    ImGui::PushStyleColor(ImGuiCol_Text, C_DIM2);
+    ImGui::TextUnformatted("discord.gg/eminencehardware");
+    ImGui::PopStyleColor();
+
+    ImGui::End();
+
+    // ══ CONTENT AREA ══════════════════════════════════════════════════════
+    ImGui::SetNextWindowPos({SBW, TB});
+    ImGui::SetNextWindowSize({io.DisplaySize.x-SBW, io.DisplaySize.y-TB});
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, C_BG);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {14.f,10.f});
+    ImGui::Begin("##ct", nullptr,
+        ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|
+        ImGuiWindowFlags_NoScrollbar|ImGuiWindowFlags_NoBringToFrontOnFocus|
+        ImGuiWindowFlags_NoSavedSettings);
+    ImGui::PopStyleVar(); ImGui::PopStyleColor();
+
+    // Section header
+    const char* titles[] = {
+        "System Tweaks","Network Tweaks","GPU / Driver Tweaks",
+        "Game Optimizations","Cleanup"
+    };
+    ImGui::Dummy({0.f,4.f});
+    ImGui::PushStyleColor(ImGuiCol_Text, C_RED);
+    ImGui::SetWindowFontScale(1.12f);
+    ImGui::Text("%s", titles[g_section]);
+    ImGui::SetWindowFontScale(1.f);
+    ImGui::PopStyleColor();
+    ImGui::Dummy({0.f,6.f});
+
+    // Scrollable cards area
+    const float logH    = 155.f;
+    float       cardAreaH = ImGui::GetContentRegionAvail().y - logH - 20.f;
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, C_BG);
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.f);
+    ImGui::BeginChild("##ca", {-1.f, cardAreaH}, false);
+    if      (g_section == 0) DrawCleanGrid(g_systemTweaks);
+    else if (g_section == 1) DrawCleanGrid(g_networkTweaks);
+    else if (g_section == 2) DrawCleanGrid(g_gpuTweaks);
+    else if (g_section == 3) DrawGamesGrid();
+    else {
+        ImGui::Dummy({0.f,8.f});
+        ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
+        ImGui::TextWrapped("Removes temporary files to free up disk space and improve load times.");
+        ImGui::PopStyleColor();
+        ImGui::Dummy({0.f,14.f});
+        if (CardButton("##cln", "  Clean Temp Files", {220.f,50.f}, busy))
+            RunAsync([](){CleanTempFiles(g_app.progress, MakeLog());});
+        ImGui::Dummy({0.f,14.f});
+        ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
+        ImGui::TextUnformatted("Targets:");
+        ImGui::PopStyleColor();
+        const char* flds[] = {"%TEMP%","C:\\Windows\\Temp",
+                              "C:\\Windows\\Prefetch","%LOCALAPPDATA%\\Temp"};
+        for (auto f : flds) {
+            ImGui::PushStyleColor(ImGuiCol_Text, C_REDD);
+            ImGui::Text("  * %s", f);
+            ImGui::PopStyleColor();
+        }
+    }
+    ImGui::EndChild();
+    ImGui::PopStyleVar(); ImGui::PopStyleColor();
+
+    // Log panel
+    ImGui::Dummy({0.f,4.f});
+    ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
+    ImGui::TextUnformatted("Output");
+    ImGui::PopStyleColor();
+    ImGui::SameLine(0.f,8.f);
+    if (ImGui::SmallButton("Clear")) g_app.clearLog();
+    ImGui::SameLine(0.f,6.f);
+    ImGui::PushStyleColor(ImGuiCol_Text, C_DIM2);
+    ImGui::Text("%zu lines", (size_t)g_app.logLines.size());
+    ImGui::PopStyleColor();
+    DrawLog(ImGui::GetContentRegionAvail().y - 4.f);
 
     DrawRebootDialog();
     ImGui::End();
