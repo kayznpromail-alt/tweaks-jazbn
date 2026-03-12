@@ -353,20 +353,34 @@ static bool PrimaryButton(const char* label, ImVec2 sz = {0,0}) {
     return hit;
 }
 
-// ─── Spinner ──────────────────────────────────────────────────────────────
-static void DrawSpinner(ImDrawList* dl, ImVec2 C, float r, float thick, float t) {
-    const int N = 64; const float arc = 0.55f; const float spd = 2.0f;
-    for (int i = 0; i < (int)(N*arc); i++) {
-        float a0 = t*spd + (float)i/N * IM_PI*2.f;
-        float a1 = t*spd + (float)(i+1)/N * IM_PI*2.f;
-        float alpha = (float)i / (N*arc);
-        ImVec2 p0 = {C.x+cosf(a0)*r, C.y+sinf(a0)*r};
-        ImVec2 p1 = {C.x+cosf(a1)*r, C.y+sinf(a1)*r};
-        dl->AddLine(p0, p1, IM_COL32(0,185,210,(ImU8)(alpha*230)), thick);
+// ─── Spinner arc helper ───────────────────────────────────────────────────
+static void DrawArc(ImDrawList* dl, ImVec2 C, float r, float thick,
+                    float angleStart, float arcFrac, float spd, float t,
+                    ImU32 colBright, ImU32 colDim) {
+    const int N = 80;
+    int segs = (int)(N * arcFrac);
+    float base = t * spd + angleStart;
+    for (int i = 0; i < segs; i++) {
+        float a0 = base + (float)i / N * IM_PI * 2.f;
+        float a1 = base + (float)(i + 1) / N * IM_PI * 2.f;
+        float al = (float)i / segs;
+        ImVec2 p0 = { C.x + cosf(a0)*r, C.y + sinf(a0)*r };
+        ImVec2 p1 = { C.x + cosf(a1)*r, C.y + sinf(a1)*r };
+        // interpolate colour dim -> bright
+        ImU32 cd = colDim, cb = colBright;
+        auto lerp8 = [](int a, int b, float f) { return (ImU8)(a + (int)((b-a)*f)); };
+        ImU32 col = IM_COL32(
+            lerp8((cd>>IM_COL32_R_SHIFT)&0xFF, (cb>>IM_COL32_R_SHIFT)&0xFF, al),
+            lerp8((cd>>IM_COL32_G_SHIFT)&0xFF, (cb>>IM_COL32_G_SHIFT)&0xFF, al),
+            lerp8((cd>>IM_COL32_B_SHIFT)&0xFF, (cb>>IM_COL32_B_SHIFT)&0xFF, al),
+            lerp8((cd>>IM_COL32_A_SHIFT)&0xFF, (cb>>IM_COL32_A_SHIFT)&0xFF, al));
+        dl->AddLine(p0, p1, col, thick);
     }
-    float ta = t*spd + arc*IM_PI*2.f;
-    ImVec2 tip = {C.x+cosf(ta)*r, C.y+sinf(ta)*r};
-    dl->AddCircleFilled(tip, thick*1.6f, IM_COL32(0,220,245,255));
+    // bright tip dot + simple glow (just 2 circles)
+    float ta = base + arcFrac * IM_PI * 2.f;
+    ImVec2 tip = { C.x + cosf(ta)*r, C.y + sinf(ta)*r };
+    dl->AddCircleFilled(tip, thick * 2.6f, IM_COL32(0, 200, 230, 55));
+    dl->AddCircleFilled(tip, thick * 1.4f, colBright);
 }
 
 // ─── Loading screen ───────────────────────────────────────────────────────
@@ -388,221 +402,157 @@ static void DrawLoadingScreen() {
 
     ImDrawList* dl = ImGui::GetWindowDrawList();
     float W = io.DisplaySize.x, H = io.DisplaySize.y;
-    ImVec2 cx = {W*0.5f, H*0.5f};
+    ImVec2 cx = { W * 0.5f, H * 0.5f };
 
-    // ── Background ────────────────────────────────────────────────────────
-    // Two layers of diagonal moving lines
-    float off1 = fmodf(t * 14.f, 48.f);
-    float off2 = fmodf(t *  6.f, 88.f);
-    for (float x = -H + off1; x < W + H; x += 48.f)
-        dl->AddLine({x, 0.f}, {x+H, H}, IM_COL32(0,155,180,4), 1.f);
-    for (float x = -H - off2; x < W + H; x += 88.f)
-        dl->AddLine({x, 0.f}, {x+H, H}, IM_COL32(0,195,215,5), 1.f);
+    // ── Background: subtle diagonal lines ────────────────────────────────
+    float off1 = fmodf(t * 12.f, 56.f);
+    for (float x = -H + off1; x < W + H; x += 56.f)
+        dl->AddLine({x, 0.f}, {x + H, H}, IM_COL32(0, 145, 170, 5), 1.f);
 
-    // Horizontal scan-lines
-    for (float y = 0.f; y < H; y += 4.f)
-        dl->AddLine({0.f, y}, {W, y}, IM_COL32(0,0,0,10), 1.f);
+    // Scanlines (lighter touch)
+    for (float y = 0.f; y < H; y += 6.f)
+        dl->AddLine({0.f, y}, {W, y}, IM_COL32(0, 0, 0, 8), 1.f);
 
-    // Procedural floating particles (no state, time-seeded)
-    for (int i = 0; i < 70; i++) {
+    // ── Particles ─────────────────────────────────────────────────────────
+    for (int i = 0; i < 55; i++) {
         float seed  = (float)i * 137.508f;
         float xi    = fmodf(seed * 0.618f, W);
-        float speed = 18.f + fmodf(seed * 0.382f, 45.f);
-        float yi    = H - fmodf(t * speed + seed * 6.7f, H + 20.f);
-        float life  = fmodf(t * 0.4f + seed * 0.1f, 1.f);
-        float alpha = life < 0.2f ? life*5.f : (life > 0.8f ? (1.f-life)*5.f : 1.f);
-        float r     = 0.7f + fmodf(seed * 0.14f, 1.8f);
-        int   a     = (int)(alpha * 50.f);
-        if (a > 2) dl->AddCircleFilled({xi, yi}, r, IM_COL32(0,195,220,a));
+        float spd   = 20.f + fmodf(seed * 0.37f, 38.f);
+        float yi    = H - fmodf(t * spd + seed * 5.5f, H + 24.f);
+        float life  = fmodf(t * 0.38f + seed * 0.09f, 1.f);
+        float alpha = (life < 0.25f) ? life * 4.f : (life > 0.75f ? (1.f - life) * 4.f : 1.f);
+        float r     = 0.8f + fmodf(seed * 0.13f, 1.6f);
+        int   a     = (int)(alpha * 70.f);
+        if (a > 3) dl->AddCircleFilled({xi, yi}, r, IM_COL32(0, 190, 215, a));
     }
 
-    // Screen corner L-decorations
-    const float cs2 = 26.f;
-    const ImU32 cCol2 = IM_COL32(0,195,225,130);
-    dl->AddLine({2.f,2.f},{cs2,2.f},cCol2,1.5f); dl->AddLine({2.f,2.f},{2.f,cs2},cCol2,1.5f);
-    dl->AddLine({W-cs2,2.f},{W-2.f,2.f},cCol2,1.5f); dl->AddLine({W-2.f,2.f},{W-2.f,cs2},cCol2,1.5f);
-    dl->AddLine({2.f,H-cs2},{2.f,H-2.f},cCol2,1.5f); dl->AddLine({2.f,H-2.f},{cs2,H-2.f},cCol2,1.5f);
-    dl->AddLine({W-2.f,H-cs2},{W-2.f,H-2.f},cCol2,1.5f); dl->AddLine({W-cs2,H-2.f},{W-2.f,H-2.f},cCol2,1.5f);
+    // ── Corner brackets ───────────────────────────────────────────────────
+    const float cs = 22.f;
+    const ImU32 cc = IM_COL32(0, 185, 215, 120);
+    dl->AddLine({3.f,3.f},{cs,3.f},cc,1.5f);   dl->AddLine({3.f,3.f},{3.f,cs},cc,1.5f);
+    dl->AddLine({W-cs,3.f},{W-3.f,3.f},cc,1.5f); dl->AddLine({W-3.f,3.f},{W-3.f,cs},cc,1.5f);
+    dl->AddLine({3.f,H-cs},{3.f,H-3.f},cc,1.5f); dl->AddLine({3.f,H-3.f},{cs,H-3.f},cc,1.5f);
+    dl->AddLine({W-3.f,H-cs},{W-3.f,H-3.f},cc,1.5f); dl->AddLine({W-cs,H-3.f},{W-3.f,H-3.f},cc,1.5f);
 
-    // ── Spinner composition ───────────────────────────────────────────────
-    const float R0 = 58.f; // outer ring radius
-    ImGui::SetWindowFontScale(2.1f);
-    float lineH2 = ImGui::GetTextLineHeight();
+    // ── Layout math ───────────────────────────────────────────────────────
+    const float R0 = 54.f;
+    ImGui::SetWindowFontScale(2.0f);
+    float titleH = ImGui::GetTextLineHeight();
     ImGui::SetWindowFontScale(1.f);
-    float subH2  = ImGui::GetTextLineHeight();
-    float barH2  = 14.f, statusH2 = subH2;
-    float totalH2 = R0*2.f + 16.f + lineH2 + 5.f + subH2 + 20.f + barH2 + 12.f + statusH2;
-    float startY2 = cx.y - totalH2 * 0.5f;
-    ImVec2 sc = {cx.x, startY2 + R0};
+    float subH   = ImGui::GetTextLineHeight();
+    float barH   = 6.f;
+    float totalH = R0*2.f + 18.f + titleH + 6.f + subH + 22.f + barH + 14.f + subH;
+    float startY = cx.y - totalH * 0.5f;
+    ImVec2 sc    = { cx.x, startY + R0 };
 
-    // Radial ambient glow
-    for (int i = 7; i >= 0; i--) {
-        float rr = R0 + 8.f + i*20.f;
-        float aa = 0.09f - i*0.011f + 0.022f*sinf(t*0.7f + i*0.28f);
-        if (aa > 0.f)
-            dl->AddCircleFilled(sc, rr, IM_COL32(0,155,185,(int)(aa*255)), 72);
+    // ── Radial glow (clean, uses AddCircle outlines — no banding) ────────
+    float pulse = 0.5f + 0.5f * sinf(t * 2.6f);
+    for (int i = 6; i >= 1; i--) {
+        float rr = R0 + (float)i * 14.f;
+        int   aa = (int)((0.055f - i * 0.007f + pulse * 0.012f) * 255.f);
+        if (aa > 0)
+            dl->AddCircle(sc, rr, IM_COL32(0, 160, 195, aa), 72, (float)i * 2.2f);
     }
 
-    // ── Outer ring (large, slow, 3/4 arc) ────────────────────────────────
-    {
-        const int N = 90; const float arc = 0.74f; const float spd = 0.65f;
-        float base = t * spd;
-        for (int i = 0; i < (int)(N*arc); i++) {
-            float a0 = base + (float)i/N * IM_PI*2.f;
-            float a1 = base + (float)(i+1)/N * IM_PI*2.f;
-            float al = (float)i/(N*arc);
-            ImVec2 p0 = {sc.x+cosf(a0)*R0, sc.y+sinf(a0)*R0};
-            ImVec2 p1 = {sc.x+cosf(a1)*R0, sc.y+sinf(a1)*R0};
-            dl->AddLine(p0, p1, IM_COL32(0,195,220,(int)(al*210)), 2.2f);
-        }
-        float ta = base + arc*IM_PI*2.f;
-        ImVec2 tip = {sc.x+cosf(ta)*R0, sc.y+sinf(ta)*R0};
-        for (int i = 4; i >= 1; i--)
-            dl->AddCircleFilled(tip, i*2.8f, IM_COL32(0,215,240,(int)(50.f/i)));
-        dl->AddCircleFilled(tip, 3.f, IM_COL32(0,240,255,255));
-    }
+    // ── Spinners ──────────────────────────────────────────────────────────
+    // Outer: slow, 3/4 arc
+    DrawArc(dl, sc, R0, 2.0f, 0.f, 0.76f,  0.6f, t,
+            IM_COL32(0, 220, 250, 255), IM_COL32(0, 80, 100, 0));
+    // Mid: counter-rotating, 1/2 arc
+    DrawArc(dl, sc, R0 * 0.70f, 1.5f, IM_PI * 0.5f, 0.50f, -1.2f, t,
+            IM_COL32(0, 175, 205, 220), IM_COL32(0, 50, 70, 0));
+    // Inner: fast tiny arc
+    DrawArc(dl, sc, R0 * 0.38f, 1.1f, IM_PI, 0.40f, 2.8f, t,
+            IM_COL32(0, 210, 240, 190), IM_COL32(0, 40, 55, 0));
 
-    // ── Mid ring (counter-rotating, 1/2 arc) ─────────────────────────────
-    {
-        const int N = 64; const float arc = 0.50f; const float spd = 1.3f;
-        float base = -t*spd + 0.8f;
-        float R1 = R0 * 0.68f;
-        for (int i = 0; i < (int)(N*arc); i++) {
-            float a0 = base + (float)i/N * IM_PI*2.f;
-            float a1 = base + (float)(i+1)/N * IM_PI*2.f;
-            float al = (float)i/(N*arc);
-            ImVec2 p0 = {sc.x+cosf(a0)*R1, sc.y+sinf(a0)*R1};
-            ImVec2 p1 = {sc.x+cosf(a1)*R1, sc.y+sinf(a1)*R1};
-            dl->AddLine(p0, p1, IM_COL32(0,160,192,(int)(al*165)), 1.6f);
-        }
-        float ta = base + arc*IM_PI*2.f;
-        ImVec2 tip2 = {sc.x+cosf(ta)*R1, sc.y+sinf(ta)*R1};
-        dl->AddCircleFilled(tip2, 2.5f, IM_COL32(0,200,228,220));
-    }
-
-    // ── Inner orbiting dots ───────────────────────────────────────────────
-    {
-        float R2 = R0 * 0.36f;
-        for (int i = 0; i < 10; i++) {
-            float ang = t*2.8f + (float)i/10.f * IM_PI*2.f;
-            float al  = 0.35f + 0.65f*((float)i/10.f);
-            float dot2 = 0.5f + fmodf((float)i*0.618f, 0.5f);
-            dl->AddCircleFilled({sc.x+cosf(ang)*R2, sc.y+sinf(ang)*R2},
-                dot2*2.f, IM_COL32(0,195,220,(int)(al*195)));
-        }
-    }
-
-    // ── Center pulsing glow + logo ────────────────────────────────────────
-    float pulse2 = 0.6f + 0.4f*sinf(t*4.2f);
-    for (int i = 5; i >= 1; i--)
-        dl->AddCircleFilled(sc, i*4.5f*pulse2, IM_COL32(0,205,235,(int)(12.f/i)));
+    // ── Center dot ───────────────────────────────────────────────────────
     if (g_logoSRV) {
-        const float ls2 = 34.f;
-        dl->AddCircleFilled(sc, ls2*0.72f, IM_COL32(4,14,18,185), 32);
+        const float ls = 30.f;
+        dl->AddCircleFilled(sc, ls * 0.75f, IM_COL32(3, 10, 14, 200), 40);
         dl->AddImage((ImTextureID)g_logoSRV,
-            {sc.x-ls2*.5f, sc.y-ls2*.5f},{sc.x+ls2*.5f, sc.y+ls2*.5f});
+            {sc.x - ls*0.5f, sc.y - ls*0.5f}, {sc.x + ls*0.5f, sc.y + ls*0.5f});
     } else {
-        dl->AddCircleFilled(sc, 5.f*pulse2, IM_COL32(0,230,255,230));
+        float pr = 4.f + 2.f * pulse;
+        dl->AddCircleFilled(sc, pr + 6.f, IM_COL32(0, 180, 210, 30), 24);
+        dl->AddCircleFilled(sc, pr,        IM_COL32(0, 225, 255, 220), 24);
     }
 
     // ── Brand name ────────────────────────────────────────────────────────
-    float curY2 = startY2 + R0*2.f + 16.f;
-    ImGui::SetWindowFontScale(2.1f);
+    float curY = startY + R0 * 2.f + 18.f;
+    ImGui::SetWindowFontScale(2.0f);
     {
         const char* b1 = "EMINENCE"; const char* b2 = " TWEAK";
-        float bW3 = ImGui::CalcTextSize(b1).x + ImGui::CalcTextSize(b2).x;
-        ImGui::SetCursorScreenPos({cx.x - bW3*0.5f, curY2});
-        ImGui::PushStyleColor(ImGuiCol_Text, C_TEXT);
-        ImGui::Text("%s", b1);
-        ImGui::PopStyleColor();
-        ImGui::SameLine(0.f,0.f);
-        ImGui::PushStyleColor(ImGuiCol_Text, C_ACC2);
-        ImGui::Text("%s", b2);
-        ImGui::PopStyleColor();
-        curY2 += lineH2 + 5.f;
+        float bW = ImGui::CalcTextSize(b1).x + ImGui::CalcTextSize(b2).x;
+        ImGui::SetCursorScreenPos({cx.x - bW * 0.5f, curY});
+        ImGui::PushStyleColor(ImGuiCol_Text, C_TEXT);  ImGui::Text("%s", b1); ImGui::PopStyleColor();
+        ImGui::SameLine(0.f, 0.f);
+        ImGui::PushStyleColor(ImGuiCol_Text, C_ACC2);  ImGui::Text("%s", b2); ImGui::PopStyleColor();
+        curY += titleH + 6.f;
     }
     ImGui::SetWindowFontScale(1.f);
     {
-        const char* sub2 = "GAMING PC OPTIMIZER";
-        float sw2 = ImGui::CalcTextSize(sub2).x;
-        ImGui::SetCursorScreenPos({cx.x - sw2*0.5f, curY2});
+        const char* sub = "GAMING PC OPTIMIZER";
+        float sw = ImGui::CalcTextSize(sub).x;
+        ImGui::SetCursorScreenPos({cx.x - sw * 0.5f, curY});
         ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
-        ImGui::Text("%s", sub2);
+        ImGui::Text("%s", sub);
         ImGui::PopStyleColor();
-        curY2 += subH2 + 20.f;
+        curY += subH + 22.f;
     }
 
-    // ── Progress bar with brackets + scan highlight ───────────────────────
-    float barW3 = 330.f;
-    float bX3   = cx.x - barW3*0.5f;
-    float bY3   = curY2;
-    float bH3   = 5.f;
+    // ── Progress bar ──────────────────────────────────────────────────────
+    const float barW = 320.f;
+    float bX = cx.x - barW * 0.5f;
+    float bY = curY;
 
-    // Corner brackets
-    float brkS2 = 9.f;
-    ImU32 brkC2 = IM_COL32(0,155,180,110);
-    dl->AddLine({bX3,bY3},{bX3+brkS2,bY3},brkC2,1.f);
-    dl->AddLine({bX3,bY3},{bX3,bY3+brkS2},brkC2,1.f);
-    dl->AddLine({bX3+barW3-brkS2,bY3},{bX3+barW3,bY3},brkC2,1.f);
-    dl->AddLine({bX3+barW3,bY3},{bX3+barW3,bY3+brkS2},brkC2,1.f);
-    dl->AddLine({bX3,bY3+bH3},{bX3+brkS2,bY3+bH3},brkC2,1.f);
-    dl->AddLine({bX3,bY3+bH3-brkS2},{bX3,bY3+bH3},brkC2,1.f);
-    dl->AddLine({bX3+barW3-brkS2,bY3+bH3},{bX3+barW3,bY3+bH3},brkC2,1.f);
-    dl->AddLine({bX3+barW3,bY3+bH3-brkS2},{bX3+barW3,bY3+bH3},brkC2,1.f);
+    // Track bg
+    dl->AddRectFilled({bX, bY}, {bX + barW, bY + barH}, IM_COL32(0, 28, 38, 220), 4.f);
+    // Track border
+    dl->AddRect({bX, bY}, {bX + barW, bY + barH}, IM_COL32(0, 100, 125, 80), 4.f, 0, 1.f);
 
-    // Track
-    dl->AddRectFilled({bX3,bY3},{bX3+barW3,bY3+bH3}, IM_COL32(0,35,45,210), 3.f);
-    if (prog > 0.f) {
-        float fW = barW3 * prog;
-        // Glow under fill
-        for (int i = 3; i >= 1; i--) {
-            float e2 = i * 1.8f;
-            dl->AddRectFilled({bX3,bY3-e2},{bX3+fW,bY3+bH3+e2},
-                IM_COL32(0,185,210,(int)(18.f/i)), 3.f);
-        }
+    if (prog > 0.001f) {
+        float fW = barW * prog;
+        // Glow layer (single, clean)
+        dl->AddRectFilled({bX, bY - 3.f}, {bX + fW, bY + barH + 3.f},
+            IM_COL32(0, 170, 200, 40), 4.f);
+        // Fill gradient
         dl->AddRectFilledMultiColor(
-            {bX3,bY3},{bX3+fW,bY3+bH3},
-            IM_COL32(0,125,150,255), IM_COL32(0,215,242,255),
-            IM_COL32(0,215,242,255), IM_COL32(0,125,150,255));
-        // Scanning highlight
-        float scanX2 = bX3 + fmodf(t*90.f, fW);
-        dl->AddRectFilled({scanX2,bY3},{scanX2+22.f,bY3+bH3}, IM_COL32(255,255,255,28), 3.f);
-        // Head glow
-        for (int i = 4; i >= 1; i--)
-            dl->AddCircleFilled({bX3+fW, bY3+bH3*0.5f}, i*3.2f, IM_COL32(0,215,240,(int)(40.f/i)));
-        dl->AddCircleFilled({bX3+fW, bY3+bH3*0.5f}, 2.8f, IM_COL32(0,240,255,255));
+            {bX, bY}, {bX + fW, bY + barH},
+            IM_COL32(0, 110, 140, 255), IM_COL32(0, 210, 245, 255),
+            IM_COL32(0, 210, 245, 255), IM_COL32(0, 110, 140, 255));
+        // Head dot
+        float hy = bY + barH * 0.5f;
+        dl->AddCircleFilled({bX + fW, hy}, 5.5f, IM_COL32(0, 180, 215, 60), 20);
+        dl->AddCircleFilled({bX + fW, hy}, 3.0f, IM_COL32(0, 240, 255, 255), 20);
     }
-    curY2 += bH3 + 10.f;
+    curY += barH + 12.f;
 
     // ── Status + percent ──────────────────────────────────────────────────
-    int mi2 = std::min((int)(prog*kLoadMsgCount), kLoadMsgCount-1);
-    {
-        float mW2 = ImGui::CalcTextSize(kLoadMsgs[mi2]).x;
-        ImGui::SetCursorScreenPos({cx.x - mW2*0.5f, curY2});
-        ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
-        ImGui::Text("%s", kLoadMsgs[mi2]);
-        ImGui::PopStyleColor();
-    }
-    {
-        char pct2[10]; snprintf(pct2,sizeof(pct2),"%.0f%%",prog*100.f);
-        float pW2 = ImGui::CalcTextSize(pct2).x;
-        ImGui::SetCursorScreenPos({bX3+barW3-pW2, curY2});
-        ImGui::PushStyleColor(ImGuiCol_Text, C_ACC2);
-        ImGui::Text("%s", pct2);
-        ImGui::PopStyleColor();
-    }
+    int mi = std::min((int)(prog * kLoadMsgCount), kLoadMsgCount - 1);
+    float mW = ImGui::CalcTextSize(kLoadMsgs[mi]).x;
+    ImGui::SetCursorScreenPos({cx.x - mW * 0.5f, curY});
+    ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
+    ImGui::Text("%s", kLoadMsgs[mi]);
+    ImGui::PopStyleColor();
+
+    char pct[10]; snprintf(pct, sizeof(pct), "%.0f%%", prog * 100.f);
+    float pW = ImGui::CalcTextSize(pct).x;
+    ImGui::SetCursorScreenPos({bX + barW - pW, curY});
+    ImGui::PushStyleColor(ImGuiCol_Text, C_ACC2);
+    ImGui::Text("%s", pct);
+    ImGui::PopStyleColor();
 
     // ── Bottom info ───────────────────────────────────────────────────────
-    ImGui::SetCursorPos({18.f, H-26.f});
+    ImGui::SetCursorPos({16.f, H - 24.f});
     ImGui::PushStyleColor(ImGuiCol_Text, C_DIM2);
     ImGui::Text("discord.gg/eminencehardware");
     ImGui::PopStyleColor();
     {
-        const char* ver2 = "v3.0";
-        float vW2 = ImGui::CalcTextSize(ver2).x;
-        ImGui::SetCursorPos({W-vW2-18.f, H-26.f});
+        const char* ver = "v3.0";
+        float vW = ImGui::CalcTextSize(ver).x;
+        ImGui::SetCursorPos({W - vW - 16.f, H - 24.f});
         ImGui::PushStyleColor(ImGuiCol_Text, C_DIM2);
-        ImGui::Text("%s", ver2);
+        ImGui::Text("%s", ver);
         ImGui::PopStyleColor();
     }
 
