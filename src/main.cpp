@@ -387,66 +387,131 @@ static void DrawLoadingScreen() {
     ImGui::PopStyleColor();
 
     ImDrawList* dl = ImGui::GetWindowDrawList();
-    ImVec2 cx = {io.DisplaySize.x*0.5f, io.DisplaySize.y*0.5f};
+    float W = io.DisplaySize.x, H = io.DisplaySize.y;
+    ImVec2 cx = {W*0.5f, H*0.5f};
 
-    // Dot grid background
-    for (int x = 0; x < (int)io.DisplaySize.x; x += 52)
-        for (int y = 0; y < (int)io.DisplaySize.y; y += 52)
-            dl->AddCircleFilled({(float)x,(float)y}, 0.9f, IM_COL32(0,130,155,18));
+    // ── Background ────────────────────────────────────────────────────────
+    // Two layers of diagonal moving lines
+    float off1 = fmodf(t * 14.f, 48.f);
+    float off2 = fmodf(t *  6.f, 88.f);
+    for (float x = -H + off1; x < W + H; x += 48.f)
+        dl->AddLine({x, 0.f}, {x+H, H}, IM_COL32(0,155,180,4), 1.f);
+    for (float x = -H - off2; x < W + H; x += 88.f)
+        dl->AddLine({x, 0.f}, {x+H, H}, IM_COL32(0,195,215,5), 1.f);
 
-    // Radial ambient glow behind card
-    for (int i = 5; i >= 0; i--) {
-        float rr  = 180.f + i*55.f;
-        float aa  = 0.12f - i*0.018f + 0.035f*sinf(t*0.75f + i*0.4f);
+    // Horizontal scan-lines
+    for (float y = 0.f; y < H; y += 4.f)
+        dl->AddLine({0.f, y}, {W, y}, IM_COL32(0,0,0,10), 1.f);
+
+    // Procedural floating particles (no state, time-seeded)
+    for (int i = 0; i < 70; i++) {
+        float seed  = (float)i * 137.508f;
+        float xi    = fmodf(seed * 0.618f, W);
+        float speed = 18.f + fmodf(seed * 0.382f, 45.f);
+        float yi    = H - fmodf(t * speed + seed * 6.7f, H + 20.f);
+        float life  = fmodf(t * 0.4f + seed * 0.1f, 1.f);
+        float alpha = life < 0.2f ? life*5.f : (life > 0.8f ? (1.f-life)*5.f : 1.f);
+        float r     = 0.7f + fmodf(seed * 0.14f, 1.8f);
+        int   a     = (int)(alpha * 50.f);
+        if (a > 2) dl->AddCircleFilled({xi, yi}, r, IM_COL32(0,195,220,a));
+    }
+
+    // Screen corner L-decorations
+    const float cs2 = 26.f;
+    const ImU32 cCol2 = IM_COL32(0,195,225,130);
+    dl->AddLine({2.f,2.f},{cs2,2.f},cCol2,1.5f); dl->AddLine({2.f,2.f},{2.f,cs2},cCol2,1.5f);
+    dl->AddLine({W-cs2,2.f},{W-2.f,2.f},cCol2,1.5f); dl->AddLine({W-2.f,2.f},{W-2.f,cs2},cCol2,1.5f);
+    dl->AddLine({2.f,H-cs2},{2.f,H-2.f},cCol2,1.5f); dl->AddLine({2.f,H-2.f},{cs2,H-2.f},cCol2,1.5f);
+    dl->AddLine({W-2.f,H-cs2},{W-2.f,H-2.f},cCol2,1.5f); dl->AddLine({W-cs2,H-2.f},{W-2.f,H-2.f},cCol2,1.5f);
+
+    // ── Spinner composition ───────────────────────────────────────────────
+    const float R0 = 58.f; // outer ring radius
+    ImGui::SetWindowFontScale(2.1f);
+    float lineH2 = ImGui::GetTextLineHeight();
+    ImGui::SetWindowFontScale(1.f);
+    float subH2  = ImGui::GetTextLineHeight();
+    float barH2  = 14.f, statusH2 = subH2;
+    float totalH2 = R0*2.f + 16.f + lineH2 + 5.f + subH2 + 20.f + barH2 + 12.f + statusH2;
+    float startY2 = cx.y - totalH2 * 0.5f;
+    ImVec2 sc = {cx.x, startY2 + R0};
+
+    // Radial ambient glow
+    for (int i = 7; i >= 0; i--) {
+        float rr = R0 + 8.f + i*20.f;
+        float aa = 0.09f - i*0.011f + 0.022f*sinf(t*0.7f + i*0.28f);
         if (aa > 0.f)
-            dl->AddCircleFilled(cx, rr, IM_COL32(0,155,178,(int)(aa*255)), 96);
+            dl->AddCircleFilled(sc, rr, IM_COL32(0,155,185,(int)(aa*255)), 72);
     }
 
-    // ── Glass card ────────────────────────────────────────────────────────
-    const float cW = 340.f, cH = 310.f;
-    const float cX = cx.x - cW*0.5f, cY = cx.y - cH*0.5f;
-    const float cR = 14.f;
-
-    // Card drop shadow
-    for (int i = 3; i >= 0; i--) {
-        float e = 6.f + i*8.f;
-        dl->AddRectFilled({cX-e, cY-e}, {cX+cW+e, cY+cH+e},
-            IM_COL32(6,5,22,(int)((0.60f-i*0.14f)*255)), cR+e*0.6f);
+    // ── Outer ring (large, slow, 3/4 arc) ────────────────────────────────
+    {
+        const int N = 90; const float arc = 0.74f; const float spd = 0.65f;
+        float base = t * spd;
+        for (int i = 0; i < (int)(N*arc); i++) {
+            float a0 = base + (float)i/N * IM_PI*2.f;
+            float a1 = base + (float)(i+1)/N * IM_PI*2.f;
+            float al = (float)i/(N*arc);
+            ImVec2 p0 = {sc.x+cosf(a0)*R0, sc.y+sinf(a0)*R0};
+            ImVec2 p1 = {sc.x+cosf(a1)*R0, sc.y+sinf(a1)*R0};
+            dl->AddLine(p0, p1, IM_COL32(0,195,220,(int)(al*210)), 2.2f);
+        }
+        float ta = base + arc*IM_PI*2.f;
+        ImVec2 tip = {sc.x+cosf(ta)*R0, sc.y+sinf(ta)*R0};
+        for (int i = 4; i >= 1; i--)
+            dl->AddCircleFilled(tip, i*2.8f, IM_COL32(0,215,240,(int)(50.f/i)));
+        dl->AddCircleFilled(tip, 3.f, IM_COL32(0,240,255,255));
     }
 
-    // Card body
-    dl->AddRectFilled({cX,cY},{cX+cW,cY+cH}, IM_COL32(9,9,20,248), cR);
+    // ── Mid ring (counter-rotating, 1/2 arc) ─────────────────────────────
+    {
+        const int N = 64; const float arc = 0.50f; const float spd = 1.3f;
+        float base = -t*spd + 0.8f;
+        float R1 = R0 * 0.68f;
+        for (int i = 0; i < (int)(N*arc); i++) {
+            float a0 = base + (float)i/N * IM_PI*2.f;
+            float a1 = base + (float)(i+1)/N * IM_PI*2.f;
+            float al = (float)i/(N*arc);
+            ImVec2 p0 = {sc.x+cosf(a0)*R1, sc.y+sinf(a0)*R1};
+            ImVec2 p1 = {sc.x+cosf(a1)*R1, sc.y+sinf(a1)*R1};
+            dl->AddLine(p0, p1, IM_COL32(0,160,192,(int)(al*165)), 1.6f);
+        }
+        float ta = base + arc*IM_PI*2.f;
+        ImVec2 tip2 = {sc.x+cosf(ta)*R1, sc.y+sinf(ta)*R1};
+        dl->AddCircleFilled(tip2, 2.5f, IM_COL32(0,200,228,220));
+    }
 
-    // Inner top sheen (glass highlight)
-    dl->AddRectFilled({cX+1.f,cY+1.f},{cX+cW-1.f,cY+28.f},
-        IM_COL32(0,190,220,8), cR);
+    // ── Inner orbiting dots ───────────────────────────────────────────────
+    {
+        float R2 = R0 * 0.36f;
+        for (int i = 0; i < 10; i++) {
+            float ang = t*2.8f + (float)i/10.f * IM_PI*2.f;
+            float al  = 0.35f + 0.65f*((float)i/10.f);
+            float dot2 = 0.5f + fmodf((float)i*0.618f, 0.5f);
+            dl->AddCircleFilled({sc.x+cosf(ang)*R2, sc.y+sinf(ang)*R2},
+                dot2*2.f, IM_COL32(0,195,220,(int)(al*195)));
+        }
+    }
 
-    // Card border (pulsing)
-    float bp = 0.38f + 0.18f*sinf(t*1.3f);
-    dl->AddRect({cX,cY},{cX+cW,cY+cH},
-        IM_COL32(0,165,188,(int)(bp*80)), cR, 0, 1.2f);
-
-    // Top accent line
-    dl->AddLine({cX+cR, cY+0.7f},{cX+cW-cR, cY+0.7f},
-        IM_COL32(0,200,228,(int)(bp*140)), 1.5f);
-
-    // ── Content inside card ───────────────────────────────────────────────
-    float iY = cY + 30.f;
-
-    // Logo
+    // ── Center pulsing glow + logo ────────────────────────────────────────
+    float pulse2 = 0.6f + 0.4f*sinf(t*4.2f);
+    for (int i = 5; i >= 1; i--)
+        dl->AddCircleFilled(sc, i*4.5f*pulse2, IM_COL32(0,205,235,(int)(12.f/i)));
     if (g_logoSRV) {
-        const float ls = 44.f;
-        float lx = cx.x - ls*0.5f;
-        dl->AddImage((ImTextureID)g_logoSRV, {lx, iY}, {lx+ls, iY+ls});
-        iY += ls + 14.f;
+        const float ls2 = 34.f;
+        dl->AddCircleFilled(sc, ls2*0.72f, IM_COL32(4,14,18,185), 32);
+        dl->AddImage((ImTextureID)g_logoSRV,
+            {sc.x-ls2*.5f, sc.y-ls2*.5f},{sc.x+ls2*.5f, sc.y+ls2*.5f});
+    } else {
+        dl->AddCircleFilled(sc, 5.f*pulse2, IM_COL32(0,230,255,230));
     }
 
-    // Brand name
-    ImGui::SetWindowFontScale(2.0f);
+    // ── Brand name ────────────────────────────────────────────────────────
+    float curY2 = startY2 + R0*2.f + 16.f;
+    ImGui::SetWindowFontScale(2.1f);
     {
         const char* b1 = "EMINENCE"; const char* b2 = " TWEAK";
-        float bW = ImGui::CalcTextSize(b1).x + ImGui::CalcTextSize(b2).x;
-        ImGui::SetCursorScreenPos({cx.x - bW*0.5f, iY});
+        float bW3 = ImGui::CalcTextSize(b1).x + ImGui::CalcTextSize(b2).x;
+        ImGui::SetCursorScreenPos({cx.x - bW3*0.5f, curY2});
         ImGui::PushStyleColor(ImGuiCol_Text, C_TEXT);
         ImGui::Text("%s", b1);
         ImGui::PopStyleColor();
@@ -454,76 +519,92 @@ static void DrawLoadingScreen() {
         ImGui::PushStyleColor(ImGuiCol_Text, C_ACC2);
         ImGui::Text("%s", b2);
         ImGui::PopStyleColor();
-        iY += ImGui::GetTextLineHeight() + 4.f;
+        curY2 += lineH2 + 5.f;
     }
     ImGui::SetWindowFontScale(1.f);
     {
-        const char* sub = "GAMING PC OPTIMIZER";
-        float sW = ImGui::CalcTextSize(sub).x;
-        ImGui::SetCursorScreenPos({cx.x - sW*0.5f, iY});
+        const char* sub2 = "GAMING PC OPTIMIZER";
+        float sw2 = ImGui::CalcTextSize(sub2).x;
+        ImGui::SetCursorScreenPos({cx.x - sw2*0.5f, curY2});
         ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
-        ImGui::Text("%s", sub);
+        ImGui::Text("%s", sub2);
         ImGui::PopStyleColor();
-        iY += ImGui::GetTextLineHeight() + 10.f;
+        curY2 += subH2 + 20.f;
     }
 
-    // Thin separator inside card
-    dl->AddLine({cX+36.f, iY}, {cX+cW-36.f, iY}, IM_COL32(0,140,165,40), 0.8f);
-    iY += 10.f;
+    // ── Progress bar with brackets + scan highlight ───────────────────────
+    float barW3 = 330.f;
+    float bX3   = cx.x - barW3*0.5f;
+    float bY3   = curY2;
+    float bH3   = 5.f;
 
-    // Subtitle / version
-    {
-        const char* ver = "Gaming PC Optimizer  \xe2\x80\x94  v3.0";
-        float vW = ImGui::CalcTextSize(ver).x;
-        ImGui::SetCursorScreenPos({cx.x - vW*0.5f, iY});
-        ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
-        ImGui::Text("%s", ver);
-        ImGui::PopStyleColor();
-        iY += ImGui::GetTextLineHeight() + 22.f;
-    }
+    // Corner brackets
+    float brkS2 = 9.f;
+    ImU32 brkC2 = IM_COL32(0,155,180,110);
+    dl->AddLine({bX3,bY3},{bX3+brkS2,bY3},brkC2,1.f);
+    dl->AddLine({bX3,bY3},{bX3,bY3+brkS2},brkC2,1.f);
+    dl->AddLine({bX3+barW3-brkS2,bY3},{bX3+barW3,bY3},brkC2,1.f);
+    dl->AddLine({bX3+barW3,bY3},{bX3+barW3,bY3+brkS2},brkC2,1.f);
+    dl->AddLine({bX3,bY3+bH3},{bX3+brkS2,bY3+bH3},brkC2,1.f);
+    dl->AddLine({bX3,bY3+bH3-brkS2},{bX3,bY3+bH3},brkC2,1.f);
+    dl->AddLine({bX3+barW3-brkS2,bY3+bH3},{bX3+barW3,bY3+bH3},brkC2,1.f);
+    dl->AddLine({bX3+barW3,bY3+bH3-brkS2},{bX3+barW3,bY3+bH3},brkC2,1.f);
 
-    // Spinner (centered)
-    DrawSpinner(dl, {cx.x, iY + 33.f}, 30.f, 2.4f, t);
-    DrawSpinner(dl, {cx.x, iY + 33.f}, 18.f, 1.3f, -t*0.7f);
-    float dot = 0.55f + 0.45f*sinf(t*5.f);
-    dl->AddCircleFilled({cx.x, iY+33.f}, 3.2f*dot, IM_COL32(0,220,245,255));
-    iY += 76.f;
-
-    // Progress bar (gradient)
-    float bW2 = cW - 56.f;
-    float bX  = cX + 28.f;
-    dl->AddRectFilled({bX,iY},{bX+bW2,iY+2.5f}, IM_COL32(0,45,55,255), 2.f);
+    // Track
+    dl->AddRectFilled({bX3,bY3},{bX3+barW3,bY3+bH3}, IM_COL32(0,35,45,210), 3.f);
     if (prog > 0.f) {
+        float fW = barW3 * prog;
+        // Glow under fill
+        for (int i = 3; i >= 1; i--) {
+            float e2 = i * 1.8f;
+            dl->AddRectFilled({bX3,bY3-e2},{bX3+fW,bY3+bH3+e2},
+                IM_COL32(0,185,210,(int)(18.f/i)), 3.f);
+        }
         dl->AddRectFilledMultiColor(
-            {bX,iY},{bX+bW2*prog,iY+2.5f},
-            IM_COL32(0,140,165,255), IM_COL32(0,210,240,255),
-            IM_COL32(0,210,240,255), IM_COL32(0,140,165,255));
-        float tx = bX + bW2*prog;
-        dl->AddCircleFilled({tx, iY+1.2f}, 4.5f, IM_COL32(0,200,230,48));
-        dl->AddCircleFilled({tx, iY+1.2f}, 2.2f, IM_COL32(0,230,255,255));
+            {bX3,bY3},{bX3+fW,bY3+bH3},
+            IM_COL32(0,125,150,255), IM_COL32(0,215,242,255),
+            IM_COL32(0,215,242,255), IM_COL32(0,125,150,255));
+        // Scanning highlight
+        float scanX2 = bX3 + fmodf(t*90.f, fW);
+        dl->AddRectFilled({scanX2,bY3},{scanX2+22.f,bY3+bH3}, IM_COL32(255,255,255,28), 3.f);
+        // Head glow
+        for (int i = 4; i >= 1; i--)
+            dl->AddCircleFilled({bX3+fW, bY3+bH3*0.5f}, i*3.2f, IM_COL32(0,215,240,(int)(40.f/i)));
+        dl->AddCircleFilled({bX3+fW, bY3+bH3*0.5f}, 2.8f, IM_COL32(0,240,255,255));
     }
-    iY += 13.f;
+    curY2 += bH3 + 10.f;
 
-    // Status message + percent
-    int mi = std::min((int)(prog*kLoadMsgCount), kLoadMsgCount-1);
-    float mW = ImGui::CalcTextSize(kLoadMsgs[mi]).x;
-    ImGui::SetCursorScreenPos({cx.x - mW*0.5f, iY});
-    ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
-    ImGui::Text("%s", kLoadMsgs[mi]);
-    ImGui::PopStyleColor();
+    // ── Status + percent ──────────────────────────────────────────────────
+    int mi2 = std::min((int)(prog*kLoadMsgCount), kLoadMsgCount-1);
+    {
+        float mW2 = ImGui::CalcTextSize(kLoadMsgs[mi2]).x;
+        ImGui::SetCursorScreenPos({cx.x - mW2*0.5f, curY2});
+        ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
+        ImGui::Text("%s", kLoadMsgs[mi2]);
+        ImGui::PopStyleColor();
+    }
+    {
+        char pct2[10]; snprintf(pct2,sizeof(pct2),"%.0f%%",prog*100.f);
+        float pW2 = ImGui::CalcTextSize(pct2).x;
+        ImGui::SetCursorScreenPos({bX3+barW3-pW2, curY2});
+        ImGui::PushStyleColor(ImGuiCol_Text, C_ACC2);
+        ImGui::Text("%s", pct2);
+        ImGui::PopStyleColor();
+    }
 
-    char pct[10]; snprintf(pct,sizeof(pct),"%.0f%%",prog*100.f);
-    float pW = ImGui::CalcTextSize(pct).x;
-    ImGui::SetCursorScreenPos({cX+cW-28.f-pW, iY});
-    ImGui::PushStyleColor(ImGuiCol_Text, C_ACC);
-    ImGui::Text("%s", pct);
-    ImGui::PopStyleColor();
-
-    // Bottom discord
-    ImGui::SetCursorPos({18.f, io.DisplaySize.y-26.f});
+    // ── Bottom info ───────────────────────────────────────────────────────
+    ImGui::SetCursorPos({18.f, H-26.f});
     ImGui::PushStyleColor(ImGuiCol_Text, C_DIM2);
     ImGui::Text("discord.gg/eminencehardware");
     ImGui::PopStyleColor();
+    {
+        const char* ver2 = "v3.0";
+        float vW2 = ImGui::CalcTextSize(ver2).x;
+        ImGui::SetCursorPos({W-vW2-18.f, H-26.f});
+        ImGui::PushStyleColor(ImGuiCol_Text, C_DIM2);
+        ImGui::Text("%s", ver2);
+        ImGui::PopStyleColor();
+    }
 
     ImGui::End();
     if (g_loadTimer >= LOAD_DURATION) g_phase = AppPhase::Main;
