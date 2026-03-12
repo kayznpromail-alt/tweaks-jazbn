@@ -32,6 +32,9 @@
 #define IM_PI 3.14159265358979323846f
 #endif
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "dwmapi.lib")
@@ -49,6 +52,46 @@ static IDXGISwapChain*         g_pSwapChain           = nullptr;
 static UINT                    g_ResizeWidth           = 0;
 static UINT                    g_ResizeHeight          = 0;
 static ID3D11RenderTargetView* g_mainRenderTargetView  = nullptr;
+
+// ─── Logo texture ─────────────────────────────────────────────────────────
+static ID3D11ShaderResourceView* g_logoSRV = nullptr;
+static int g_logoW = 0, g_logoH = 0;
+
+static void LoadLogoTexture() {
+    char exePath[MAX_PATH] = {};
+    GetModuleFileNameA(nullptr, exePath, MAX_PATH);
+    char* last = strrchr(exePath, '\\');
+    if (last) *(last + 1) = '\0';
+    char path[MAX_PATH];
+    snprintf(path, sizeof(path), "%sassets\\logo.png", exePath);
+
+    int w, h, ch;
+    unsigned char* data = stbi_load(path, &w, &h, &ch, 4);
+    if (!data) return;
+
+    D3D11_TEXTURE2D_DESC td = {};
+    td.Width = (UINT)w; td.Height = (UINT)h;
+    td.MipLevels = 1; td.ArraySize = 1;
+    td.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    td.SampleDesc.Count = 1;
+    td.Usage = D3D11_USAGE_DEFAULT;
+    td.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+    D3D11_SUBRESOURCE_DATA sd = {};
+    sd.pSysMem = data; sd.SysMemPitch = (UINT)(w * 4);
+
+    ID3D11Texture2D* tex = nullptr;
+    if (SUCCEEDED(g_pd3dDevice->CreateTexture2D(&td, &sd, &tex))) {
+        D3D11_SHADER_RESOURCE_VIEW_DESC srv = {};
+        srv.Format = td.Format;
+        srv.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        srv.Texture2D.MipLevels = 1;
+        g_pd3dDevice->CreateShaderResourceView(tex, &srv, &g_logoSRV);
+        tex->Release();
+        g_logoW = w; g_logoH = h;
+    }
+    stbi_image_free(data);
+}
 
 // ─── Phase ────────────────────────────────────────────────────────────────
 enum class AppPhase { Loading, Main };
@@ -304,12 +347,20 @@ static void DrawLoadingScreen() {
     dl->AddCircleFilled({C.x,C.y}, 14.f*dp, IM_COL32(180,20,20,50));
 
     // ── Logo ──────────────────────────────────────────────────────────────
-    ImGui::SetCursorPos({C.x-128.f, C.y-168.f});
+    if (g_logoSRV) {
+        const float logoSize = 110.f;
+        ImGui::SetCursorPos({C.x - logoSize * 0.5f, C.y - 200.f});
+        ImGui::Image((ImTextureID)g_logoSRV, {logoSize, logoSize});
+        ImGui::SetCursorPos({C.x - 128.f, C.y - 80.f});
+    } else {
+        ImGui::SetCursorPos({C.x-128.f, C.y-168.f});
+    }
     ImGui::SetWindowFontScale(2.4f);
     ImGui::PushStyleColor(ImGuiCol_Text, C_RED2);
     ImGui::Text("EMINENCE");
     ImGui::PopStyleColor();
-    ImGui::SetCursorPos({C.x-128.f, C.y-134.f});
+    float titleCurY = g_logoSRV ? C.y - 46.f : C.y - 134.f;
+    ImGui::SetCursorPos({C.x-128.f, titleCurY});
     ImGui::PushStyleColor(ImGuiCol_Text, C_TEXT);
     ImGui::Text("TWEAK");
     ImGui::PopStyleColor();
@@ -461,7 +512,15 @@ static bool DrawTitleBar(HWND hwnd) {
 
     // Logo
     float textY = (H - ImGui::GetTextLineHeight()*1.5f)*0.5f;
-    ImGui::SetCursorPos({16.f, textY});
+    float curX = 16.f;
+    if (g_logoSRV) {
+        const float icoSize = 30.f;
+        ImGui::SetCursorPos({curX, (H - icoSize) * 0.5f});
+        ImGui::Image((ImTextureID)g_logoSRV, {icoSize, icoSize});
+        ImGui::SameLine(0.f, 8.f);
+        curX = ImGui::GetCursorPosX();
+    }
+    ImGui::SetCursorPos({curX, textY});
     ImGui::SetWindowFontScale(1.25f);
     ImGui::PushStyleColor(ImGuiCol_Text, C_RED2);
     ImGui::Text("EMINENCE");
@@ -832,6 +891,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int) {
     ApplyTheme();
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX11_Init(g_pd3dDevice, g_pd3dDeviceContext);
+    LoadLogoTexture();
 
     // Font
     const char* ff[] = {
@@ -876,6 +936,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int) {
     ImGui_ImplDX11_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
+    if (g_logoSRV) { g_logoSRV->Release(); g_logoSRV = nullptr; }
     CleanupDeviceD3D();
     DestroyWindow(hwnd);
     UnregisterClassW(wc.lpszClassName,wc.hInstance);

@@ -19,6 +19,15 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(imgui)
 
+# ─── Fetch stb (stb_image) ────────────────────────────────────────────────
+FetchContent_Declare(
+    stb
+    GIT_REPOSITORY https://github.com/nothings/stb.git
+    GIT_TAG        master
+    GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(stb)
+
 # ─── ImGui sources ────────────────────────────────────────────────────────
 set(IMGUI_SOURCES
     ${imgui_SOURCE_DIR}/imgui.cpp
@@ -48,6 +57,7 @@ add_executable(EminenceTweak WIN32
 
 target_include_directories(EminenceTweak PRIVATE
     ${IMGUI_INCLUDES}
+    ${stb_SOURCE_DIR}
     src
 )
 
