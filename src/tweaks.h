@@ -1,10 +1,10 @@
 #pragma once
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#include <atomic>
 #include <string>
 #include <vector>
-#include <atomic>
 #include <functional>
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 
 // ─── Result of a single tweak command ─────────────────────────────────────
 struct TweakResult {
