@@ -139,6 +139,11 @@ static int      g_section      = 0;   // 0=System 1=Network 2=GPU 3=Cleanup
 static int      g_sectionShown = 0;   // section currently displayed
 static float    g_fadeAlpha    = 1.f; // cross-fade alpha
 static int      g_tab          = 0;   // 0=Tweaks 1=Undo Changes
+static float    g_tabSlider    = 0.f; // smooth tab indicator X (lerped)
+
+// ─── Click ripple ─────────────────────────────────────────────────────────
+struct Ripple { float t; ImVec2 pos; ImVec2 sz; };
+static Ripple g_ripple = {-1.f, {}, {}};
 
 // ─── Particle system ──────────────────────────────────────────────────────
 struct Particle { float x,y,vx,vy,life,maxLife,r; };
@@ -307,6 +312,18 @@ static LogCallback MakeLog() {
     return [](const std::string& m, bool ok){ g_app.addLog(m, ok); };
 }
 
+// ─── Glow helpers ────────────────────────────────────────────────────────
+// Draw layered fake-glow around a rect (no real blur, just alpha stacking)
+static void DrawRectGlow(ImDrawList* dl, ImVec2 mn, ImVec2 mx,
+                          ImU32 rgb, float layers = 5.f, float step = 2.8f) {
+    for (int i = (int)layers; i >= 1; i--) {
+        float e = i * step;
+        int   a = (int)(38.f / i);
+        dl->AddRectFilled({mn.x-e, mn.y-e}, {mx.x+e, mx.y+e},
+            (rgb & 0x00FFFFFF) | ((ImU32)a << 24), 8.f + e);
+    }
+}
+
 // ─── Button helpers ───────────────────────────────────────────────────────
 static bool AccentButton(const char* label, ImVec2 sz = {0,0}) {
     ImGui::PushStyleColor(ImGuiCol_Button,        C_CARD);
@@ -320,7 +337,8 @@ static bool AccentButton(const char* label, ImVec2 sz = {0,0}) {
     if (ImGui::IsItemHovered()) {
         auto rMin = ImGui::GetItemRectMin();
         auto rMax = ImGui::GetItemRectMax();
-        ImGui::GetWindowDrawList()->AddRect(rMin, rMax, IC(C_ACC, 0.70f), 6.f, 0, 1.5f);
+        DrawRectGlow(ImGui::GetWindowDrawList(), rMin, rMax,
+                     IM_COL32(0,195,220,255), 4.f, 2.5f);
     }
     return hit;
 }
@@ -468,7 +486,7 @@ static void DrawLoadingScreen() {
     DrawSpinner(dl, {cx.x, iY + 33.f}, 30.f, 2.4f, t);
     DrawSpinner(dl, {cx.x, iY + 33.f}, 18.f, 1.3f, -t*0.7f);
     float dot = 0.55f + 0.45f*sinf(t*5.f);
-    dl->AddCircleFilled({cx.x, iY+33.f}, 3.2f*dot, IM_COL32(165,145,255,255));
+    dl->AddCircleFilled({cx.x, iY+33.f}, 3.2f*dot, IM_COL32(0,220,245,255));
     iY += 76.f;
 
     // Progress bar (gradient)
@@ -513,7 +531,7 @@ static void DrawLoadingScreen() {
 
 // ─── Log panel ────────────────────────────────────────────────────────────
 static void DrawLog(float h) {
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.028f,0.026f,0.072f,1.f));
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.022f,0.035f,0.042f,1.f));
     ImGui::PushStyleColor(ImGuiCol_Border,  C_BORDER);
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.f);
     if (ImGui::BeginChild("##log",{-1.f,h},true,ImGuiWindowFlags_HorizontalScrollbar)) {
@@ -570,11 +588,12 @@ static bool NavItem(const char* label, bool active, float w) {
     return clicked;
 }
 
-// ─── Flat cyan button (EDGEY style) ──────────────────────────────────────
+// ─── Dark button with glow border (cheat-loader style) ───────────────────
 static bool CardButton(const char* id, const char* label, ImVec2 sz, bool disabled=false) {
-    ImDrawList* dl = ImGui::GetWindowDrawList();
-    ImVec2 pos     = ImGui::GetCursorScreenPos();
-    bool clicked   = false, hov = false;
+    ImDrawList* dl  = ImGui::GetWindowDrawList();
+    ImVec2 pos      = ImGui::GetCursorScreenPos();
+    ImVec2 bMax     = {pos.x+sz.x, pos.y+sz.y};
+    bool clicked    = false, hov = false;
     if (disabled) {
         ImGui::Dummy(sz);
     } else {
@@ -582,25 +601,59 @@ static bool CardButton(const char* id, const char* label, ImVec2 sz, bool disabl
         clicked = ImGui::IsItemClicked();
         hov     = ImGui::IsItemHovered();
     }
-    float a = disabled ? 0.35f : 1.f;
 
-    // Solid cyan fill
-    ImU32 bg = hov ? IM_COL32(0,190,215,(int)(255*a))
-                   : IM_COL32(0,160,182,(int)(255*a));
-    dl->AddRectFilled(pos, {pos.x+sz.x, pos.y+sz.y}, bg, 8.f);
+    // ── Outer glow (hover only) ──────────────────────────────────────────
+    if (hov && !disabled)
+        DrawRectGlow(dl, pos, bMax, IM_COL32(0,195,220,255), 5.f, 2.6f);
 
-    // Top inner highlight
+    // ── Fill: very dark, slight tint on hover ────────────────────────────
+    ImU32 fill = hov ? IM_COL32(8,28,34,255) : IM_COL32(6,17,21,255);
+    if (disabled) fill = IM_COL32(5,12,16,200);
+    dl->AddRectFilled(pos, bMax, fill, 7.f);
+
+    // ── Border ───────────────────────────────────────────────────────────
+    float t = (float)ImGui::GetTime();
+    float bA = disabled ? 0.12f
+             : (hov ? (0.7f + 0.15f*sinf(t*4.f)) : 0.28f);
+    dl->AddRect(pos, bMax, IM_COL32(0, 195, 220, (int)(bA*255)), 7.f, 0, hov?1.5f:1.f);
+
+    // ── Top glass line ────────────────────────────────────────────────────
     if (!disabled)
-        dl->AddRectFilled(pos, {pos.x+sz.x, pos.y+4.f},
-            IM_COL32(255,255,255,(int)(hov?22:14)), 8.f);
+        dl->AddLine({pos.x+8.f, pos.y+0.8f}, {bMax.x-8.f, pos.y+0.8f},
+            IM_COL32(255,255,255, hov?18:8), 1.f);
 
-    // Label centered
+    // ── Left accent bar ───────────────────────────────────────────────────
+    if (!disabled) {
+        float barA = hov ? 220 : 55;
+        dl->AddRectFilled({pos.x, pos.y+9.f}, {pos.x+2.f, bMax.y-9.f},
+            IM_COL32(0, 195, 220, (int)barA), 2.f);
+    }
+
+    // ── Click ripple ─────────────────────────────────────────────────────
+    if (clicked && !disabled)
+        g_ripple = {0.f, pos, sz};
+
+    // ── Label ─────────────────────────────────────────────────────────────
     ImVec2 tsz = ImGui::CalcTextSize(label);
     float tx = pos.x + (sz.x - tsz.x) * 0.5f;
     float ty = pos.y + (sz.y - tsz.y) * 0.5f;
-    ImU32 tc = disabled ? IM_COL32(200,235,240,90) : IM_COL32(255,255,255,255);
+    ImU32 tc = disabled ? IM_COL32(60,95,105,120)
+             : (hov ? IM_COL32(220,245,250,255) : IM_COL32(155,210,225,210));
     dl->AddText({tx, ty}, tc, label);
     return clicked;
+}
+
+// ─── Ripple updater (call once per frame from main draw) ─────────────────
+static void DrawRipple(ImDrawList* dl) {
+    if (g_ripple.t < 0.f) return;
+    float p = g_ripple.t / 0.45f;
+    if (p >= 1.f) { g_ripple.t = -1.f; return; }
+    float e = p * 10.f;
+    int   a = (int)((1.f-p) * 80.f);
+    ImVec2 mn = {g_ripple.pos.x-e, g_ripple.pos.y-e};
+    ImVec2 mx = {g_ripple.pos.x+g_ripple.sz.x+e, g_ripple.pos.y+g_ripple.sz.y+e};
+    dl->AddRect(mn, mx, IM_COL32(0,210,238,a), 7.f+e, 0, 1.5f);
+    g_ripple.t += ImGui::GetIO().DeltaTime;
 }
 
 // ─── 3-column grid of tweak groups ───────────────────────────────────────
@@ -707,12 +760,34 @@ static bool DrawHeader(HWND hwnd) {
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImVec2 wp = ImGui::GetWindowPos();
 
-    // Subtle cyan glow at top
-    dl->AddRectFilled({wp.x,wp.y},{wp.x+io.DisplaySize.x,wp.y+2.f},
-        IM_COL32(0,195,225,200));
-    // Bottom border
+    float t2 = (float)ImGui::GetTime();
+
+    // Animated top glow line — width pulses slightly
+    float pulse = 0.75f + 0.25f*sinf(t2*1.8f);
+    float glowW = io.DisplaySize.x * pulse;
+    float glowX = (io.DisplaySize.x - glowW) * 0.5f;
+    // Glow layers
+    for (int i = 3; i >= 0; i--) {
+        float e = i * 1.5f;
+        int a = (int)((i==0?180:55) / (i+1));
+        dl->AddRectFilled({wp.x+glowX-e, wp.y}, {wp.x+glowX+glowW+e, wp.y+1.5f+e},
+            IM_COL32(0,195,225,a));
+    }
+
+    // Bottom border with subtle glow
     dl->AddLine({wp.x, wp.y+HDR_H-1.f},{wp.x+io.DisplaySize.x, wp.y+HDR_H-1.f},
-        IM_COL32(0,120,145,60), 1.f);
+        IM_COL32(0,140,165,45), 1.f);
+    dl->AddLine({wp.x, wp.y+HDR_H-3.f},{wp.x+io.DisplaySize.x, wp.y+HDR_H-3.f},
+        IM_COL32(0,140,165,15), 1.f);
+
+    // Corner L-decorations (top-left & top-right)
+    const float cs = 18.f; // corner size
+    // Top-left
+    dl->AddLine({wp.x+1.f, wp.y+2.f},{wp.x+cs, wp.y+2.f},     IM_COL32(0,195,225,160), 1.5f);
+    dl->AddLine({wp.x+1.f, wp.y+2.f},{wp.x+1.f, wp.y+cs},     IM_COL32(0,195,225,160), 1.5f);
+    // Top-right
+    dl->AddLine({wp.x+io.DisplaySize.x-cs, wp.y+2.f},{wp.x+io.DisplaySize.x-1.f, wp.y+2.f}, IM_COL32(0,195,225,160), 1.5f);
+    dl->AddLine({wp.x+io.DisplaySize.x-1.f, wp.y+2.f},{wp.x+io.DisplaySize.x-1.f, wp.y+cs}, IM_COL32(0,195,225,160), 1.5f);
 
     // Logo — left side
     if (g_logoSRV) {
@@ -815,30 +890,52 @@ static void DrawTabBar() {
 
     const char* tabs[] = {"Tweaks","Undo Changes"};
     const float tabW   = 200.f;
-    const float totalW = tabW * 2.f + 16.f;
+    const float tabGap = 16.f;
+    const float totalW = tabW * 2.f + tabGap;
     float startX = (io.DisplaySize.x - totalW) * 0.5f;
 
+    // Smooth slider lerp
+    float targetX = wp.x + startX + g_tab * (tabW + tabGap);
+    g_tabSlider += (targetX - g_tabSlider) * ImGui::GetIO().DeltaTime * 16.f;
+    if (g_tabSlider == 0.f) g_tabSlider = targetX; // first frame init
+
     for (int i = 0; i < 2; i++) {
-        float tx = startX + i * (tabW + 16.f);
+        float tx = startX + i * (tabW + tabGap);
         ImVec2 tpos = {wp.x + tx, wp.y};
         bool active = (g_tab == i);
         bool hov = ImGui::IsMouseHoveringRect(tpos,{tpos.x+tabW, tpos.y+TAB_H});
 
-        ImU32 tc = active ? IM_COL32(0,215,240,255)
-                 : (hov   ? IM_COL32(160,215,225,255)
-                          : IM_COL32(100,130,145,255));
+        // Hover bg
+        if (hov && !active)
+            dl->AddRectFilled(tpos, {tpos.x+tabW, tpos.y+TAB_H}, IM_COL32(0,60,75,30));
+
+        ImU32 tc = active ? IM_COL32(0,220,245,255)
+                 : (hov   ? IM_COL32(140,200,215,255)
+                          : IM_COL32(80,115,130,220));
         dl->AddText({tpos.x + (tabW - ImGui::CalcTextSize(tabs[i]).x)*0.5f,
                      tpos.y + (TAB_H - ImGui::GetTextLineHeight())*0.5f}, tc, tabs[i]);
-        if (active)
-            dl->AddRectFilled({tpos.x + 20.f, tpos.y+TAB_H-2.5f},
-                              {tpos.x + tabW - 20.f, tpos.y+TAB_H},
-                              IM_COL32(0,200,230,255), 2.f);
         if (hov && ImGui::IsMouseClicked(0)) g_tab = i;
+    }
+
+    // Smooth sliding underline indicator
+    float t2 = (float)ImGui::GetTime();
+    float pulse = 0.85f + 0.15f*sinf(t2*3.f);
+    dl->AddRectFilled(
+        {g_tabSlider + 22.f, wp.y + TAB_H - 2.5f},
+        {g_tabSlider + tabW - 22.f, wp.y + TAB_H},
+        IM_COL32(0, (int)(200*pulse), (int)(235*pulse), 255), 2.f);
+    // Indicator glow
+    for (int i = 1; i <= 3; i++) {
+        float e = i * 1.8f;
+        dl->AddRectFilled(
+            {g_tabSlider + 22.f - e, wp.y + TAB_H - 2.5f - e*0.5f},
+            {g_tabSlider + tabW - 22.f + e, wp.y + TAB_H + e*0.3f},
+            IM_COL32(0, 200, 230, (int)(25.f/i)), 2.f);
     }
 
     // Bottom separator
     dl->AddLine({wp.x, wp.y+TAB_H-1.f},{wp.x+io.DisplaySize.x, wp.y+TAB_H-1.f},
-        IM_COL32(0,100,120,55), 1.f);
+        IM_COL32(0,80,100,40), 1.f);
 
     ImGui::End();
 }
@@ -868,14 +965,24 @@ static void DrawMainUI(HWND hwnd) {
         ImGuiWindowFlags_NoSavedSettings);
     ImGui::PopStyleVar(); ImGui::PopStyleColor();
 
-    // Background: subtle dot grid + particles
+    // Background: diagonal grid + scan-lines + particles + ripple
     {
         ImDrawList* bdl = ImGui::GetWindowDrawList();
         ImVec2 wp = ImGui::GetWindowPos();
-        for (float x = 0; x < ctW; x += 48.f)
-            for (float y = 0; y < ctH; y += 48.f)
-                bdl->AddCircleFilled({wp.x+x, wp.y+y}, 0.8f, IM_COL32(0,120,145,16));
+
+        // Diagonal lines
+        float off = fmodf((float)ImGui::GetTime()*8.f, 36.f);
+        for (float x = -ctH + off; x < ctW + ctH; x += 36.f)
+            bdl->AddLine({wp.x+x, wp.y}, {wp.x+x+ctH, wp.y+ctH},
+                         IM_COL32(0,160,185,5), 1.f);
+
+        // Subtle horizontal scan lines (every 4px)
+        for (float y = 0.f; y < ctH; y += 4.f)
+            bdl->AddLine({wp.x, wp.y+y}, {wp.x+ctW, wp.y+y},
+                         IM_COL32(0,0,0,8), 1.f);
+
         DrawParticles(bdl, wp, ctW, ctH);
+        DrawRipple(bdl);
     }
 
     bool busy = g_app.running.load();
@@ -1100,7 +1207,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int) {
     if (!fl) io.Fonts->AddFontDefault();
 
     // Clear colour matches C_BG
-    constexpr float CLEAR[4] = {0.024f, 0.022f, 0.064f, 1.f};
+    constexpr float CLEAR[4] = {0.030f, 0.028f, 0.050f, 1.f};
 
     MSG msg = {};
     while (msg.message != WM_QUIT) {
