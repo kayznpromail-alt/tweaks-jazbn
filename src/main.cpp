@@ -508,67 +508,6 @@ static void DrawCleanGrid(const std::vector<TweakGroup>& groups) {
     }
 }
 
-// ─── Games grid ──────────────────────────────────────────────────────────
-static void DrawGamesGrid() {
-    bool  busy  = g_app.running.load();
-    float avail = ImGui::GetContentRegionAvail().x;
-    float gap   = 8.f;
-
-    // ── Main games: Fortnite / Valorant / CoD (3-col, large cards) ────────
-    const size_t mainCount = 3;
-    float mainW = (avail - gap*2.f) / 3.f;
-    for (size_t i = 0; i < mainCount && i < g_gameTweaks.size(); i++) {
-        // Draw accent top-bar for featured games
-        ImDrawList* dl  = ImGui::GetWindowDrawList();
-        ImVec2 cardPos  = ImGui::GetCursorScreenPos();
-        std::string id  = "##gtm" + std::to_string(i);
-        bool clicked    = CardButton(id.c_str(), g_gameTweaks[i].name.c_str(), {mainW, 72.f}, busy);
-        // Subtle top accent line (brighter for featured)
-        dl->AddLine(cardPos, {cardPos.x+mainW, cardPos.y}, IC(C_RED, 0.55f), 1.5f);
-        if (clicked) {
-            RunAsync([n = g_gameTweaks[i].name]() {
-                for (auto& g : g_gameTweaks) if (g.name == n) {
-                    std::atomic<float> p = 0.f;
-                    ApplyGameTweak(g, p, MakeLog());
-                    g_app.progress.store(1.f); break;
-                }
-            });
-        }
-        if (i < mainCount-1) ImGui::SameLine(0.f, gap);
-    }
-    ImGui::Dummy({0.f, 8.f});
-
-    // ── Other games: CS2, Apex etc. (2-col, smaller cards) ────────────────
-    float cardW = (avail - gap) / 2.f;
-    int   col   = 0;
-    for (size_t i = mainCount; i < g_gameTweaks.size(); i++) {
-        std::string id = "##gts" + std::to_string(i);
-        if (CardButton(id.c_str(), g_gameTweaks[i].name.c_str(), {cardW, 50.f}, busy)) {
-            RunAsync([n = g_gameTweaks[i].name]() {
-                for (auto& g : g_gameTweaks) if (g.name == n) {
-                    std::atomic<float> p = 0.f;
-                    ApplyGameTweak(g, p, MakeLog());
-                    g_app.progress.store(1.f); break;
-                }
-            });
-        }
-        col++;
-        if (col < 2) ImGui::SameLine(0.f, gap); else { col=0; ImGui::Dummy({0.f,4.f}); }
-    }
-
-    ImGui::Dummy({0.f, 10.f});
-    if (CardButton("##gtall", "  Optimize ALL Games", {avail, 44.f}, busy)) {
-        RunAsync([]() {
-            float step = 1.f / (float)g_gameTweaks.size();
-            for (size_t i = 0; i < g_gameTweaks.size(); i++) {
-                std::atomic<float> p = 0.f;
-                ApplyGameTweak(g_gameTweaks[i], p, MakeLog());
-                g_app.progress.store((float)(i+1)*step);
-            }
-        });
-    }
-}
-
 // ─── Reboot dialog ────────────────────────────────────────────────────────
 static void DrawRebootDialog() {
     if (!g_app.showRebootDlg) return;
@@ -721,8 +660,8 @@ static void DrawMainUI(HWND hwnd) {
     ImGui::Dummy({0.f, 6.f});
 
     // Nav items
-    const char* sections[] = {"System","Network","GPU","Games","Cleanup"};
-    for (int i = 0; i < 5; i++) {
+    const char* sections[] = {"System","Network","GPU","Cleanup"};
+    for (int i = 0; i < 4; i++) {
         ImGui::SetCursorPosX(0.f);
         if (NavItem(sections[i], g_section==i, SBW-1.f)) g_section = i;
     }
@@ -790,8 +729,7 @@ static void DrawMainUI(HWND hwnd) {
 
     // Section header
     const char* titles[] = {
-        "System Tweaks","Network Tweaks","GPU / Driver Tweaks",
-        "Game Optimizations","Cleanup"
+        "System Tweaks","Network Tweaks","GPU / Driver Tweaks","Cleanup"
     };
     ImGui::Dummy({0.f,4.f});
     ImGui::PushStyleColor(ImGuiCol_Text, C_RED);
@@ -810,7 +748,6 @@ static void DrawMainUI(HWND hwnd) {
     if      (g_section == 0) DrawCleanGrid(g_systemTweaks);
     else if (g_section == 1) DrawCleanGrid(g_networkTweaks);
     else if (g_section == 2) DrawCleanGrid(g_gpuTweaks);
-    else if (g_section == 3) DrawGamesGrid();
     else {
         ImGui::Dummy({0.f,8.f});
         ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
