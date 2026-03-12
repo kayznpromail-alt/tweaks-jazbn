@@ -135,7 +135,7 @@ struct AppState {
     }
 };
 static AppState g_app;
-static int      g_section = 0; // 0=System 1=Network 2=GPU 3=Games 4=Cleanup
+static int      g_section = 0; // 0=System 1=Network 2=GPU 3=Cleanup
 
 // ─── Forward decls ────────────────────────────────────────────────────────
 static bool CreateDeviceD3D(HWND); static void CleanupDeviceD3D();
