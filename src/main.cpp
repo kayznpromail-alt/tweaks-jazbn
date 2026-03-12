@@ -705,7 +705,7 @@ static bool CardButton(const char* id, const char* label, ImVec2 sz, bool disabl
 
     // ── Left accent bar ───────────────────────────────────────────────────
     if (!disabled) {
-        float barA = hov ? 220 : 55;
+        float barA = hov ? 220.f : 55.f;
         dl->AddRectFilled({pos.x, pos.y+9.f}, {pos.x+2.f, bMax.y-9.f},
             IM_COL32(0, 195, 220, (int)barA), 2.f);
     }
