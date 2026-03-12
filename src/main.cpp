@@ -135,7 +135,59 @@ struct AppState {
     }
 };
 static AppState g_app;
-static int      g_section = 0; // 0=System 1=Network 2=GPU 3=Cleanup
+static int      g_section      = 0;   // 0=System 1=Network 2=GPU 3=Cleanup
+static int      g_sectionShown = 0;   // section currently displayed
+static float    g_fadeAlpha    = 1.f; // cross-fade alpha
+
+// ─── Particle system ──────────────────────────────────────────────────────
+struct Particle { float x,y,vx,vy,life,maxLife,r; };
+static Particle g_pts[36];
+static bool     g_ptsInit = false;
+
+static void InitParticles(float W, float H) {
+    // deterministic seed for consistent look
+    unsigned s = 0x4E1A;
+    auto rng = [&]{ s ^= s<<13; s ^= s>>17; s ^= s<<5; return s; };
+    for (auto& p : g_pts) {
+        p.x      = (float)(rng() % (unsigned)W);
+        p.y      = (float)(rng() % (unsigned)H);
+        p.vx     = ((int)(rng()%100) - 50) * 0.004f;
+        p.vy     = -((float)(rng()%80) + 15) * 0.004f;
+        p.maxLife= 5.f + (rng()%500)*0.008f;
+        p.life   = p.maxLife * (rng()%100)*0.01f;
+        p.r      = 0.7f + (rng()%18)*0.1f;
+    }
+    g_ptsInit = true;
+}
+
+static void UpdateParticles(float W, float H, float dt) {
+    unsigned s = (unsigned)(ImGui::GetFrameCount() * 1234567u);
+    auto rng = [&]{ s^=s<<13; s^=s>>17; s^=s<<5; return s; };
+    for (auto& p : g_pts) {
+        p.x    += p.vx * dt * 60.f;
+        p.y    += p.vy * dt * 60.f;
+        p.life -= dt;
+        if (p.life <= 0.f || p.y < -4.f || p.x < 0.f || p.x > W) {
+            p.x      = (float)(rng() % (unsigned)W);
+            p.y      = H + 4.f;
+            p.vx     = ((int)(rng()%100)-50)*0.004f;
+            p.vy     = -((float)(rng()%80)+15)*0.004f;
+            p.maxLife= 5.f + (rng()%500)*0.008f;
+            p.life   = p.maxLife;
+        }
+    }
+}
+
+static void DrawParticles(ImDrawList* dl, ImVec2 orig, float W, float H) {
+    for (auto& p : g_pts) {
+        if (p.x < 0 || p.x > W || p.y < 0 || p.y > H) continue;
+        float t = p.life / p.maxLife;
+        float a = (t < 0.2f ? t*5.f : (t > 0.8f ? (1.f-t)*5.f : 1.f)) * 0.28f;
+        if (a < 0.01f) continue;
+        dl->AddCircleFilled({orig.x+p.x, orig.y+p.y}, p.r,
+            IM_COL32(200,22,22,(int)(a*255)));
+    }
+}
 
 // ─── Forward decls ────────────────────────────────────────────────────────
 static bool CreateDeviceD3D(HWND); static void CleanupDeviceD3D();
@@ -443,17 +495,27 @@ static bool NavItem(const char* label, bool active, float w) {
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImVec2 pos     = ImGui::GetCursorScreenPos();
     const float h  = 42.f;
+    float t        = (float)ImGui::GetTime();
     ImGui::InvisibleButton(label, {w, h});
     bool hov     = ImGui::IsItemHovered();
     bool clicked = ImGui::IsItemClicked();
-    if (active || hov) {
-        ImU32 bg = active ? IM_COL32(26,8,8,255) : IM_COL32(15,5,5,255);
-        dl->AddRectFilled(pos, {pos.x+w, pos.y+h}, bg);
-    }
-    if (active)
+
+    if (active) {
+        // pulsing background
+        float pulse = 0.28f + 0.10f*sinf(t*1.8f);
+        dl->AddRectFilled(pos, {pos.x+w, pos.y+h}, IM_COL32(26,8,8,255));
+        // soft left glow layers
+        dl->AddRectFilled({pos.x, pos.y}, {pos.x+18.f, pos.y+h},
+            IM_COL32(180,18,18,(int)(pulse*80)));
+        dl->AddRectFilled({pos.x, pos.y}, {pos.x+7.f, pos.y+h},
+            IM_COL32(220,22,22,(int)(pulse*120)));
+        // solid accent bar
         dl->AddRectFilled({pos.x, pos.y+8.f}, {pos.x+3.f, pos.y+h-8.f}, IC(C_RED));
-    else if (hov)
+    } else if (hov) {
+        dl->AddRectFilled(pos, {pos.x+w, pos.y+h}, IM_COL32(15,5,5,255));
         dl->AddRectFilled({pos.x, pos.y+10.f}, {pos.x+2.f, pos.y+h-10.f}, IC(C_REDD));
+    }
+
     ImVec2 tsz = ImGui::CalcTextSize(label);
     ImU32 tc = active ? ImGui::ColorConvertFloat4ToU32(C_TEXT)
              : (hov   ? IM_COL32(200,175,172,255)
@@ -717,8 +779,24 @@ static void DrawMainUI(HWND hwnd) {
     ImGui::End();
 
     // ══ CONTENT AREA ══════════════════════════════════════════════════════
+    // Section cross-fade logic
+    float dt = io.DeltaTime;
+    if (g_sectionShown != g_section) {
+        g_fadeAlpha -= dt * 8.f;
+        if (g_fadeAlpha <= 0.f) { g_fadeAlpha = 0.f; g_sectionShown = g_section; }
+    } else {
+        g_fadeAlpha = std::min(g_fadeAlpha + dt * 8.f, 1.f);
+    }
+
+    float ctW = io.DisplaySize.x - SBW;
+    float ctH = io.DisplaySize.y - TB;
+
+    // Init + update particles
+    if (!g_ptsInit) InitParticles(ctW, ctH);
+    UpdateParticles(ctW, ctH, dt);
+
     ImGui::SetNextWindowPos({SBW, TB});
-    ImGui::SetNextWindowSize({io.DisplaySize.x-SBW, io.DisplaySize.y-TB});
+    ImGui::SetNextWindowSize({ctW, ctH});
     ImGui::PushStyleColor(ImGuiCol_WindowBg, C_BG);
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {14.f,10.f});
     ImGui::Begin("##ct", nullptr,
@@ -727,14 +805,27 @@ static void DrawMainUI(HWND hwnd) {
         ImGuiWindowFlags_NoSavedSettings);
     ImGui::PopStyleVar(); ImGui::PopStyleColor();
 
-    // Section header
+    // Background: subtle dot grid + particles
+    {
+        ImDrawList* bdl = ImGui::GetWindowDrawList();
+        ImVec2 wp = ImGui::GetWindowPos();
+        // Dot grid
+        for (float x = 0; x < ctW; x += 48.f)
+            for (float y = 0; y < ctH; y += 48.f)
+                bdl->AddCircleFilled({wp.x+x, wp.y+y}, 0.9f, IM_COL32(55,10,10,28));
+        // Particles
+        DrawParticles(bdl, wp, ctW, ctH);
+    }
+
+    // Section header (fades with transition)
     const char* titles[] = {
         "System Tweaks","Network Tweaks","GPU / Driver Tweaks","Cleanup"
     };
     ImGui::Dummy({0.f,4.f});
+    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, g_fadeAlpha * ImGui::GetStyle().Alpha);
     ImGui::PushStyleColor(ImGuiCol_Text, C_RED);
     ImGui::SetWindowFontScale(1.12f);
-    ImGui::Text("%s", titles[g_section]);
+    ImGui::Text("%s", titles[g_sectionShown]);
     ImGui::SetWindowFontScale(1.f);
     ImGui::PopStyleColor();
     ImGui::Dummy({0.f,6.f});
@@ -742,12 +833,12 @@ static void DrawMainUI(HWND hwnd) {
     // Scrollable cards area
     const float logH    = 155.f;
     float       cardAreaH = ImGui::GetContentRegionAvail().y - logH - 20.f;
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, C_BG);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, {0,0,0,0});
     ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.f);
     ImGui::BeginChild("##ca", {-1.f, cardAreaH}, false);
-    if      (g_section == 0) DrawCleanGrid(g_systemTweaks);
-    else if (g_section == 1) DrawCleanGrid(g_networkTweaks);
-    else if (g_section == 2) DrawCleanGrid(g_gpuTweaks);
+    if      (g_sectionShown == 0) DrawCleanGrid(g_systemTweaks);
+    else if (g_sectionShown == 1) DrawCleanGrid(g_networkTweaks);
+    else if (g_sectionShown == 2) DrawCleanGrid(g_gpuTweaks);
     else {
         ImGui::Dummy({0.f,8.f});
         ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
@@ -769,9 +860,9 @@ static void DrawMainUI(HWND hwnd) {
         }
     }
     ImGui::EndChild();
-    ImGui::PopStyleVar(); ImGui::PopStyleColor();
+    ImGui::PopStyleVar(2); ImGui::PopStyleColor(); // ChildRounding + fadeAlpha + ChildBg
 
-    // Log panel
+    // Log panel (always full alpha)
     ImGui::Dummy({0.f,4.f});
     ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
     ImGui::TextUnformatted("Output");
