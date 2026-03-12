@@ -7,7 +7,7 @@
  * ╚══════╝╚═╝     ╚═╝╚═╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═══╝ ╚═════╝╚══════╝
  *
  * Eminence Tweak  —  Gaming PC Optimizer v3.0
- * Red & Black  |  Cinematic loading  |  Ultra-clean UI
+ * Dark Glassmorphism  |  Violet accent  |  Ultra-clean UI
  */
 
 #define WIN32_LEAN_AND_MEAN
@@ -145,7 +145,6 @@ static Particle g_pts[36];
 static bool     g_ptsInit = false;
 
 static void InitParticles(float W, float H) {
-    // deterministic seed for consistent look
     unsigned s = 0x4E1A;
     auto rng = [&]{ s ^= s<<13; s ^= s>>17; s ^= s<<5; return s; };
     for (auto& p : g_pts) {
@@ -182,10 +181,10 @@ static void DrawParticles(ImDrawList* dl, ImVec2 orig, float W, float H) {
     for (auto& p : g_pts) {
         if (p.x < 0 || p.x > W || p.y < 0 || p.y > H) continue;
         float t = p.life / p.maxLife;
-        float a = (t < 0.2f ? t*5.f : (t > 0.8f ? (1.f-t)*5.f : 1.f)) * 0.28f;
+        float a = (t < 0.2f ? t*5.f : (t > 0.8f ? (1.f-t)*5.f : 1.f)) * 0.25f;
         if (a < 0.01f) continue;
         dl->AddCircleFilled({orig.x+p.x, orig.y+p.y}, p.r,
-            IM_COL32(200,22,22,(int)(a*255)));
+            IM_COL32(115, 88, 235, (int)(a*255)));
     }
 }
 
@@ -206,25 +205,25 @@ static bool IsAdmin() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  COLOUR PALETTE  —  red & black, ultra-clean
+//  COLOUR PALETTE  —  dark glassmorphism · violet accent
 // ═══════════════════════════════════════════════════════════════════════════
-// Background layers
-static const ImVec4 C_BG      = {0.040f, 0.020f, 0.020f, 1.f}; // #0A0505
-static const ImVec4 C_BG2     = {0.058f, 0.030f, 0.030f, 1.f}; // #0F0808
-static const ImVec4 C_CARD    = {0.078f, 0.040f, 0.040f, 1.f}; // #140A0A
-static const ImVec4 C_CARD_H  = {0.110f, 0.058f, 0.058f, 1.f}; // #1C0F0F
-// Red accents
-static const ImVec4 C_RED     = {0.820f, 0.080f, 0.080f, 1.f}; // #D11414
-static const ImVec4 C_RED2    = {1.000f, 0.150f, 0.150f, 1.f}; // #FF2626
-static const ImVec4 C_REDD    = {0.340f, 0.030f, 0.030f, 1.f}; // #570808
-static const ImVec4 C_REDDD   = {0.160f, 0.015f, 0.015f, 1.f}; // #290404
+// Background layers (deep navy-black)
+static const ImVec4 C_BG     = {0.024f, 0.022f, 0.064f, 1.f}; // #060610
+static const ImVec4 C_BG2    = {0.036f, 0.034f, 0.092f, 1.f}; // #09091A
+static const ImVec4 C_CARD   = {0.055f, 0.052f, 0.135f, 1.f}; // #0E0D22
+static const ImVec4 C_CARD_H = {0.082f, 0.078f, 0.188f, 1.f}; // #141430
+// Violet accent
+static const ImVec4 C_ACC    = {0.486f, 0.416f, 0.940f, 1.f}; // #7C6AF0
+static const ImVec4 C_ACC2   = {0.648f, 0.580f, 1.000f, 1.f}; // #A594FF
+static const ImVec4 C_ACCD   = {0.200f, 0.165f, 0.478f, 1.f}; // #332A7A
+static const ImVec4 C_ACCDD  = {0.090f, 0.072f, 0.230f, 1.f}; // #17123A
 // Text
-static const ImVec4 C_TEXT    = {0.940f, 0.920f, 0.910f, 1.f}; // #F0EBE8
-static const ImVec4 C_DIM     = {0.500f, 0.400f, 0.390f, 1.f}; // #806763
-static const ImVec4 C_DIM2    = {0.270f, 0.200f, 0.195f, 1.f}; // #453332
+static const ImVec4 C_TEXT   = {0.920f, 0.908f, 0.960f, 1.f}; // #EAE7F5
+static const ImVec4 C_DIM    = {0.435f, 0.415f, 0.555f, 1.f}; // #6F6A8E
+static const ImVec4 C_DIM2   = {0.210f, 0.200f, 0.290f, 1.f}; // #35334A
 // Status
-static const ImVec4 C_GREEN   = {0.200f, 0.850f, 0.380f, 1.f}; // #33D961
-static const ImVec4 C_BORDER  = {0.200f, 0.060f, 0.060f, 1.f}; // #330F0F
+static const ImVec4 C_GREEN  = {0.180f, 0.820f, 0.640f, 1.f}; // #2ED1A3
+static const ImVec4 C_BORDER = {0.135f, 0.122f, 0.295f, 1.f}; // #221F4B
 
 static ImU32 IC(ImVec4 v, float a = 1.f) {
     return IM_COL32((int)(v.x*255),(int)(v.y*255),(int)(v.z*255),(int)(v.w*a*255));
@@ -234,12 +233,12 @@ static ImU32 IC(ImVec4 v, float a = 1.f) {
 static void ApplyTheme() {
     ImGuiStyle& s = ImGui::GetStyle();
     s.WindowRounding    = 0.f;
-    s.ChildRounding     = 6.f;
-    s.FrameRounding     = 5.f;
+    s.ChildRounding     = 8.f;
+    s.FrameRounding     = 6.f;
     s.GrabRounding      = 4.f;
-    s.TabRounding       = 5.f;
-    s.ScrollbarRounding = 5.f;
-    s.PopupRounding     = 6.f;
+    s.TabRounding       = 6.f;
+    s.ScrollbarRounding = 6.f;
+    s.PopupRounding     = 10.f;
     s.WindowBorderSize  = 0.f;
     s.FrameBorderSize   = 1.f;
     s.WindowPadding     = {18.f, 14.f};
@@ -250,7 +249,7 @@ static void ApplyTheme() {
     auto* c = s.Colors;
     c[ImGuiCol_WindowBg]             = C_BG;
     c[ImGuiCol_ChildBg]              = C_BG2;
-    c[ImGuiCol_PopupBg]              = C_BG2;
+    c[ImGuiCol_PopupBg]              = {0.042f,0.038f,0.105f,0.97f};
     c[ImGuiCol_FrameBg]              = C_CARD;
     c[ImGuiCol_FrameBgHovered]       = C_CARD_H;
     c[ImGuiCol_FrameBgActive]        = C_CARD_H;
@@ -258,37 +257,37 @@ static void ApplyTheme() {
     c[ImGuiCol_TitleBgActive]        = C_BG;
     c[ImGuiCol_Button]               = C_CARD;
     c[ImGuiCol_ButtonHovered]        = C_CARD_H;
-    c[ImGuiCol_ButtonActive]         = C_REDDD;
+    c[ImGuiCol_ButtonActive]         = C_ACCDD;
     c[ImGuiCol_Header]               = C_CARD;
     c[ImGuiCol_HeaderHovered]        = C_CARD_H;
-    c[ImGuiCol_HeaderActive]         = C_REDDD;
+    c[ImGuiCol_HeaderActive]         = C_ACCDD;
     c[ImGuiCol_Tab]                  = C_BG2;
     c[ImGuiCol_TabHovered]           = C_CARD_H;
     c[ImGuiCol_TabActive]            = C_CARD;
     c[ImGuiCol_TabUnfocused]         = C_BG;
     c[ImGuiCol_TabUnfocusedActive]   = C_BG2;
     c[ImGuiCol_ScrollbarBg]          = C_BG;
-    c[ImGuiCol_ScrollbarGrab]        = C_REDD;
-    c[ImGuiCol_ScrollbarGrabHovered] = C_RED;
-    c[ImGuiCol_ScrollbarGrabActive]  = C_RED2;
-    c[ImGuiCol_SliderGrab]           = C_RED;
-    c[ImGuiCol_SliderGrabActive]     = C_RED2;
-    c[ImGuiCol_CheckMark]            = C_RED2;
+    c[ImGuiCol_ScrollbarGrab]        = C_ACCD;
+    c[ImGuiCol_ScrollbarGrabHovered] = C_ACC;
+    c[ImGuiCol_ScrollbarGrabActive]  = C_ACC2;
+    c[ImGuiCol_SliderGrab]           = C_ACC;
+    c[ImGuiCol_SliderGrabActive]     = C_ACC2;
+    c[ImGuiCol_CheckMark]            = C_ACC2;
     c[ImGuiCol_Separator]            = C_BORDER;
-    c[ImGuiCol_SeparatorHovered]     = C_REDD;
-    c[ImGuiCol_SeparatorActive]      = C_RED;
+    c[ImGuiCol_SeparatorHovered]     = C_ACCD;
+    c[ImGuiCol_SeparatorActive]      = C_ACC;
     c[ImGuiCol_Border]               = C_BORDER;
     c[ImGuiCol_BorderShadow]         = {0,0,0,0};
     c[ImGuiCol_Text]                 = C_TEXT;
     c[ImGuiCol_TextDisabled]         = C_DIM;
-    c[ImGuiCol_TextSelectedBg]       = C_REDDD;
-    c[ImGuiCol_PlotHistogram]        = C_RED;
-    c[ImGuiCol_PlotHistogramHovered] = C_RED2;
-    c[ImGuiCol_ResizeGrip]           = C_REDD;
-    c[ImGuiCol_ResizeGripHovered]    = C_RED;
-    c[ImGuiCol_ResizeGripActive]     = C_RED2;
-    c[ImGuiCol_NavHighlight]         = C_RED;
-    c[ImGuiCol_ModalWindowDimBg]     = {0,0,0,0.75f};
+    c[ImGuiCol_TextSelectedBg]       = C_ACCDD;
+    c[ImGuiCol_PlotHistogram]        = C_ACC;
+    c[ImGuiCol_PlotHistogramHovered] = C_ACC2;
+    c[ImGuiCol_ResizeGrip]           = C_ACCD;
+    c[ImGuiCol_ResizeGripHovered]    = C_ACC;
+    c[ImGuiCol_ResizeGripActive]     = C_ACC2;
+    c[ImGuiCol_NavHighlight]         = C_ACC;
+    c[ImGuiCol_ModalWindowDimBg]     = {0.01f,0.01f,0.04f,0.80f};
     c[ImGuiCol_MenuBarBg]            = C_BG;
 }
 
@@ -308,11 +307,11 @@ static LogCallback MakeLog() {
 }
 
 // ─── Button helpers ───────────────────────────────────────────────────────
-static bool RedButton(const char* label, ImVec2 sz = {0,0}) {
+static bool AccentButton(const char* label, ImVec2 sz = {0,0}) {
     ImGui::PushStyleColor(ImGuiCol_Button,        C_CARD);
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, C_CARD_H);
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  C_REDDD);
-    ImGui::PushStyleColor(ImGuiCol_Border,        C_REDD);
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  C_ACCDD);
+    ImGui::PushStyleColor(ImGuiCol_Border,        C_ACCD);
     ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.f);
     bool hit = ImGui::Button(label, sz);
     ImGui::PopStyleVar();
@@ -320,15 +319,15 @@ static bool RedButton(const char* label, ImVec2 sz = {0,0}) {
     if (ImGui::IsItemHovered()) {
         auto rMin = ImGui::GetItemRectMin();
         auto rMax = ImGui::GetItemRectMax();
-        ImGui::GetWindowDrawList()->AddRect(rMin, rMax, IC(C_RED, 0.7f), 5.f, 0, 1.5f);
+        ImGui::GetWindowDrawList()->AddRect(rMin, rMax, IC(C_ACC, 0.70f), 6.f, 0, 1.5f);
     }
     return hit;
 }
 
 static bool PrimaryButton(const char* label, ImVec2 sz = {0,0}) {
-    ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.48f,0.05f,0.05f,1.f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.70f,0.08f,0.08f,1.f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.35f,0.03f,0.03f,1.f));
+    ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.30f,0.24f,0.60f,1.f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.42f,0.35f,0.74f,1.f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.22f,0.17f,0.46f,1.f));
     ImGui::PushStyleColor(ImGuiCol_Text,          C_TEXT);
     bool hit = ImGui::Button(label, sz);
     ImGui::PopStyleColor(4);
@@ -337,7 +336,7 @@ static bool PrimaryButton(const char* label, ImVec2 sz = {0,0}) {
         float p = 0.5f + 0.5f * sinf(t * 3.5f);
         auto rMin = ImGui::GetItemRectMin();
         auto rMax = ImGui::GetItemRectMax();
-        ImGui::GetWindowDrawList()->AddRect(rMin, rMax, IC(C_RED2, p * 0.7f), 5.f, 0, 2.f);
+        ImGui::GetWindowDrawList()->AddRect(rMin, rMax, IC(C_ACC2, p * 0.72f), 6.f, 0, 2.f);
     }
     return hit;
 }
@@ -351,11 +350,11 @@ static void DrawSpinner(ImDrawList* dl, ImVec2 C, float r, float thick, float t)
         float alpha = (float)i / (N*arc);
         ImVec2 p0 = {C.x+cosf(a0)*r, C.y+sinf(a0)*r};
         ImVec2 p1 = {C.x+cosf(a1)*r, C.y+sinf(a1)*r};
-        dl->AddLine(p0, p1, IM_COL32(210,20,20,(ImU8)(alpha*230)), thick);
+        dl->AddLine(p0, p1, IM_COL32(120,98,240,(ImU8)(alpha*230)), thick);
     }
     float ta = t*spd + arc*IM_PI*2.f;
     ImVec2 tip = {C.x+cosf(ta)*r, C.y+sinf(ta)*r};
-    dl->AddCircleFilled(tip, thick*1.6f, IM_COL32(255,60,60,255));
+    dl->AddCircleFilled(tip, thick*1.6f, IM_COL32(185,165,255,255));
 }
 
 // ─── Loading screen ───────────────────────────────────────────────────────
@@ -376,92 +375,137 @@ static void DrawLoadingScreen() {
     ImGui::PopStyleColor();
 
     ImDrawList* dl = ImGui::GetWindowDrawList();
-    ImVec2 C = {io.DisplaySize.x*0.5f, io.DisplaySize.y*0.5f};
+    ImVec2 cx = {io.DisplaySize.x*0.5f, io.DisplaySize.y*0.5f};
 
-    // Subtle background grid
-    for (int x = 0; x < (int)io.DisplaySize.x; x += 50)
-        for (int y = 0; y < (int)io.DisplaySize.y; y += 50)
-            dl->AddCircleFilled({(float)x,(float)y}, 1.f, IM_COL32(60,10,10,35));
+    // Dot grid background
+    for (int x = 0; x < (int)io.DisplaySize.x; x += 52)
+        for (int y = 0; y < (int)io.DisplaySize.y; y += 52)
+            dl->AddCircleFilled({(float)x,(float)y}, 0.9f, IM_COL32(75,55,175,20));
 
-    // Glow aura
+    // Radial ambient glow behind card
+    for (int i = 5; i >= 0; i--) {
+        float rr  = 180.f + i*55.f;
+        float aa  = 0.14f - i*0.022f + 0.04f*sinf(t*0.75f + i*0.4f);
+        if (aa > 0.f)
+            dl->AddCircleFilled(cx, rr, IM_COL32(72,50,195,(int)(aa*255)), 96);
+    }
+
+    // ── Glass card ────────────────────────────────────────────────────────
+    const float cW = 340.f, cH = 310.f;
+    const float cX = cx.x - cW*0.5f, cY = cx.y - cH*0.5f;
+    const float cR = 14.f;
+
+    // Card drop shadow
     for (int i = 3; i >= 0; i--) {
-        float r = 80.f + i*28.f;
-        float pulse = 0.3f + 0.2f*sinf(t*1.1f + i*0.6f);
-        dl->AddCircle({C.x,C.y}, r, IM_COL32(180,20,20,(int)(pulse*55)), 72, 1.f);
+        float e = 6.f + i*8.f;
+        dl->AddRectFilled({cX-e, cY-e}, {cX+cW+e, cY+cH+e},
+            IM_COL32(6,5,22,(int)((0.60f-i*0.14f)*255)), cR+e*0.6f);
     }
 
-    // Double spinner
-    DrawSpinner(dl, C, 66.f, 3.f, t);
-    DrawSpinner(dl, C, 48.f, 1.6f, -t*0.65f);
+    // Card body
+    dl->AddRectFilled({cX,cY},{cX+cW,cY+cH}, IM_COL32(11,10,28,245), cR);
 
-    // Pulsing center
-    float dp = 0.6f + 0.4f*sinf(t*4.5f);
-    dl->AddCircleFilled({C.x,C.y}, 5.f*dp, IM_COL32(220,30,30,255));
-    dl->AddCircleFilled({C.x,C.y}, 14.f*dp, IM_COL32(180,20,20,50));
+    // Inner top sheen (glass highlight)
+    dl->AddRectFilled({cX+1.f,cY+1.f},{cX+cW-1.f,cY+28.f},
+        IM_COL32(175,155,255,9), cR);
 
-    // ── Logo ──────────────────────────────────────────────────────────────
+    // Card border (pulsing)
+    float bp = 0.38f + 0.18f*sinf(t*1.3f);
+    dl->AddRect({cX,cY},{cX+cW,cY+cH},
+        IM_COL32(122,98,242,(int)(bp*72)), cR, 0, 1.2f);
+
+    // Top accent line
+    dl->AddLine({cX+cR, cY+0.7f},{cX+cW-cR, cY+0.7f},
+        IM_COL32(155,128,255,(int)(bp*130)), 1.5f);
+
+    // ── Content inside card ───────────────────────────────────────────────
+    float iY = cY + 30.f;
+
+    // Logo
     if (g_logoSRV) {
-        const float logoSize = 110.f;
-        ImGui::SetCursorPos({C.x - logoSize * 0.5f, C.y - 200.f});
-        ImGui::Image((ImTextureID)g_logoSRV, {logoSize, logoSize});
-        ImGui::SetCursorPos({C.x - 128.f, C.y - 80.f});
-    } else {
-        ImGui::SetCursorPos({C.x-128.f, C.y-168.f});
+        const float ls = 44.f;
+        float lx = cx.x - ls*0.5f;
+        dl->AddImage((ImTextureID)g_logoSRV, {lx, iY}, {lx+ls, iY+ls});
+        iY += ls + 14.f;
     }
-    ImGui::SetWindowFontScale(2.4f);
-    ImGui::PushStyleColor(ImGuiCol_Text, C_RED2);
-    ImGui::Text("EMINENCE");
-    ImGui::PopStyleColor();
-    float titleCurY = g_logoSRV ? C.y - 46.f : C.y - 134.f;
-    ImGui::SetCursorPos({C.x-128.f, titleCurY});
-    ImGui::PushStyleColor(ImGuiCol_Text, C_TEXT);
-    ImGui::Text("TWEAK");
-    ImGui::PopStyleColor();
+
+    // Brand name
+    ImGui::SetWindowFontScale(2.0f);
+    {
+        const char* brand = "EMINENCE";
+        float bW = ImGui::CalcTextSize(brand).x;
+        ImGui::SetCursorScreenPos({cx.x - bW*0.5f, iY});
+        ImGui::PushStyleColor(ImGuiCol_Text, C_ACC2);
+        ImGui::Text("%s", brand);
+        ImGui::PopStyleColor();
+        iY += ImGui::GetTextLineHeight() + 2.f;
+    }
     ImGui::SetWindowFontScale(1.f);
-
-    // Subtitle
-    const char* sub = "GAMING PC OPTIMIZER  \xe2\x80\x94  v3.0";
-    float subW = ImGui::CalcTextSize(sub).x;
-    ImGui::SetCursorPos({C.x - subW*0.5f, C.y - 102.f});
-    ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
-    ImGui::Text("%s", sub);
-    ImGui::PopStyleColor();
-
-    // Thin separator lines flanking subtitle
-    float lineY = C.y - 92.f;
-    dl->AddLine({C.x - 200.f, lineY}, {C.x - subW*0.5f - 10.f, lineY}, IC(C_BORDER,0.8f), 0.8f);
-    dl->AddLine({C.x + subW*0.5f + 10.f, lineY}, {C.x + 200.f, lineY}, IC(C_BORDER,0.8f), 0.8f);
-
-    // ── Progress bar ──────────────────────────────────────────────────────
-    float bW = 320.f, bH = 3.f;
-    float bX = C.x - bW*0.5f, bY = C.y + 108.f;
-    dl->AddRectFilled({bX,bY},{bX+bW,bY+bH}, IM_COL32(30,8,8,255), bH);
-    if (prog > 0.f) {
-        dl->AddRectFilled({bX,bY},{bX+bW*prog,bY+bH}, IM_COL32(205,25,25,255), bH);
-        float tx = bX + bW*prog;
-        dl->AddCircleFilled({tx,bY+bH*0.5f}, 6.f, IM_COL32(220,30,30,60));
-        dl->AddCircleFilled({tx,bY+bH*0.5f}, 3.f, IM_COL32(255,70,70,255));
+    {
+        const char* sub = "TWEAK";
+        float sW = ImGui::CalcTextSize(sub).x;
+        ImGui::SetCursorScreenPos({cx.x - sW*0.5f, iY});
+        ImGui::PushStyleColor(ImGuiCol_Text, C_TEXT);
+        ImGui::Text("%s", sub);
+        ImGui::PopStyleColor();
+        iY += ImGui::GetTextLineHeight() + 10.f;
     }
 
-    // Status message
+    // Thin separator inside card
+    dl->AddLine({cX+36.f, iY}, {cX+cW-36.f, iY}, IM_COL32(95,75,190,38), 0.8f);
+    iY += 10.f;
+
+    // Subtitle / version
+    {
+        const char* ver = "Gaming PC Optimizer  \xe2\x80\x94  v3.0";
+        float vW = ImGui::CalcTextSize(ver).x;
+        ImGui::SetCursorScreenPos({cx.x - vW*0.5f, iY});
+        ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
+        ImGui::Text("%s", ver);
+        ImGui::PopStyleColor();
+        iY += ImGui::GetTextLineHeight() + 22.f;
+    }
+
+    // Spinner (centered)
+    DrawSpinner(dl, {cx.x, iY + 33.f}, 30.f, 2.4f, t);
+    DrawSpinner(dl, {cx.x, iY + 33.f}, 18.f, 1.3f, -t*0.7f);
+    float dot = 0.55f + 0.45f*sinf(t*5.f);
+    dl->AddCircleFilled({cx.x, iY+33.f}, 3.2f*dot, IM_COL32(165,145,255,255));
+    iY += 76.f;
+
+    // Progress bar (gradient)
+    float bW2 = cW - 56.f;
+    float bX  = cX + 28.f;
+    dl->AddRectFilled({bX,iY},{bX+bW2,iY+2.5f}, IM_COL32(26,22,66,255), 2.f);
+    if (prog > 0.f) {
+        dl->AddRectFilledMultiColor(
+            {bX,iY},{bX+bW2*prog,iY+2.5f},
+            IM_COL32(72,55,195,255), IM_COL32(160,138,255,255),
+            IM_COL32(160,138,255,255), IM_COL32(72,55,195,255));
+        float tx = bX + bW2*prog;
+        dl->AddCircleFilled({tx, iY+1.2f}, 4.5f, IM_COL32(150,125,255,48));
+        dl->AddCircleFilled({tx, iY+1.2f}, 2.2f, IM_COL32(195,178,255,255));
+    }
+    iY += 13.f;
+
+    // Status message + percent
     int mi = std::min((int)(prog*kLoadMsgCount), kLoadMsgCount-1);
     float mW = ImGui::CalcTextSize(kLoadMsgs[mi]).x;
-    ImGui::SetCursorPos({C.x-mW*0.5f, C.y+118.f});
+    ImGui::SetCursorScreenPos({cx.x - mW*0.5f, iY});
     ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
     ImGui::Text("%s", kLoadMsgs[mi]);
     ImGui::PopStyleColor();
 
-    // Percent
     char pct[10]; snprintf(pct,sizeof(pct),"%.0f%%",prog*100.f);
     float pW = ImGui::CalcTextSize(pct).x;
-    ImGui::SetCursorPos({C.x-pW*0.5f, C.y+138.f});
-    ImGui::PushStyleColor(ImGuiCol_Text, C_RED);
-    ImGui::Text("%s",pct);
+    ImGui::SetCursorScreenPos({cX+cW-28.f-pW, iY});
+    ImGui::PushStyleColor(ImGuiCol_Text, C_ACC);
+    ImGui::Text("%s", pct);
     ImGui::PopStyleColor();
 
     // Bottom discord
     ImGui::SetCursorPos({18.f, io.DisplaySize.y-26.f});
-    ImGui::PushStyleColor(ImGuiCol_Text, C_BORDER);
+    ImGui::PushStyleColor(ImGuiCol_Text, C_DIM2);
     ImGui::Text("discord.gg/eminencehardware");
     ImGui::PopStyleColor();
 
@@ -471,8 +515,9 @@ static void DrawLoadingScreen() {
 
 // ─── Log panel ────────────────────────────────────────────────────────────
 static void DrawLog(float h) {
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.025f,0.010f,0.010f,1.f));
-    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 6.f);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.028f,0.026f,0.072f,1.f));
+    ImGui::PushStyleColor(ImGuiCol_Border,  C_BORDER);
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 8.f);
     if (ImGui::BeginChild("##log",{-1.f,h},true,ImGuiWindowFlags_HorizontalScrollbar)) {
         std::lock_guard<std::mutex> lk(g_app.logMutex);
         ImGuiListClipper clipper;
@@ -481,13 +526,13 @@ static void DrawLog(float h) {
             for (int i=clipper.DisplayStart; i<clipper.DisplayEnd; i++) {
                 auto& [txt,ok] = g_app.logLines[i];
                 bool hdr = txt.find("====")!=std::string::npos || txt.find(">> ")!=std::string::npos;
-                ImVec4 col = hdr ? C_RED : (ok ? C_GREEN : C_DIM);
+                ImVec4 col = hdr ? C_ACC2 : (ok ? C_GREEN : C_DIM);
                 ImGui::TextColored(col, "%s", txt.c_str());
             }
         if (g_app.scrollToBottom) { ImGui::SetScrollHereY(1.f); g_app.scrollToBottom=false; }
         ImGui::EndChild();
     }
-    ImGui::PopStyleVar(); ImGui::PopStyleColor();
+    ImGui::PopStyleVar(); ImGui::PopStyleColor(2);
 }
 
 // ─── Sidebar nav item ─────────────────────────────────────────────────────
@@ -501,30 +546,33 @@ static bool NavItem(const char* label, bool active, float w) {
     bool clicked = ImGui::IsItemClicked();
 
     if (active) {
-        // pulsing background
         float pulse = 0.28f + 0.10f*sinf(t*1.8f);
-        dl->AddRectFilled(pos, {pos.x+w, pos.y+h}, IM_COL32(26,8,8,255));
-        // soft left glow layers
-        dl->AddRectFilled({pos.x, pos.y}, {pos.x+18.f, pos.y+h},
-            IM_COL32(180,18,18,(int)(pulse*80)));
-        dl->AddRectFilled({pos.x, pos.y}, {pos.x+7.f, pos.y+h},
-            IM_COL32(220,22,22,(int)(pulse*120)));
-        // solid accent bar
-        dl->AddRectFilled({pos.x, pos.y+8.f}, {pos.x+3.f, pos.y+h-8.f}, IC(C_RED));
+        // Background
+        dl->AddRectFilled(pos, {pos.x+w, pos.y+h}, IM_COL32(14,12,35,255));
+        // Layered left glow
+        dl->AddRectFilled({pos.x,pos.y},{pos.x+20.f,pos.y+h},
+            IM_COL32(100,78,222,(int)(pulse*70)));
+        dl->AddRectFilled({pos.x,pos.y},{pos.x+8.f,pos.y+h},
+            IM_COL32(128,104,240,(int)(pulse*105)));
+        // Solid left accent bar
+        dl->AddRectFilled({pos.x,pos.y+8.f},{pos.x+3.f,pos.y+h-8.f}, IC(C_ACC));
+        // Right side subtle glow
+        dl->AddRectFilled({pos.x+w-14.f,pos.y},{pos.x+w,pos.y+h},
+            IM_COL32(80,60,190,(int)(pulse*30)));
     } else if (hov) {
-        dl->AddRectFilled(pos, {pos.x+w, pos.y+h}, IM_COL32(15,5,5,255));
-        dl->AddRectFilled({pos.x, pos.y+10.f}, {pos.x+2.f, pos.y+h-10.f}, IC(C_REDD));
+        dl->AddRectFilled(pos, {pos.x+w, pos.y+h}, IM_COL32(10,9,26,255));
+        dl->AddRectFilled({pos.x,pos.y+10.f},{pos.x+2.f,pos.y+h-10.f}, IC(C_ACCD));
     }
 
     ImVec2 tsz = ImGui::CalcTextSize(label);
     ImU32 tc = active ? ImGui::ColorConvertFloat4ToU32(C_TEXT)
-             : (hov   ? IM_COL32(200,175,172,255)
+             : (hov   ? IM_COL32(195,185,230,255)
                       : ImGui::ColorConvertFloat4ToU32(C_DIM));
     dl->AddText({pos.x+16.f, pos.y+(h-tsz.y)*0.5f}, tc, label);
     return clicked;
 }
 
-// ─── Clean card button ────────────────────────────────────────────────────
+// ─── Glass card button ────────────────────────────────────────────────────
 static bool CardButton(const char* id, const char* label, ImVec2 sz, bool disabled=false) {
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImVec2 pos     = ImGui::GetCursorScreenPos();
@@ -536,15 +584,28 @@ static bool CardButton(const char* id, const char* label, ImVec2 sz, bool disabl
         clicked = ImGui::IsItemClicked();
         hov     = ImGui::IsItemHovered();
     }
-    float a   = disabled ? 0.42f : 1.f;
-    ImU32 bg  = hov ? IM_COL32(28,14,14,255) : IM_COL32(16,8,8,(int)(255*a));
-    ImU32 acc = hov ? IM_COL32(255,45,45,255) : IM_COL32(80,8,8,(int)(255*a));
-    ImU32 tc  = disabled ? IM_COL32(100,75,73,160)
-              : (hov     ? IM_COL32(240,235,232,255)
-                         : IM_COL32(196,185,182,255));
-    dl->AddRectFilled(pos, {pos.x+sz.x, pos.y+sz.y}, bg, 5.f);
-    dl->AddRectFilled(pos, {pos.x+3.f,  pos.y+sz.y}, acc, 3.f);
+    float a = disabled ? 0.40f : 1.f;
+
+    // Card body
+    ImU32 bg = hov ? IM_COL32(20,17,52,(int)(255*a))
+                   : IM_COL32(13,11,32,(int)(255*a));
+    dl->AddRectFilled(pos, {pos.x+sz.x, pos.y+sz.y}, bg, 7.f);
+
+    // Top inner highlight (glass sheen)
+    if (hov)
+        dl->AddRectFilled(pos, {pos.x+sz.x, pos.y+5.f},
+            IM_COL32(155,130,255,(int)(20*a)), 7.f);
+
+    // Border
+    float ba = hov ? 0.52f : 0.20f;
+    dl->AddRect(pos, {pos.x+sz.x, pos.y+sz.y},
+        IM_COL32(116,92,238,(int)(ba*255*a)), 7.f, 0, 1.f);
+
+    // Label
     ImVec2 tsz = ImGui::CalcTextSize(label);
+    ImU32 tc = disabled ? IM_COL32(78,68,105,140)
+             : (hov     ? ImGui::ColorConvertFloat4ToU32(C_TEXT)
+                        : IM_COL32(175,165,218,255));
     dl->AddText({pos.x+14.f, pos.y+(sz.y-tsz.y)*0.5f}, tc, label);
     return clicked;
 }
@@ -577,7 +638,7 @@ static void DrawRebootDialog() {
     ImGui::SetNextWindowSize({360.f,0.f});
     if (ImGui::BeginPopupModal("Restart Required##r",nullptr,ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Dummy({0,6.f});
-        ImGui::TextColored(C_RED2,"  All tweaks have been applied!");
+        ImGui::TextColored(C_ACC2,"  All tweaks have been applied!");
         ImGui::Separator(); ImGui::Dummy({0,4.f});
         ImGui::TextColored(C_DIM, "  Restart your PC to activate all changes.");
         ImGui::Dummy({0,12.f});
@@ -599,7 +660,7 @@ static bool DrawTitleBar(HWND hwnd) {
     const float H = 50.f;
     ImGui::SetNextWindowPos({0,0});
     ImGui::SetNextWindowSize({io.DisplaySize.x, H});
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.022f,0.010f,0.010f,1.f));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.015f,0.014f,0.042f,1.f));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,{16.f,0.f});
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize,0.f);
     ImGui::Begin("##tb",nullptr,
@@ -608,27 +669,27 @@ static bool DrawTitleBar(HWND hwnd) {
         ImGuiWindowFlags_NoSavedSettings);
     ImGui::PopStyleVar(2); ImGui::PopStyleColor();
 
-    // Logo
+    // Logo icon
     float textY = (H - ImGui::GetTextLineHeight()*1.5f)*0.5f;
-    float curX = 16.f;
+    float curX  = 16.f;
     if (g_logoSRV) {
-        const float icoSize = 30.f;
+        const float icoSize = 28.f;
         ImGui::SetCursorPos({curX, (H - icoSize) * 0.5f});
         ImGui::Image((ImTextureID)g_logoSRV, {icoSize, icoSize});
-        ImGui::SameLine(0.f, 8.f);
+        ImGui::SameLine(0.f, 10.f);
         curX = ImGui::GetCursorPosX();
     }
     ImGui::SetCursorPos({curX, textY});
-    ImGui::SetWindowFontScale(1.25f);
-    ImGui::PushStyleColor(ImGuiCol_Text, C_RED2);
+    ImGui::SetWindowFontScale(1.22f);
+    ImGui::PushStyleColor(ImGuiCol_Text, C_ACC2);
     ImGui::Text("EMINENCE");
     ImGui::PopStyleColor();
-    ImGui::SameLine(0.f,6.f);
+    ImGui::SameLine(0.f,7.f);
     ImGui::PushStyleColor(ImGuiCol_Text, C_TEXT);
     ImGui::Text("TWEAK");
     ImGui::PopStyleColor();
     ImGui::SetWindowFontScale(1.f);
-    ImGui::SameLine(0.f,8.f);
+    ImGui::SameLine(0.f,9.f);
     ImGui::SetCursorPosY((H-ImGui::GetTextLineHeight())*0.5f+1.f);
     ImGui::PushStyleColor(ImGuiCol_Text, C_DIM2);
     ImGui::Text("v3.0");
@@ -636,16 +697,16 @@ static bool DrawTitleBar(HWND hwnd) {
 
     // Admin badge
     bool admin = IsAdmin();
-    ImGui::SameLine(0.f,20.f);
+    ImGui::SameLine(0.f,22.f);
     ImGui::SetCursorPosY((H-ImGui::GetFrameHeight())*0.5f);
-    ImGui::PushStyleColor(ImGuiCol_Text, admin ? C_GREEN : C_RED);
+    ImGui::PushStyleColor(ImGuiCol_Text, admin ? C_GREEN : C_ACCD);
     ImGui::Text(admin ? " ADMIN" : " NO ADMIN");
     ImGui::PopStyleColor();
 
     // Discord
     ImGui::SameLine(0.f,18.f);
     ImGui::SetCursorPosY((H-ImGui::GetTextLineHeight())*0.5f);
-    ImGui::PushStyleColor(ImGuiCol_Text, C_REDD);
+    ImGui::PushStyleColor(ImGuiCol_Text, C_DIM2);
     ImGui::Text("discord.gg/eminencehardware");
     ImGui::PopStyleColor();
 
@@ -656,26 +717,26 @@ static bool DrawTitleBar(HWND hwnd) {
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing,{0,0});
 
     ImGui::PushStyleColor(ImGuiCol_Button,        {0,0,0,0});
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, {1,1,1,0.07f});
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  {1,1,1,0.12f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, {1.f,1.f,1.f,0.06f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  {1.f,1.f,1.f,0.10f});
     ImGui::PushStyleColor(ImGuiCol_Text,          C_DIM);
     if (ImGui::Button(" \xe2\x80\x94 ##mn",{45.f,H})) ShowWindow(hwnd,SW_MINIMIZE);
     ImGui::PopStyleColor(4);
 
     ImGui::SameLine();
     ImGui::PushStyleColor(ImGuiCol_Button,        {0,0,0,0});
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, {0.7f,0.07f,0.07f,1.f});
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  {0.5f,0.04f,0.04f,1.f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, {0.62f,0.07f,0.07f,1.f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  {0.44f,0.04f,0.04f,1.f});
     ImGui::PushStyleColor(ImGuiCol_Text,          C_DIM);
     bool cls = ImGui::Button(" X ##cl",{45.f,H});
     ImGui::PopStyleColor(4);
     ImGui::PopStyleVar(2);
 
-    // Bottom hairline
+    // Bottom accent hairline
     ImVec2 wp = ImGui::GetWindowPos();
     ImGui::GetWindowDrawList()->AddLine(
         {wp.x, wp.y+H-1.f}, {wp.x+io.DisplaySize.x, wp.y+H-1.f},
-        IC(C_BORDER,0.9f), 1.f);
+        IC(C_BORDER, 0.85f), 1.f);
 
     ImGui::End();
     return cls;
@@ -693,7 +754,7 @@ static void DrawMainUI(HWND hwnd) {
     // ══ SIDEBAR ═══════════════════════════════════════════════════════════
     ImGui::SetNextWindowPos({0.f, TB});
     ImGui::SetNextWindowSize({SBW, sbH});
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.016f,0.007f,0.007f,1.f));
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.014f,0.013f,0.040f,1.f));
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.f,0.f});
     ImGui::Begin("##sb", nullptr,
         ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|
@@ -703,12 +764,14 @@ static void DrawMainUI(HWND hwnd) {
 
     ImDrawList* sdl = ImGui::GetWindowDrawList();
     ImVec2 sbWP = ImGui::GetWindowPos();
-    sdl->AddLine({sbWP.x+SBW-1.f, sbWP.y}, {sbWP.x+SBW-1.f, sbWP.y+sbH}, IC(C_BORDER,0.9f));
+    // Right separator line
+    sdl->AddLine({sbWP.x+SBW-1.f, sbWP.y}, {sbWP.x+SBW-1.f, sbWP.y+sbH},
+        IC(C_BORDER,0.85f));
 
-    // Logo
+    // Logo in sidebar
     ImGui::Dummy({0.f, 14.f});
     if (g_logoSRV) {
-        const float ls = 38.f;
+        const float ls = 36.f;
         ImGui::SetCursorPosX((SBW - ls) * 0.5f);
         ImGui::Image((ImTextureID)g_logoSRV, {ls, ls});
         ImGui::Dummy({0.f, 8.f});
@@ -716,9 +779,9 @@ static void DrawMainUI(HWND hwnd) {
         ImGui::Dummy({0.f, 6.f});
     }
 
-    // Separator line under logo
+    // Separator below logo
     float sepY = sbWP.y + ImGui::GetCursorPosY();
-    sdl->AddLine({sbWP.x+12.f, sepY}, {sbWP.x+SBW-13.f, sepY}, IC(C_BORDER,0.55f));
+    sdl->AddLine({sbWP.x+14.f, sepY}, {sbWP.x+SBW-15.f, sepY}, IC(C_BORDER,0.50f));
     ImGui::Dummy({0.f, 6.f});
 
     // Nav items
@@ -728,32 +791,36 @@ static void DrawMainUI(HWND hwnd) {
         if (NavItem(sections[i], g_section==i, SBW-1.f)) g_section = i;
     }
 
-    // Bottom fixed layout
-    bool busy = g_app.running.load();
+    // Bottom layout
+    bool  busy = g_app.running.load();
     float prog = g_app.progress.load();
 
     // Status text
     ImGui::SetCursorPos({10.f, sbH - 102.f});
-    ImGui::PushStyleColor(ImGuiCol_Text, busy ? C_RED : C_DIM2);
+    ImGui::PushStyleColor(ImGuiCol_Text, busy ? C_ACC : C_DIM2);
     ImGui::TextUnformatted(busy ? "Running..." : "Ready");
     ImGui::PopStyleColor();
 
-    // Progress bar (3px thin, drawn via DrawList)
+    // Thin progress bar
     float pbY = sbWP.y + sbH - 82.f;
-    sdl->AddRectFilled({sbWP.x+10.f, pbY}, {sbWP.x+SBW-11.f, pbY+3.f}, IM_COL32(18,6,6,255), 2.f);
+    sdl->AddRectFilled({sbWP.x+10.f, pbY}, {sbWP.x+SBW-11.f, pbY+3.f},
+        IM_COL32(18,15,50,255), 2.f);
     if (prog > 0.f) {
-        sdl->AddRectFilled({sbWP.x+10.f, pbY},
-            {sbWP.x+10.f+(SBW-21.f)*prog, pbY+3.f}, IM_COL32(205,25,25,255), 2.f);
+        sdl->AddRectFilledMultiColor(
+            {sbWP.x+10.f, pbY},
+            {sbWP.x+10.f+(SBW-21.f)*prog, pbY+3.f},
+            IM_COL32(70,52,188,255), IM_COL32(148,126,242,255),
+            IM_COL32(148,126,242,255), IM_COL32(70,52,188,255));
     }
 
     // OPTIMIZE ALL button
     ImGui::SetCursorPos({8.f, sbH - 76.f});
     if (busy) ImGui::BeginDisabled();
-    ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.52f,0.05f,0.05f,1.f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.72f,0.08f,0.08f,1.f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.36f,0.03f,0.03f,1.f));
+    ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.28f,0.22f,0.60f,1.f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.40f,0.33f,0.74f,1.f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.20f,0.16f,0.46f,1.f));
     ImGui::PushStyleColor(ImGuiCol_Text,          C_TEXT);
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 5.f);
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.f);
     if (ImGui::Button("OPTIMIZE ALL##oa", {SBW-16.f, 48.f})) {
         RunAsync([](){
             ApplyAllTweaks(g_app.progress, MakeLog());
@@ -767,7 +834,7 @@ static void DrawMainUI(HWND hwnd) {
         float t  = (float)ImGui::GetTime();
         float p2 = 0.38f + 0.28f*sinf(t*3.2f);
         auto rm  = ImGui::GetItemRectMin(); auto rM = ImGui::GetItemRectMax();
-        ImGui::GetWindowDrawList()->AddRect(rm, rM, IC(C_RED2, p2), 5.f, 0, 2.f);
+        ImGui::GetWindowDrawList()->AddRect(rm, rM, IC(C_ACC2, p2), 6.f, 0, 2.f);
     }
 
     // Discord link
@@ -779,7 +846,7 @@ static void DrawMainUI(HWND hwnd) {
     ImGui::End();
 
     // ══ CONTENT AREA ══════════════════════════════════════════════════════
-    // Section cross-fade logic
+    // Section cross-fade
     float dt = io.DeltaTime;
     if (g_sectionShown != g_section) {
         g_fadeAlpha -= dt * 8.f;
@@ -791,7 +858,7 @@ static void DrawMainUI(HWND hwnd) {
     float ctW = io.DisplaySize.x - SBW;
     float ctH = io.DisplaySize.y - TB;
 
-    // Init + update particles
+    // Particles
     if (!g_ptsInit) InitParticles(ctW, ctH);
     UpdateParticles(ctW, ctH, dt);
 
@@ -805,32 +872,30 @@ static void DrawMainUI(HWND hwnd) {
         ImGuiWindowFlags_NoSavedSettings);
     ImGui::PopStyleVar(); ImGui::PopStyleColor();
 
-    // Background: subtle dot grid + particles
+    // Background: dot grid + particles
     {
         ImDrawList* bdl = ImGui::GetWindowDrawList();
         ImVec2 wp = ImGui::GetWindowPos();
-        // Dot grid
         for (float x = 0; x < ctW; x += 48.f)
             for (float y = 0; y < ctH; y += 48.f)
-                bdl->AddCircleFilled({wp.x+x, wp.y+y}, 0.9f, IM_COL32(55,10,10,28));
-        // Particles
+                bdl->AddCircleFilled({wp.x+x, wp.y+y}, 0.9f, IM_COL32(55,38,130,22));
         DrawParticles(bdl, wp, ctW, ctH);
     }
 
-    // Section header (fades with transition)
+    // Section header with fade
     const char* titles[] = {
         "System Tweaks","Network Tweaks","GPU / Driver Tweaks","Cleanup"
     };
     ImGui::Dummy({0.f,4.f});
     ImGui::PushStyleVar(ImGuiStyleVar_Alpha, g_fadeAlpha * ImGui::GetStyle().Alpha);
-    ImGui::PushStyleColor(ImGuiCol_Text, C_RED);
+    ImGui::PushStyleColor(ImGuiCol_Text, C_ACC2);
     ImGui::SetWindowFontScale(1.12f);
     ImGui::Text("%s", titles[g_sectionShown]);
     ImGui::SetWindowFontScale(1.f);
     ImGui::PopStyleColor();
     ImGui::Dummy({0.f,6.f});
 
-    // Scrollable cards area
+    // Scrollable cards
     const float logH    = 155.f;
     float       cardAreaH = ImGui::GetContentRegionAvail().y - logH - 20.f;
     ImGui::PushStyleColor(ImGuiCol_ChildBg, {0,0,0,0});
@@ -845,7 +910,8 @@ static void DrawMainUI(HWND hwnd) {
         ImGui::TextWrapped("Removes temporary files to free up disk space and improve load times.");
         ImGui::PopStyleColor();
         ImGui::Dummy({0.f,14.f});
-        if (CardButton("##cln", "  Clean Temp Files", {220.f,50.f}, busy))
+        bool busy2 = g_app.running.load();
+        if (CardButton("##cln", "  Clean Temp Files", {220.f,50.f}, busy2))
             RunAsync([](){CleanTempFiles(g_app.progress, MakeLog());});
         ImGui::Dummy({0.f,14.f});
         ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
@@ -854,7 +920,7 @@ static void DrawMainUI(HWND hwnd) {
         const char* flds[] = {"%TEMP%","C:\\Windows\\Temp",
                               "C:\\Windows\\Prefetch","%LOCALAPPDATA%\\Temp"};
         for (auto f : flds) {
-            ImGui::PushStyleColor(ImGuiCol_Text, C_REDD);
+            ImGui::PushStyleColor(ImGuiCol_Text, C_ACCD);
             ImGui::Text("  * %s", f);
             ImGui::PopStyleColor();
         }
@@ -862,7 +928,7 @@ static void DrawMainUI(HWND hwnd) {
     ImGui::EndChild();
     ImGui::PopStyleVar(2); ImGui::PopStyleColor(); // ChildRounding + fadeAlpha + ChildBg
 
-    // Log panel (always full alpha)
+    // Log panel
     ImGui::Dummy({0.f,4.f});
     ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
     ImGui::TextUnformatted("Output");
@@ -989,7 +1055,8 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE, LPSTR, int) {
             { io.Fonts->AddFontFromFileTTF(fp,15.f); fl=true; break; }
     if (!fl) io.Fonts->AddFontDefault();
 
-    constexpr float CLEAR[4] = {0.040f,0.020f,0.020f,1.f};
+    // Clear colour matches C_BG
+    constexpr float CLEAR[4] = {0.024f, 0.022f, 0.064f, 1.f};
 
     MSG msg = {};
     while (msg.message != WM_QUIT) {
