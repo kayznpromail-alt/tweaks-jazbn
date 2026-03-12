@@ -138,6 +138,7 @@ static AppState g_app;
 static int      g_section      = 0;   // 0=System 1=Network 2=GPU 3=Cleanup
 static int      g_sectionShown = 0;   // section currently displayed
 static float    g_fadeAlpha    = 1.f; // cross-fade alpha
+static int      g_tab          = 0;   // 0=Tweaks 1=Undo Changes
 
 // ─── Particle system ──────────────────────────────────────────────────────
 struct Particle { float x,y,vx,vy,life,maxLife,r; };
@@ -184,7 +185,7 @@ static void DrawParticles(ImDrawList* dl, ImVec2 orig, float W, float H) {
         float a = (t < 0.2f ? t*5.f : (t > 0.8f ? (1.f-t)*5.f : 1.f)) * 0.25f;
         if (a < 0.01f) continue;
         dl->AddCircleFilled({orig.x+p.x, orig.y+p.y}, p.r,
-            IM_COL32(115, 88, 235, (int)(a*255)));
+            IM_COL32(0, 185, 210, (int)(a*255)));
     }
 }
 
@@ -205,25 +206,25 @@ static bool IsAdmin() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  COLOUR PALETTE  —  dark glassmorphism · violet accent
+//  COLOUR PALETTE  —  dark · cyan accent  (EDGEY style)
 // ═══════════════════════════════════════════════════════════════════════════
-// Background layers (deep navy-black)
-static const ImVec4 C_BG     = {0.024f, 0.022f, 0.064f, 1.f}; // #060610
-static const ImVec4 C_BG2    = {0.036f, 0.034f, 0.092f, 1.f}; // #09091A
-static const ImVec4 C_CARD   = {0.055f, 0.052f, 0.135f, 1.f}; // #0E0D22
-static const ImVec4 C_CARD_H = {0.082f, 0.078f, 0.188f, 1.f}; // #141430
-// Violet accent
-static const ImVec4 C_ACC    = {0.486f, 0.416f, 0.940f, 1.f}; // #7C6AF0
-static const ImVec4 C_ACC2   = {0.648f, 0.580f, 1.000f, 1.f}; // #A594FF
-static const ImVec4 C_ACCD   = {0.200f, 0.165f, 0.478f, 1.f}; // #332A7A
-static const ImVec4 C_ACCDD  = {0.090f, 0.072f, 0.230f, 1.f}; // #17123A
+// Background
+static const ImVec4 C_BG     = {0.030f, 0.028f, 0.050f, 1.f}; // #070713
+static const ImVec4 C_BG2    = {0.042f, 0.040f, 0.068f, 1.f}; // #0B0A11
+static const ImVec4 C_CARD   = {0.055f, 0.052f, 0.088f, 1.f}; // #0E0D16
+static const ImVec4 C_CARD_H = {0.070f, 0.068f, 0.110f, 1.f}; // #12111C
+// Cyan accent
+static const ImVec4 C_ACC    = {0.000f, 0.690f, 0.780f, 1.f}; // #00B0C7
+static const ImVec4 C_ACC2   = {0.000f, 0.840f, 0.940f, 1.f}; // #00D6EF
+static const ImVec4 C_ACCD   = {0.000f, 0.360f, 0.420f, 1.f}; // #005C6B
+static const ImVec4 C_ACCDD  = {0.000f, 0.185f, 0.220f, 1.f}; // #002F38
 // Text
-static const ImVec4 C_TEXT   = {0.920f, 0.908f, 0.960f, 1.f}; // #EAE7F5
-static const ImVec4 C_DIM    = {0.435f, 0.415f, 0.555f, 1.f}; // #6F6A8E
-static const ImVec4 C_DIM2   = {0.210f, 0.200f, 0.290f, 1.f}; // #35334A
+static const ImVec4 C_TEXT   = {0.930f, 0.950f, 0.965f, 1.f}; // #EDF2F7
+static const ImVec4 C_DIM    = {0.420f, 0.455f, 0.510f, 1.f}; // #6B7482
+static const ImVec4 C_DIM2   = {0.200f, 0.220f, 0.260f, 1.f}; // #333843
 // Status
 static const ImVec4 C_GREEN  = {0.180f, 0.820f, 0.640f, 1.f}; // #2ED1A3
-static const ImVec4 C_BORDER = {0.135f, 0.122f, 0.295f, 1.f}; // #221F4B
+static const ImVec4 C_BORDER = {0.040f, 0.380f, 0.440f, 1.f}; // #0A6170
 
 static ImU32 IC(ImVec4 v, float a = 1.f) {
     return IM_COL32((int)(v.x*255),(int)(v.y*255),(int)(v.z*255),(int)(v.w*a*255));
@@ -249,14 +250,14 @@ static void ApplyTheme() {
     auto* c = s.Colors;
     c[ImGuiCol_WindowBg]             = C_BG;
     c[ImGuiCol_ChildBg]              = C_BG2;
-    c[ImGuiCol_PopupBg]              = {0.042f,0.038f,0.105f,0.97f};
+    c[ImGuiCol_PopupBg]              = {0.036f,0.034f,0.060f,0.97f};
     c[ImGuiCol_FrameBg]              = C_CARD;
     c[ImGuiCol_FrameBgHovered]       = C_CARD_H;
     c[ImGuiCol_FrameBgActive]        = C_CARD_H;
     c[ImGuiCol_TitleBg]              = C_BG;
     c[ImGuiCol_TitleBgActive]        = C_BG;
-    c[ImGuiCol_Button]               = C_CARD;
-    c[ImGuiCol_ButtonHovered]        = C_CARD_H;
+    c[ImGuiCol_Button]               = C_ACCD;
+    c[ImGuiCol_ButtonHovered]        = C_ACC;
     c[ImGuiCol_ButtonActive]         = C_ACCDD;
     c[ImGuiCol_Header]               = C_CARD;
     c[ImGuiCol_HeaderHovered]        = C_CARD_H;
@@ -287,7 +288,7 @@ static void ApplyTheme() {
     c[ImGuiCol_ResizeGripHovered]    = C_ACC;
     c[ImGuiCol_ResizeGripActive]     = C_ACC2;
     c[ImGuiCol_NavHighlight]         = C_ACC;
-    c[ImGuiCol_ModalWindowDimBg]     = {0.01f,0.01f,0.04f,0.80f};
+    c[ImGuiCol_ModalWindowDimBg]     = {0.01f,0.01f,0.03f,0.80f};
     c[ImGuiCol_MenuBarBg]            = C_BG;
 }
 
@@ -325,19 +326,12 @@ static bool AccentButton(const char* label, ImVec2 sz = {0,0}) {
 }
 
 static bool PrimaryButton(const char* label, ImVec2 sz = {0,0}) {
-    ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.30f,0.24f,0.60f,1.f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.42f,0.35f,0.74f,1.f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.22f,0.17f,0.46f,1.f));
-    ImGui::PushStyleColor(ImGuiCol_Text,          C_TEXT);
+    ImGui::PushStyleColor(ImGuiCol_Button,        C_ACC);
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, C_ACC2);
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  C_ACCD);
+    ImGui::PushStyleColor(ImGuiCol_Text,          ImVec4(0.f,0.f,0.f,1.f));
     bool hit = ImGui::Button(label, sz);
     ImGui::PopStyleColor(4);
-    if (ImGui::IsItemHovered()) {
-        float t = (float)ImGui::GetTime();
-        float p = 0.5f + 0.5f * sinf(t * 3.5f);
-        auto rMin = ImGui::GetItemRectMin();
-        auto rMax = ImGui::GetItemRectMax();
-        ImGui::GetWindowDrawList()->AddRect(rMin, rMax, IC(C_ACC2, p * 0.72f), 6.f, 0, 2.f);
-    }
     return hit;
 }
 
@@ -350,11 +344,11 @@ static void DrawSpinner(ImDrawList* dl, ImVec2 C, float r, float thick, float t)
         float alpha = (float)i / (N*arc);
         ImVec2 p0 = {C.x+cosf(a0)*r, C.y+sinf(a0)*r};
         ImVec2 p1 = {C.x+cosf(a1)*r, C.y+sinf(a1)*r};
-        dl->AddLine(p0, p1, IM_COL32(120,98,240,(ImU8)(alpha*230)), thick);
+        dl->AddLine(p0, p1, IM_COL32(0,185,210,(ImU8)(alpha*230)), thick);
     }
     float ta = t*spd + arc*IM_PI*2.f;
     ImVec2 tip = {C.x+cosf(ta)*r, C.y+sinf(ta)*r};
-    dl->AddCircleFilled(tip, thick*1.6f, IM_COL32(185,165,255,255));
+    dl->AddCircleFilled(tip, thick*1.6f, IM_COL32(0,220,245,255));
 }
 
 // ─── Loading screen ───────────────────────────────────────────────────────
@@ -380,14 +374,14 @@ static void DrawLoadingScreen() {
     // Dot grid background
     for (int x = 0; x < (int)io.DisplaySize.x; x += 52)
         for (int y = 0; y < (int)io.DisplaySize.y; y += 52)
-            dl->AddCircleFilled({(float)x,(float)y}, 0.9f, IM_COL32(75,55,175,20));
+            dl->AddCircleFilled({(float)x,(float)y}, 0.9f, IM_COL32(0,130,155,18));
 
     // Radial ambient glow behind card
     for (int i = 5; i >= 0; i--) {
         float rr  = 180.f + i*55.f;
-        float aa  = 0.14f - i*0.022f + 0.04f*sinf(t*0.75f + i*0.4f);
+        float aa  = 0.12f - i*0.018f + 0.035f*sinf(t*0.75f + i*0.4f);
         if (aa > 0.f)
-            dl->AddCircleFilled(cx, rr, IM_COL32(72,50,195,(int)(aa*255)), 96);
+            dl->AddCircleFilled(cx, rr, IM_COL32(0,155,178,(int)(aa*255)), 96);
     }
 
     // ── Glass card ────────────────────────────────────────────────────────
@@ -403,20 +397,20 @@ static void DrawLoadingScreen() {
     }
 
     // Card body
-    dl->AddRectFilled({cX,cY},{cX+cW,cY+cH}, IM_COL32(11,10,28,245), cR);
+    dl->AddRectFilled({cX,cY},{cX+cW,cY+cH}, IM_COL32(9,9,20,248), cR);
 
     // Inner top sheen (glass highlight)
     dl->AddRectFilled({cX+1.f,cY+1.f},{cX+cW-1.f,cY+28.f},
-        IM_COL32(175,155,255,9), cR);
+        IM_COL32(0,190,220,8), cR);
 
     // Card border (pulsing)
     float bp = 0.38f + 0.18f*sinf(t*1.3f);
     dl->AddRect({cX,cY},{cX+cW,cY+cH},
-        IM_COL32(122,98,242,(int)(bp*72)), cR, 0, 1.2f);
+        IM_COL32(0,165,188,(int)(bp*80)), cR, 0, 1.2f);
 
     // Top accent line
     dl->AddLine({cX+cR, cY+0.7f},{cX+cW-cR, cY+0.7f},
-        IM_COL32(155,128,255,(int)(bp*130)), 1.5f);
+        IM_COL32(0,200,228,(int)(bp*140)), 1.5f);
 
     // ── Content inside card ───────────────────────────────────────────────
     float iY = cY + 30.f;
@@ -432,27 +426,31 @@ static void DrawLoadingScreen() {
     // Brand name
     ImGui::SetWindowFontScale(2.0f);
     {
-        const char* brand = "EMINENCE";
-        float bW = ImGui::CalcTextSize(brand).x;
+        const char* b1 = "EMINENCE"; const char* b2 = " TWEAK";
+        float bW = ImGui::CalcTextSize(b1).x + ImGui::CalcTextSize(b2).x;
         ImGui::SetCursorScreenPos({cx.x - bW*0.5f, iY});
-        ImGui::PushStyleColor(ImGuiCol_Text, C_ACC2);
-        ImGui::Text("%s", brand);
+        ImGui::PushStyleColor(ImGuiCol_Text, C_TEXT);
+        ImGui::Text("%s", b1);
         ImGui::PopStyleColor();
-        iY += ImGui::GetTextLineHeight() + 2.f;
+        ImGui::SameLine(0.f,0.f);
+        ImGui::PushStyleColor(ImGuiCol_Text, C_ACC2);
+        ImGui::Text("%s", b2);
+        ImGui::PopStyleColor();
+        iY += ImGui::GetTextLineHeight() + 4.f;
     }
     ImGui::SetWindowFontScale(1.f);
     {
-        const char* sub = "TWEAK";
+        const char* sub = "GAMING PC OPTIMIZER";
         float sW = ImGui::CalcTextSize(sub).x;
         ImGui::SetCursorScreenPos({cx.x - sW*0.5f, iY});
-        ImGui::PushStyleColor(ImGuiCol_Text, C_TEXT);
+        ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
         ImGui::Text("%s", sub);
         ImGui::PopStyleColor();
         iY += ImGui::GetTextLineHeight() + 10.f;
     }
 
     // Thin separator inside card
-    dl->AddLine({cX+36.f, iY}, {cX+cW-36.f, iY}, IM_COL32(95,75,190,38), 0.8f);
+    dl->AddLine({cX+36.f, iY}, {cX+cW-36.f, iY}, IM_COL32(0,140,165,40), 0.8f);
     iY += 10.f;
 
     // Subtitle / version
@@ -476,15 +474,15 @@ static void DrawLoadingScreen() {
     // Progress bar (gradient)
     float bW2 = cW - 56.f;
     float bX  = cX + 28.f;
-    dl->AddRectFilled({bX,iY},{bX+bW2,iY+2.5f}, IM_COL32(26,22,66,255), 2.f);
+    dl->AddRectFilled({bX,iY},{bX+bW2,iY+2.5f}, IM_COL32(0,45,55,255), 2.f);
     if (prog > 0.f) {
         dl->AddRectFilledMultiColor(
             {bX,iY},{bX+bW2*prog,iY+2.5f},
-            IM_COL32(72,55,195,255), IM_COL32(160,138,255,255),
-            IM_COL32(160,138,255,255), IM_COL32(72,55,195,255));
+            IM_COL32(0,140,165,255), IM_COL32(0,210,240,255),
+            IM_COL32(0,210,240,255), IM_COL32(0,140,165,255));
         float tx = bX + bW2*prog;
-        dl->AddCircleFilled({tx, iY+1.2f}, 4.5f, IM_COL32(150,125,255,48));
-        dl->AddCircleFilled({tx, iY+1.2f}, 2.2f, IM_COL32(195,178,255,255));
+        dl->AddCircleFilled({tx, iY+1.2f}, 4.5f, IM_COL32(0,200,230,48));
+        dl->AddCircleFilled({tx, iY+1.2f}, 2.2f, IM_COL32(0,230,255,255));
     }
     iY += 13.f;
 
@@ -572,7 +570,7 @@ static bool NavItem(const char* label, bool active, float w) {
     return clicked;
 }
 
-// ─── Glass card button ────────────────────────────────────────────────────
+// ─── Flat cyan button (EDGEY style) ──────────────────────────────────────
 static bool CardButton(const char* id, const char* label, ImVec2 sz, bool disabled=false) {
     ImDrawList* dl = ImGui::GetWindowDrawList();
     ImVec2 pos     = ImGui::GetCursorScreenPos();
@@ -584,42 +582,37 @@ static bool CardButton(const char* id, const char* label, ImVec2 sz, bool disabl
         clicked = ImGui::IsItemClicked();
         hov     = ImGui::IsItemHovered();
     }
-    float a = disabled ? 0.40f : 1.f;
+    float a = disabled ? 0.35f : 1.f;
 
-    // Card body
-    ImU32 bg = hov ? IM_COL32(20,17,52,(int)(255*a))
-                   : IM_COL32(13,11,32,(int)(255*a));
-    dl->AddRectFilled(pos, {pos.x+sz.x, pos.y+sz.y}, bg, 7.f);
+    // Solid cyan fill
+    ImU32 bg = hov ? IM_COL32(0,190,215,(int)(255*a))
+                   : IM_COL32(0,160,182,(int)(255*a));
+    dl->AddRectFilled(pos, {pos.x+sz.x, pos.y+sz.y}, bg, 8.f);
 
-    // Top inner highlight (glass sheen)
-    if (hov)
-        dl->AddRectFilled(pos, {pos.x+sz.x, pos.y+5.f},
-            IM_COL32(155,130,255,(int)(20*a)), 7.f);
+    // Top inner highlight
+    if (!disabled)
+        dl->AddRectFilled(pos, {pos.x+sz.x, pos.y+4.f},
+            IM_COL32(255,255,255,(int)(hov?22:14)), 8.f);
 
-    // Border
-    float ba = hov ? 0.52f : 0.20f;
-    dl->AddRect(pos, {pos.x+sz.x, pos.y+sz.y},
-        IM_COL32(116,92,238,(int)(ba*255*a)), 7.f, 0, 1.f);
-
-    // Label
+    // Label centered
     ImVec2 tsz = ImGui::CalcTextSize(label);
-    ImU32 tc = disabled ? IM_COL32(78,68,105,140)
-             : (hov     ? ImGui::ColorConvertFloat4ToU32(C_TEXT)
-                        : IM_COL32(175,165,218,255));
-    dl->AddText({pos.x+14.f, pos.y+(sz.y-tsz.y)*0.5f}, tc, label);
+    float tx = pos.x + (sz.x - tsz.x) * 0.5f;
+    float ty = pos.y + (sz.y - tsz.y) * 0.5f;
+    ImU32 tc = disabled ? IM_COL32(200,235,240,90) : IM_COL32(255,255,255,255);
+    dl->AddText({tx, ty}, tc, label);
     return clicked;
 }
 
-// ─── 2-column grid of tweak groups ───────────────────────────────────────
-static void DrawCleanGrid(const std::vector<TweakGroup>& groups) {
+// ─── 3-column grid of tweak groups ───────────────────────────────────────
+static void DrawTweakGrid(const std::vector<TweakGroup>& groups, int idOffset = 0) {
     bool  busy  = g_app.running.load();
     float avail = ImGui::GetContentRegionAvail().x;
     float gap   = 8.f;
-    float cardW = (avail - gap) / 2.f;
+    float cardW = (avail - gap*2.f) / 3.f;
     int   col   = 0;
     for (size_t i = 0; i < groups.size(); i++) {
-        std::string id = "##cg" + std::to_string(i);
-        if (CardButton(id.c_str(), groups[i].name.c_str(), {cardW, 44.f}, busy)) {
+        std::string id = "##cg" + std::to_string(i + idOffset);
+        if (CardButton(id.c_str(), groups[i].name.c_str(), {cardW, 48.f}, busy)) {
             RunAsync([grp = std::vector<TweakGroup>{groups[i]}]() {
                 std::atomic<float> p = 0.f;
                 ApplyTweakGroups(grp, p, MakeLog());
@@ -627,8 +620,48 @@ static void DrawCleanGrid(const std::vector<TweakGroup>& groups) {
             });
         }
         col++;
-        if (col < 2) ImGui::SameLine(0.f, gap); else { col=0; ImGui::Dummy({0.f,4.f}); }
+        if (col < 3) ImGui::SameLine(0.f, gap);
+        else { col = 0; ImGui::Dummy({0.f, 6.f}); }
     }
+}
+
+// ─── Combined all-tweaks grid (Tweaks tab) ────────────────────────────────
+static void DrawAllTweaksGrid() {
+    bool  busy  = g_app.running.load();
+    float avail = ImGui::GetContentRegionAvail().x;
+    float gap   = 8.f;
+    float cardW = (avail - gap*2.f) / 3.f;
+    const float cardH = 48.f;
+    int   col   = 0;
+
+    // Combine all groups + cleanup
+    std::vector<const TweakGroup*> all;
+    for (auto& g : g_systemTweaks)  all.push_back(&g);
+    for (auto& g : g_networkTweaks) all.push_back(&g);
+    for (auto& g : g_gpuTweaks)     all.push_back(&g);
+
+    for (size_t i = 0; i < all.size(); i++) {
+        std::string id = "##ag" + std::to_string(i);
+        if (CardButton(id.c_str(), all[i]->name.c_str(), {cardW, cardH}, busy)) {
+            RunAsync([grp = std::vector<TweakGroup>{*all[i]}]() {
+                std::atomic<float> p = 0.f;
+                ApplyTweakGroups(grp, p, MakeLog());
+                g_app.progress.store(1.f);
+            });
+        }
+        col++;
+        if (col < 3) ImGui::SameLine(0.f, gap);
+        else { col = 0; ImGui::Dummy({0.f, 6.f}); }
+    }
+
+    // Cleanup button
+    std::string cid = "##agcln";
+    if (CardButton(cid.c_str(), "Clean Temp Files", {cardW, cardH}, busy)) {
+        RunAsync([](){CleanTempFiles(g_app.progress, MakeLog());});
+    }
+    col++;
+    if (col < 3) ImGui::SameLine(0.f, gap);
+    else { col = 0; ImGui::Dummy({0.f, 6.f}); }
 }
 
 // ─── Reboot dialog ────────────────────────────────────────────────────────
@@ -654,73 +687,100 @@ static void DrawRebootDialog() {
     }
 }
 
-// ─── Title bar ────────────────────────────────────────────────────────────
-static bool DrawTitleBar(HWND hwnd) {
+// ─── Header (EDGEY-style: logo left, title centred, controls right) ───────
+static const float HDR_H = 110.f;
+static const float TAB_H = 52.f;
+
+static bool DrawHeader(HWND hwnd) {
     ImGuiIO& io = ImGui::GetIO();
-    const float H = 50.f;
     ImGui::SetNextWindowPos({0,0});
-    ImGui::SetNextWindowSize({io.DisplaySize.x, H});
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.015f,0.014f,0.042f,1.f));
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,{16.f,0.f});
+    ImGui::SetNextWindowSize({io.DisplaySize.x, HDR_H});
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.018f,0.017f,0.032f,1.f));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,{0.f,0.f});
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize,0.f);
-    ImGui::Begin("##tb",nullptr,
+    ImGui::Begin("##hdr",nullptr,
         ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|
         ImGuiWindowFlags_NoScrollbar|ImGuiWindowFlags_NoBringToFrontOnFocus|
         ImGuiWindowFlags_NoSavedSettings);
     ImGui::PopStyleVar(2); ImGui::PopStyleColor();
 
-    // Logo icon
-    float textY = (H - ImGui::GetTextLineHeight()*1.5f)*0.5f;
-    float curX  = 16.f;
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    ImVec2 wp = ImGui::GetWindowPos();
+
+    // Subtle cyan glow at top
+    dl->AddRectFilled({wp.x,wp.y},{wp.x+io.DisplaySize.x,wp.y+2.f},
+        IM_COL32(0,195,225,200));
+    // Bottom border
+    dl->AddLine({wp.x, wp.y+HDR_H-1.f},{wp.x+io.DisplaySize.x, wp.y+HDR_H-1.f},
+        IM_COL32(0,120,145,60), 1.f);
+
+    // Logo — left side
     if (g_logoSRV) {
-        const float icoSize = 28.f;
-        ImGui::SetCursorPos({curX, (H - icoSize) * 0.5f});
-        ImGui::Image((ImTextureID)g_logoSRV, {icoSize, icoSize});
-        ImGui::SameLine(0.f, 10.f);
-        curX = ImGui::GetCursorPosX();
+        const float ls = 52.f;
+        float lx = 22.f, ly = (HDR_H - ls) * 0.5f;
+        ImGui::SetCursorPos({lx, ly});
+        ImGui::Image((ImTextureID)g_logoSRV, {ls, ls});
     }
-    ImGui::SetCursorPos({curX, textY});
-    ImGui::SetWindowFontScale(1.22f);
-    ImGui::PushStyleColor(ImGuiCol_Text, C_ACC2);
-    ImGui::Text("EMINENCE");
-    ImGui::PopStyleColor();
-    ImGui::SameLine(0.f,7.f);
-    ImGui::PushStyleColor(ImGuiCol_Text, C_TEXT);
-    ImGui::Text("TWEAK");
-    ImGui::PopStyleColor();
-    ImGui::SetWindowFontScale(1.f);
-    ImGui::SameLine(0.f,9.f);
-    ImGui::SetCursorPosY((H-ImGui::GetTextLineHeight())*0.5f+1.f);
-    ImGui::PushStyleColor(ImGuiCol_Text, C_DIM2);
-    ImGui::Text("v3.0");
-    ImGui::PopStyleColor();
 
-    // Admin badge
-    bool admin = IsAdmin();
-    ImGui::SameLine(0.f,22.f);
-    ImGui::SetCursorPosY((H-ImGui::GetFrameHeight())*0.5f);
-    ImGui::PushStyleColor(ImGuiCol_Text, admin ? C_GREEN : C_ACCD);
-    ImGui::Text(admin ? " ADMIN" : " NO ADMIN");
-    ImGui::PopStyleColor();
+    // Centred title block
+    {
+        ImGui::SetWindowFontScale(1.9f);
+        float lineH = ImGui::GetTextLineHeight();
+        ImGui::SetWindowFontScale(1.f);
+        float subH  = ImGui::GetTextLineHeight();
+        float totalH = lineH + 4.f + subH;
+        float startY = (HDR_H - totalH) * 0.5f;
 
-    // Discord
-    ImGui::SameLine(0.f,18.f);
-    ImGui::SetCursorPosY((H-ImGui::GetTextLineHeight())*0.5f);
-    ImGui::PushStyleColor(ImGuiCol_Text, C_DIM2);
-    ImGui::Text("discord.gg/eminencehardware");
-    ImGui::PopStyleColor();
+        // "EMINENCE TWEAK" — two-tone
+        ImGui::SetWindowFontScale(1.9f);
+        const char* t1 = "EMINENCE"; const char* t2 = " TWEAK";
+        float w1 = ImGui::CalcTextSize(t1).x;
+        float w2 = ImGui::CalcTextSize(t2).x;
+        float cx = (io.DisplaySize.x - (w1+w2)) * 0.5f;
+        ImGui::SetCursorPos({cx, startY});
+        ImGui::PushStyleColor(ImGuiCol_Text, C_TEXT);
+        ImGui::Text("%s", t1);
+        ImGui::PopStyleColor();
+        ImGui::SameLine(0.f,0.f);
+        ImGui::PushStyleColor(ImGuiCol_Text, C_ACC2);
+        ImGui::Text("%s", t2);
+        ImGui::PopStyleColor();
+        ImGui::SetWindowFontScale(1.f);
 
-    // Window controls
-    float ctrlW = 90.f;
-    ImGui::SetCursorPos({io.DisplaySize.x-ctrlW, 0.f});
+        // Subtitle
+        const char* sub = "GAMING PC OPTIMIZER";
+        float sw = ImGui::CalcTextSize(sub).x;
+        ImGui::SetCursorPos({(io.DisplaySize.x-sw)*0.5f, startY+lineH+4.f});
+        ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
+        ImGui::Text("%s", sub);
+        ImGui::PopStyleColor();
+    }
+
+    // Admin badge (below subtitle, centred-ish)
+    {
+        bool admin = IsAdmin();
+        ImGui::PushStyleColor(ImGuiCol_Text, admin ? C_GREEN : C_ACCD);
+        float aw = ImGui::CalcTextSize(admin?" ADMIN":"NO ADMIN").x;
+        ImGui::SetCursorPos({18.f, HDR_H-22.f});
+        ImGui::Text(admin ? " ADMIN" : "NO ADMIN");
+        ImGui::PopStyleColor();
+        ImGui::SetCursorPos({18.f+aw+10.f, HDR_H-22.f});
+        ImGui::PushStyleColor(ImGuiCol_Text, C_DIM2);
+        ImGui::Text("discord.gg/eminencehardware");
+        ImGui::PopStyleColor();
+    }
+
+    // Window controls — top right
+    const float btnW = 46.f;
     ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding,0.f);
     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing,{0,0});
 
+    ImGui::SetCursorPos({io.DisplaySize.x - btnW*2.f, 0.f});
     ImGui::PushStyleColor(ImGuiCol_Button,        {0,0,0,0});
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, {1.f,1.f,1.f,0.06f});
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  {1.f,1.f,1.f,0.10f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, {1.f,1.f,1.f,0.07f});
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  {1.f,1.f,1.f,0.12f});
     ImGui::PushStyleColor(ImGuiCol_Text,          C_DIM);
-    if (ImGui::Button(" \xe2\x80\x94 ##mn",{45.f,H})) ShowWindow(hwnd,SW_MINIMIZE);
+    if (ImGui::Button(" \xe2\x80\x94 ##mn",{btnW,HDR_H*0.45f})) ShowWindow(hwnd,SW_MINIMIZE);
     ImGui::PopStyleColor(4);
 
     ImGui::SameLine();
@@ -728,218 +788,202 @@ static bool DrawTitleBar(HWND hwnd) {
     ImGui::PushStyleColor(ImGuiCol_ButtonHovered, {0.62f,0.07f,0.07f,1.f});
     ImGui::PushStyleColor(ImGuiCol_ButtonActive,  {0.44f,0.04f,0.04f,1.f});
     ImGui::PushStyleColor(ImGuiCol_Text,          C_DIM);
-    bool cls = ImGui::Button(" X ##cl",{45.f,H});
+    bool cls = ImGui::Button(" X ##cl",{btnW,HDR_H*0.45f});
     ImGui::PopStyleColor(4);
     ImGui::PopStyleVar(2);
-
-    // Bottom accent hairline
-    ImVec2 wp = ImGui::GetWindowPos();
-    ImGui::GetWindowDrawList()->AddLine(
-        {wp.x, wp.y+H-1.f}, {wp.x+io.DisplaySize.x, wp.y+H-1.f},
-        IC(C_BORDER, 0.85f), 1.f);
 
     ImGui::End();
     return cls;
 }
 
-// ─── Main UI ─────────────────────────────────────────────────────────────
-static void DrawMainUI(HWND hwnd) {
+// ─── Tab bar ─────────────────────────────────────────────────────────────
+static void DrawTabBar() {
     ImGuiIO& io = ImGui::GetIO();
-    if (DrawTitleBar(hwnd)) g_wantClose = true;
-
-    const float TB  = 50.f;
-    const float SBW = 198.f;
-    float sbH = io.DisplaySize.y - TB;
-
-    // ══ SIDEBAR ═══════════════════════════════════════════════════════════
-    ImGui::SetNextWindowPos({0.f, TB});
-    ImGui::SetNextWindowSize({SBW, sbH});
-    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.014f,0.013f,0.040f,1.f));
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.f,0.f});
-    ImGui::Begin("##sb", nullptr,
+    ImGui::SetNextWindowPos({0.f, HDR_H});
+    ImGui::SetNextWindowSize({io.DisplaySize.x, TAB_H});
+    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.022f,0.020f,0.038f,1.f));
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding,{0.f,0.f});
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize,0.f);
+    ImGui::Begin("##tabs",nullptr,
         ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|
-        ImGuiWindowFlags_NoScrollbar|ImGuiWindowFlags_NoScrollWithMouse|
-        ImGuiWindowFlags_NoBringToFrontOnFocus|ImGuiWindowFlags_NoSavedSettings);
-    ImGui::PopStyleVar(); ImGui::PopStyleColor();
+        ImGuiWindowFlags_NoScrollbar|ImGuiWindowFlags_NoBringToFrontOnFocus|
+        ImGuiWindowFlags_NoSavedSettings);
+    ImGui::PopStyleVar(2); ImGui::PopStyleColor();
 
-    ImDrawList* sdl = ImGui::GetWindowDrawList();
-    ImVec2 sbWP = ImGui::GetWindowPos();
-    // Right separator line
-    sdl->AddLine({sbWP.x+SBW-1.f, sbWP.y}, {sbWP.x+SBW-1.f, sbWP.y+sbH},
-        IC(C_BORDER,0.85f));
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+    ImVec2 wp = ImGui::GetWindowPos();
 
-    // Logo in sidebar
-    ImGui::Dummy({0.f, 14.f});
-    if (g_logoSRV) {
-        const float ls = 36.f;
-        ImGui::SetCursorPosX((SBW - ls) * 0.5f);
-        ImGui::Image((ImTextureID)g_logoSRV, {ls, ls});
-        ImGui::Dummy({0.f, 8.f});
-    } else {
-        ImGui::Dummy({0.f, 6.f});
+    const char* tabs[] = {"Tweaks","Undo Changes"};
+    const float tabW   = 200.f;
+    const float totalW = tabW * 2.f + 16.f;
+    float startX = (io.DisplaySize.x - totalW) * 0.5f;
+
+    for (int i = 0; i < 2; i++) {
+        float tx = startX + i * (tabW + 16.f);
+        ImVec2 tpos = {wp.x + tx, wp.y};
+        bool active = (g_tab == i);
+        bool hov = ImGui::IsMouseHoveringRect(tpos,{tpos.x+tabW, tpos.y+TAB_H});
+
+        ImU32 tc = active ? IM_COL32(0,215,240,255)
+                 : (hov   ? IM_COL32(160,215,225,255)
+                          : IM_COL32(100,130,145,255));
+        dl->AddText({tpos.x + (tabW - ImGui::CalcTextSize(tabs[i]).x)*0.5f,
+                     tpos.y + (TAB_H - ImGui::GetTextLineHeight())*0.5f}, tc, tabs[i]);
+        if (active)
+            dl->AddRectFilled({tpos.x + 20.f, tpos.y+TAB_H-2.5f},
+                              {tpos.x + tabW - 20.f, tpos.y+TAB_H},
+                              IM_COL32(0,200,230,255), 2.f);
+        if (hov && ImGui::IsMouseClicked(0)) g_tab = i;
     }
 
-    // Separator below logo
-    float sepY = sbWP.y + ImGui::GetCursorPosY();
-    sdl->AddLine({sbWP.x+14.f, sepY}, {sbWP.x+SBW-15.f, sepY}, IC(C_BORDER,0.50f));
-    ImGui::Dummy({0.f, 6.f});
-
-    // Nav items
-    const char* sections[] = {"System","Network","GPU","Cleanup"};
-    for (int i = 0; i < 4; i++) {
-        ImGui::SetCursorPosX(0.f);
-        if (NavItem(sections[i], g_section==i, SBW-1.f)) g_section = i;
-    }
-
-    // Bottom layout
-    bool  busy = g_app.running.load();
-    float prog = g_app.progress.load();
-
-    // Status text
-    ImGui::SetCursorPos({10.f, sbH - 102.f});
-    ImGui::PushStyleColor(ImGuiCol_Text, busy ? C_ACC : C_DIM2);
-    ImGui::TextUnformatted(busy ? "Running..." : "Ready");
-    ImGui::PopStyleColor();
-
-    // Thin progress bar
-    float pbY = sbWP.y + sbH - 82.f;
-    sdl->AddRectFilled({sbWP.x+10.f, pbY}, {sbWP.x+SBW-11.f, pbY+3.f},
-        IM_COL32(18,15,50,255), 2.f);
-    if (prog > 0.f) {
-        sdl->AddRectFilledMultiColor(
-            {sbWP.x+10.f, pbY},
-            {sbWP.x+10.f+(SBW-21.f)*prog, pbY+3.f},
-            IM_COL32(70,52,188,255), IM_COL32(148,126,242,255),
-            IM_COL32(148,126,242,255), IM_COL32(70,52,188,255));
-    }
-
-    // OPTIMIZE ALL button
-    ImGui::SetCursorPos({8.f, sbH - 76.f});
-    if (busy) ImGui::BeginDisabled();
-    ImGui::PushStyleColor(ImGuiCol_Button,        ImVec4(0.28f,0.22f,0.60f,1.f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.40f,0.33f,0.74f,1.f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive,  ImVec4(0.20f,0.16f,0.46f,1.f));
-    ImGui::PushStyleColor(ImGuiCol_Text,          C_TEXT);
-    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.f);
-    if (ImGui::Button("OPTIMIZE ALL##oa", {SBW-16.f, 48.f})) {
-        RunAsync([](){
-            ApplyAllTweaks(g_app.progress, MakeLog());
-            g_app.showRebootDlg = true;
-        });
-    }
-    ImGui::PopStyleVar();
-    ImGui::PopStyleColor(4);
-    if (busy) ImGui::EndDisabled();
-    if (ImGui::IsItemHovered()) {
-        float t  = (float)ImGui::GetTime();
-        float p2 = 0.38f + 0.28f*sinf(t*3.2f);
-        auto rm  = ImGui::GetItemRectMin(); auto rM = ImGui::GetItemRectMax();
-        ImGui::GetWindowDrawList()->AddRect(rm, rM, IC(C_ACC2, p2), 6.f, 0, 2.f);
-    }
-
-    // Discord link
-    ImGui::SetCursorPos({10.f, sbH - 22.f});
-    ImGui::PushStyleColor(ImGuiCol_Text, C_DIM2);
-    ImGui::TextUnformatted("discord.gg/eminencehardware");
-    ImGui::PopStyleColor();
+    // Bottom separator
+    dl->AddLine({wp.x, wp.y+TAB_H-1.f},{wp.x+io.DisplaySize.x, wp.y+TAB_H-1.f},
+        IM_COL32(0,100,120,55), 1.f);
 
     ImGui::End();
+}
 
-    // ══ CONTENT AREA ══════════════════════════════════════════════════════
-    // Section cross-fade
-    float dt = io.DeltaTime;
-    if (g_sectionShown != g_section) {
-        g_fadeAlpha -= dt * 8.f;
-        if (g_fadeAlpha <= 0.f) { g_fadeAlpha = 0.f; g_sectionShown = g_section; }
-    } else {
-        g_fadeAlpha = std::min(g_fadeAlpha + dt * 8.f, 1.f);
-    }
+// ─── Main UI (no sidebar, EDGEY layout) ──────────────────────────────────
+static void DrawMainUI(HWND hwnd) {
+    ImGuiIO& io = ImGui::GetIO();
+    if (DrawHeader(hwnd)) g_wantClose = true;
+    DrawTabBar();
 
-    float ctW = io.DisplaySize.x - SBW;
-    float ctH = io.DisplaySize.y - TB;
+    const float topY = HDR_H + TAB_H;
+    float ctW = io.DisplaySize.x;
+    float ctH = io.DisplaySize.y - topY;
 
     // Particles
+    float dt = io.DeltaTime;
     if (!g_ptsInit) InitParticles(ctW, ctH);
     UpdateParticles(ctW, ctH, dt);
 
-    ImGui::SetNextWindowPos({SBW, TB});
+    ImGui::SetNextWindowPos({0.f, topY});
     ImGui::SetNextWindowSize({ctW, ctH});
     ImGui::PushStyleColor(ImGuiCol_WindowBg, C_BG);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {14.f,10.f});
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {16.f,12.f});
     ImGui::Begin("##ct", nullptr,
         ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove|
         ImGuiWindowFlags_NoScrollbar|ImGuiWindowFlags_NoBringToFrontOnFocus|
         ImGuiWindowFlags_NoSavedSettings);
     ImGui::PopStyleVar(); ImGui::PopStyleColor();
 
-    // Background: dot grid + particles
+    // Background: subtle dot grid + particles
     {
         ImDrawList* bdl = ImGui::GetWindowDrawList();
         ImVec2 wp = ImGui::GetWindowPos();
         for (float x = 0; x < ctW; x += 48.f)
             for (float y = 0; y < ctH; y += 48.f)
-                bdl->AddCircleFilled({wp.x+x, wp.y+y}, 0.9f, IM_COL32(55,38,130,22));
+                bdl->AddCircleFilled({wp.x+x, wp.y+y}, 0.8f, IM_COL32(0,120,145,16));
         DrawParticles(bdl, wp, ctW, ctH);
     }
 
-    // Section header with fade
-    const char* titles[] = {
-        "System Tweaks","Network Tweaks","GPU / Driver Tweaks","Cleanup"
-    };
-    ImGui::Dummy({0.f,4.f});
-    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, g_fadeAlpha * ImGui::GetStyle().Alpha);
-    ImGui::PushStyleColor(ImGuiCol_Text, C_ACC2);
-    ImGui::SetWindowFontScale(1.12f);
-    ImGui::Text("%s", titles[g_sectionShown]);
-    ImGui::SetWindowFontScale(1.f);
-    ImGui::PopStyleColor();
-    ImGui::Dummy({0.f,6.f});
+    bool busy = g_app.running.load();
+    float prog = g_app.progress.load();
 
-    // Scrollable cards
-    const float logH    = 155.f;
-    float       cardAreaH = ImGui::GetContentRegionAvail().y - logH - 20.f;
-    ImGui::PushStyleColor(ImGuiCol_ChildBg, {0,0,0,0});
-    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.f);
-    ImGui::BeginChild("##ca", {-1.f, cardAreaH}, false);
-    if      (g_sectionShown == 0) DrawCleanGrid(g_systemTweaks);
-    else if (g_sectionShown == 1) DrawCleanGrid(g_networkTweaks);
-    else if (g_sectionShown == 2) DrawCleanGrid(g_gpuTweaks);
+    // ── TWEAKS TAB ────────────────────────────────────────────────────────
+    if (g_tab == 0) {
+        // Scrollable button grid
+        const float botH = 68.f; // bottom bar height
+        float gridH = ImGui::GetContentRegionAvail().y - botH;
+        ImGui::PushStyleColor(ImGuiCol_ChildBg, {0,0,0,0});
+        ImGui::BeginChild("##grid", {-1.f, gridH}, false);
+        ImGui::Dummy({0.f, 4.f});
+        DrawAllTweaksGrid();
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
+
+        // Bottom bar: progress + OPTIMIZE ALL
+        ImGui::Dummy({0.f, 6.f});
+
+        // Progress bar
+        {
+            ImDrawList* dl = ImGui::GetWindowDrawList();
+            ImVec2 ps = ImGui::GetCursorScreenPos();
+            float barW = io.DisplaySize.x - 32.f;
+            dl->AddRectFilled(ps, {ps.x+barW, ps.y+3.f}, IM_COL32(0,40,50,220), 2.f);
+            if (prog > 0.f)
+                dl->AddRectFilledMultiColor(ps, {ps.x+barW*prog, ps.y+3.f},
+                    IM_COL32(0,130,155,255), IM_COL32(0,205,235,255),
+                    IM_COL32(0,205,235,255), IM_COL32(0,130,155,255));
+            ImGui::Dummy({0.f, 8.f});
+        }
+
+        // Status + OPTIMIZE ALL
+        ImGui::PushStyleColor(ImGuiCol_Text, busy ? C_ACC : C_DIM);
+        ImGui::Text(busy ? "Running..." : "Ready");
+        ImGui::PopStyleColor();
+        ImGui::SameLine();
+        float btnW2 = 180.f;
+        ImGui::SetCursorPosX(ImGui::GetContentRegionAvail().x - btnW2 + 16.f);
+        if (busy) ImGui::BeginDisabled();
+        if (CardButton("##optall","OPTIMIZE ALL",{btnW2, 36.f}, busy)) {
+            RunAsync([](){
+                ApplyAllTweaks(g_app.progress, MakeLog());
+                g_app.showRebootDlg = true;
+            });
+        }
+        if (busy) ImGui::EndDisabled();
+    }
+
+    // ── UNDO CHANGES TAB ─────────────────────────────────────────────────
     else {
-        ImGui::Dummy({0.f,8.f});
+        ImGui::Dummy({0.f, 8.f});
         ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
-        ImGui::TextWrapped("Removes temporary files to free up disk space and improve load times.");
+        ImGui::TextWrapped("Restore Windows defaults for key settings changed by Eminence Tweak.");
         ImGui::PopStyleColor();
-        ImGui::Dummy({0.f,14.f});
-        bool busy2 = g_app.running.load();
-        if (CardButton("##cln", "  Clean Temp Files", {220.f,50.f}, busy2))
-            RunAsync([](){CleanTempFiles(g_app.progress, MakeLog());});
-        ImGui::Dummy({0.f,14.f});
-        ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
-        ImGui::TextUnformatted("Targets:");
-        ImGui::PopStyleColor();
-        const char* flds[] = {"%TEMP%","C:\\Windows\\Temp",
-                              "C:\\Windows\\Prefetch","%LOCALAPPDATA%\\Temp"};
-        for (auto f : flds) {
-            ImGui::PushStyleColor(ImGuiCol_Text, C_ACCD);
-            ImGui::Text("  * %s", f);
-            ImGui::PopStyleColor();
+        ImGui::Dummy({0.f, 14.f});
+
+        float avail = ImGui::GetContentRegionAvail().x;
+        float gap   = 8.f;
+        float cw    = (avail - gap*2.f) / 3.f;
+        float ch    = 48.f;
+
+        struct UndoEntry { const char* name; const char* cmd; };
+        static const UndoEntry undos[] = {
+            {"Re-enable Windows Update",   "sc config wuauserv start= auto && net start wuauserv"},
+            {"Re-enable Windows Defender", "sc config WinDefend start= auto && net start WinDefend"},
+            {"Re-enable Hibernate",        "powercfg /h on"},
+            {"Re-enable Xbox Game Bar",    "reg add \"HKCU\\SOFTWARE\\Microsoft\\GameBar\" /v ShowStartupPanel /t REG_DWORD /d 1 /f"},
+            {"Re-enable Notifications",    "reg add \"HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\PushNotifications\" /v ToastEnabled /t REG_DWORD /d 1 /f"},
+            {"Re-enable Telemetry",        "reg add \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection\" /v AllowTelemetry /t REG_DWORD /d 1 /f"},
+            {"Restore USB Power-Saving",   "powercfg /setacvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 1 && powercfg /setdcvalueindex SCHEME_CURRENT 2a737441-1930-4402-8d77-b2bebba308a3 48e6b7a6-50f5-4782-a5d4-53bb8f07e226 1 && powercfg /apply"},
+            {"Reset Power Plan",           "powercfg /restoredefaultschemes"},
+            {"Re-enable Cortana",          "reg delete \"HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search\" /v AllowCortana /f"},
+        };
+
+        int col = 0;
+        for (int i = 0; i < (int)(sizeof(undos)/sizeof(undos[0])); i++) {
+            std::string id = "##u" + std::to_string(i);
+            if (CardButton(id.c_str(), undos[i].name, {cw, ch}, busy)) {
+                std::string cmd = undos[i].cmd;
+                RunAsync([cmd](){
+                    TweakGroup g; g.name = "Undo"; g.cmds.push_back(cmd);
+                    std::atomic<float> p = 0.f;
+                    ApplyTweakGroups({g}, p, MakeLog());
+                    g_app.progress.store(1.f);
+                });
+            }
+            col++;
+            if (col < 3) ImGui::SameLine(0.f, gap);
+            else { col = 0; ImGui::Dummy({0.f, 6.f}); }
         }
     }
-    ImGui::EndChild();
-    ImGui::PopStyleVar(2); ImGui::PopStyleColor(); // ChildRounding + fadeAlpha + ChildBg
 
-    // Log panel
-    ImGui::Dummy({0.f,4.f});
-    ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
-    ImGui::TextUnformatted("Output");
-    ImGui::PopStyleColor();
-    ImGui::SameLine(0.f,8.f);
-    if (ImGui::SmallButton("Clear")) g_app.clearLog();
-    ImGui::SameLine(0.f,6.f);
-    ImGui::PushStyleColor(ImGuiCol_Text, C_DIM2);
-    ImGui::Text("%zu lines", (size_t)g_app.logLines.size());
-    ImGui::PopStyleColor();
-    DrawLog(ImGui::GetContentRegionAvail().y - 4.f);
+    // Output log — always at bottom
+    {
+        ImGui::SetCursorPosY(ImGui::GetContentRegionMax().y - 138.f);
+        ImGui::PushStyleColor(ImGuiCol_Text, C_DIM);
+        ImGui::TextUnformatted("Output");
+        ImGui::PopStyleColor();
+        ImGui::SameLine(0.f,8.f);
+        if (ImGui::SmallButton("Clear")) g_app.clearLog();
+        ImGui::SameLine(0.f,6.f);
+        ImGui::PushStyleColor(ImGuiCol_Text, C_DIM2);
+        ImGui::Text("%zu lines", (size_t)g_app.logLines.size());
+        ImGui::PopStyleColor();
+        DrawLog(ImGui::GetContentRegionAvail().y - 4.f);
+    }
 
     DrawRebootDialog();
     ImGui::End();
@@ -992,7 +1036,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         LRESULT hit = DefWindowProcW(hWnd,msg,wParam,lParam);
         if (hit==HTCLIENT) {
             POINT pt; GetCursorPos(&pt); ScreenToClient(hWnd,&pt);
-            if (pt.y<50 && pt.x < (int)GetSystemMetrics(SM_CXSCREEN)-95)
+            if (pt.y<(int)HDR_H && pt.x < (int)GetSystemMetrics(SM_CXSCREEN)-100)
                 return HTCAPTION;
         }
         return hit;
