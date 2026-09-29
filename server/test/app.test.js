@@ -301,3 +301,46 @@ describe('payments', () => {
     assert.equal(pays.payments[0].status, 'finished');
   });
 });
+
+describe('admin panel API', () => {
+  const ADMIN = 'admin-secret-token';
+  const asAdmin = (ctx, path, opts = {}) => ctx.call(path, { ...opts, token: ADMIN });
+
+  test('closed without ADMIN_TOKEN, and with a wrong token', async () => {
+    const off = setup();
+    assert.equal((await off.call('/admin/stats', { token: 'x' })).status, 404);
+    const ctx = setup({ adminToken: ADMIN });
+    assert.equal((await ctx.call('/admin/stats')).status, 401);
+    assert.equal((await ctx.call('/admin/stats', { token: 'nope' })).status, 401);
+    assert.equal((await asAdmin(ctx, '/admin/stats')).status, 200);
+  });
+
+  test('create account, look it up by number, credit a pack, disable it', async () => {
+    const ctx = setup({ adminToken: ADMIN });
+    const created = await (await asAdmin(ctx, '/admin/accounts', { method: 'POST' })).json();
+    assert.ok(isAccessNumber(created.number));
+
+    const found = await (await asAdmin(ctx, '/admin/lookup', { method: 'POST', body: { number: created.number } })).json();
+    assert.equal(found.id, created.account.id);
+
+    const credited = await (
+      await asAdmin(ctx, `/admin/accounts/${found.id}/credit`, { method: 'POST', body: { packEur: 65, note: 'paypal' } })
+    ).json();
+    assert.equal(credited.balance, 500_000_000);
+    assert.equal(credited.paidEur, 65);
+    assert.equal((await asAdmin(ctx, `/admin/accounts/${found.id}/credit`, { method: 'POST', body: { tokens: -600_000_000 } })).status, 400);
+
+    const stats = await (await asAdmin(ctx, '/admin/stats')).json();
+    assert.equal(stats.tokensOwed, 500_000_000);
+    assert.equal(stats.revenueEur, 65);
+
+    const login = await (await ctx.call('/auth/login', { method: 'POST', body: { number: created.number } })).json();
+    await asAdmin(ctx, `/admin/accounts/${found.id}/status`, { method: 'POST', body: { disabled: true } });
+    assert.equal((await ctx.call('/me', { token: login.token })).status, 401, 'sessions are revoked');
+    assert.equal((await ctx.call('/auth/login', { method: 'POST', body: { number: created.number } })).status, 401);
+
+    const detail = await (await asAdmin(ctx, `/admin/accounts/${found.id}`)).json();
+    assert.equal(detail.disabled, true);
+    assert.equal(detail.payments[0].note, 'paypal');
+  });
+});

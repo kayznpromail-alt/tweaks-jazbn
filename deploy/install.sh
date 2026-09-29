@@ -31,12 +31,13 @@ if [ ! -f .env ]; then
   echo
   [ -n "$KEY" ] || { echo "Cle vide, abandon."; exit 1; }
 
-  grep -vE '^(API_DOMAIN|PUBLIC_API_URL|UPSTREAM_API_KEY|SECRET_PEPPER)=' .env.example > .env
+  grep -vE '^(API_DOMAIN|PUBLIC_API_URL|UPSTREAM_API_KEY|SECRET_PEPPER|ADMIN_TOKEN)=' .env.example > .env
   {
     echo "API_DOMAIN=$DOMAIN"
     echo "PUBLIC_API_URL=https://$DOMAIN"
     echo "UPSTREAM_API_KEY=$KEY"
     echo "SECRET_PEPPER=$(openssl rand -hex 32)"
+    echo "ADMIN_TOKEN=$(openssl rand -hex 24)"
   } >> .env
   chmod 600 .env
 fi
@@ -55,6 +56,7 @@ for _ in $(seq 1 30); do
     echo
     echo "OK : https://$DOMAIN/health repond."
     echo "Donne cette adresse a Claude : https://$DOMAIN"
+    echo "Mot de passe du panel /admin (garde-le pour toi) : $(grep '^ADMIN_TOKEN=' .env | cut -d= -f2)"
     exit 0
   fi
   sleep 4

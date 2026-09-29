@@ -75,6 +75,11 @@ git pull && docker compose up -d --build
 docker compose logs -f api
 ```
 
+## 4 bis. Panel admin
+
+Sur le site, `/admin` : stats, comptes, crédits manuels, blocage. Le mot de passe est `ADMIN_TOKEN`
+dans `.env` (le script d'installation l'affiche à la fin). Pour le revoir : `grep ADMIN_TOKEN /opt/edgey/deploy/.env`.
+
 ## 5. Sauvegardes
 
 Toute la base est dans `deploy/data/edgey.db`. Copie-la régulièrement ailleurs (au minimum une fois par jour).

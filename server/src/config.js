@@ -17,6 +17,8 @@ export function loadConfig(env = process.env) {
     upstreamBase: (env.UPSTREAM_BASE ?? 'https://api.dawvq.com').replace(/\/+$/, ''),
     upstreamKey: required('UPSTREAM_API_KEY'),
     pepper: required('SECRET_PEPPER'),
+    // Password for the /admin panel. Admin routes stay off while it is empty.
+    adminToken: env.ADMIN_TOKEN || null,
     allowedOrigins: list(env.ALLOWED_ORIGINS ?? 'https://edgeycli.com'),
     publicApiUrl: (env.PUBLIC_API_URL ?? 'https://api.edgeycli.com').replace(/\/+$/, ''),
     siteUrl: (env.SITE_URL ?? 'https://edgeycli.com').replace(/\/+$/, ''),

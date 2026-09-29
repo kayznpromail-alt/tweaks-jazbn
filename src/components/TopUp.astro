@@ -124,17 +124,39 @@ const short = (n: number) => (n >= 1e9 ? `${n / 1e9}B` : `${n / 1e6}M`);
     const eur = (n) => '€' + n.toFixed(2);
     const current = () => Number($('[data-cur]').dataset.cur) || 0;
 
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Numbers roll from their previous value to the new one.
+    const tween = (el, to, render) => {
+      const from = Number(el.dataset.v ?? to);
+      el.dataset.v = to;
+      if (still || from === to) return (el.textContent = render(to));
+      const t0 = performance.now();
+      const step = (t) => {
+        const k = Math.min(1, (t - t0) / 420);
+        const e = 1 - Math.pow(1 - k, 3);
+        el.textContent = render(from + (to - from) * e);
+        if (k < 1) requestAnimationFrame(step);
+        else el.classList.remove('bump'), void el.offsetWidth, el.classList.add('bump');
+      };
+      requestAnimationFrame(step);
+    };
+    const swap = (el, show) => {
+      if (el.hidden === !show) return;
+      el.hidden = !show;
+      if (show && !still) el.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: 'ease-out' });
+    };
+
     const update = () => {
       const pack = $('input[name="pack"]:checked');
       const tokens = Number(pack.dataset.tokens);
-      $('[data-eur-out]').textContent = eur(Number(pack.dataset.eur));
-      $('[data-recv]').textContent = '+' + fmt(tokens) + ' tokens';
-      $('[data-after]').textContent = fmt(current() + tokens) + ' tokens';
+      tween($('[data-eur-out]'), Number(pack.dataset.eur), eur);
+      tween($('[data-recv]'), tokens, (v) => '+' + fmt(Math.round(v)) + ' tokens');
+      tween($('[data-after]'), current() + tokens, (v) => fmt(Math.round(v)) + ' tokens');
 
       const method = $('input[name="method"]:checked').value;
       const crypto = method === 'crypto';
-      $('[data-crypto-only]').hidden = !crypto;
-      $('[data-discord-only]').hidden = crypto;
+      swap($('[data-crypto-only]'), crypto);
+      swap($('[data-discord-only]'), !crypto);
       $('[data-proceed-label]').textContent = crypto ? 'Proceed to payment' : 'Continue on Discord';
       $('[data-topup-msg]').hidden = true;
 
@@ -174,10 +196,22 @@ const short = (n: number) => (n >= 1e9 ? `${n / 1e9}B` : `${n / 1e6}M`);
       dlg.showModal();
     };
     document.querySelectorAll('[data-topup-open]').forEach((b) => b.addEventListener('click', open));
-    $('[data-topup-close]').addEventListener('click', () => dlg.close());
+    const close = () => {
+      if (still || dlg.classList.contains('closing')) return dlg.close();
+      dlg.classList.add('closing');
+      dlg.addEventListener('animationend', () => {
+        dlg.classList.remove('closing');
+        dlg.close();
+      }, { once: true });
+    };
+    $('[data-topup-close]').addEventListener('click', close);
+    dlg.addEventListener('cancel', (e) => {
+      e.preventDefault();
+      close();
+    });
     // Click on the dimmed backdrop closes it.
     dlg.addEventListener('click', (e) => {
-      if (e.target === dlg) dlg.close();
+      if (e.target === dlg) close();
     });
     dlg.addEventListener('close', () => history.replaceState(null, '', location.pathname));
     if (location.hash === '#topup') open();
@@ -196,8 +230,44 @@ const short = (n: number) => (n >= 1e9 ? `${n / 1e9}B` : `${n / 1e6}M`);
     color: var(--fg);
     box-shadow: 0 40px 120px -30px rgb(0 0 0 / 0.9), 0 0 0 1px rgb(34 211 238 / 0.05);
   }
-  .topup[open] { animation: pop-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  /* Opening: the window rises in, then each block follows. Closing plays it backwards. */
+  .topup[open] { animation: pop-in 0.34s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .topup[open]::backdrop { animation: fade-in 0.3s ease; }
+  .topup.closing { animation: pop-out 0.2s cubic-bezier(0.4, 0, 1, 1) forwards; }
+  .topup.closing::backdrop { animation: fade-out 0.2s ease forwards; }
   .topup::backdrop { background: rgb(2 6 8 / 0.7); backdrop-filter: blur(6px); }
+  .topup[open] .head,
+  .topup[open] .box,
+  .topup[open] .safe,
+  .topup[open] .foot { animation: rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+  .topup[open] .left .box:nth-child(1) { animation-delay: 0.05s; }
+  .topup[open] .right .box:nth-child(1) { animation-delay: 0.1s; }
+  .topup[open] .left .box:nth-child(2) { animation-delay: 0.15s; }
+  .topup[open] .right .box:nth-child(2) { animation-delay: 0.2s; }
+  .topup[open] .safe, .topup[open] .foot { animation-delay: 0.25s; }
+  .pack:has(input:checked) { animation: chosen 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .method:has(input:checked) .tick { animation: chosen 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  :global(.bump) { animation: bump 0.3s ease; }
+  /* A light sweep across the pay button. */
+  .go { position: relative; overflow: hidden; }
+  .go::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.35) 50%, transparent 70%);
+    transform: translateX(-100%);
+    animation: sweep 2.8s ease-in-out 0.6s infinite;
+  }
+  @keyframes fade-in { from { opacity: 0; } }
+  @keyframes fade-out { to { opacity: 0; } }
+  @keyframes pop-out { to { opacity: 0; transform: translateY(10px) scale(0.97); } }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+  @keyframes chosen { 0% { transform: scale(0.96); } 60% { transform: scale(1.02); } 100% { transform: scale(1); } }
+  @keyframes bump { 0% { color: var(--accent); } 100% { color: inherit; } }
+  @keyframes sweep { 0%, 60% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+  @media (prefers-reduced-motion: reduce) {
+    .topup *, .topup, .topup::backdrop { animation: none !important; }
+  }
   @keyframes pop-in {
     from { opacity: 0; transform: translateY(12px) scale(0.98); }
   }
