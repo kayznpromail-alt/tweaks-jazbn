@@ -14,9 +14,10 @@ const { title } = Astro.props;
     <meta name="description" content="edgeycli.com: your AI models, API keys, and balance in one place." />
     <meta name="theme-color" content="#05080b" />
     <script is:inline>
-      // Opening effect: once per tab, and never with reduced motion.
+      // Opening effect: every load of the home page, once per tab elsewhere, never with reduced motion.
       try {
-        if (!sessionStorage.getItem('edgey-intro') && !matchMedia('(prefers-reduced-motion: reduce)').matches)
+        var home = location.pathname === '/' || location.pathname === '/index.html';
+        if ((home || !sessionStorage.getItem('edgey-intro')) && !matchMedia('(prefers-reduced-motion: reduce)').matches)
           document.documentElement.classList.add('intro-on');
       } catch (e) {}
       // Browsers without cross-page view transitions get a simple fade-in instead.

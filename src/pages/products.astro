@@ -1,0 +1,124 @@
+---
+import Shell from '../layouts/Shell.astro';
+import Icon from '../components/Icon.astro';
+
+const features = [
+  {
+    icon: 'wallet',
+    title: 'Crypto wallet top-up',
+    text: 'After signing in, choose an available cryptocurrency and network, enter a USD amount, and get the exact payment address and QR code. The checkout shows the amount, network and expiry before you send funds.',
+  },
+  {
+    icon: 'badgeCheck',
+    title: 'Verified delivery',
+    text: 'Funds are credited only after the payment is confirmed and matched to the order. Partial, unsigned or mismatched payments are not credited automatically.',
+  },
+  {
+    icon: 'key',
+    title: 'One shared balance',
+    text: 'Your wallet is shared by all your API keys and edgeyCLI. Top up once, use it everywhere.',
+  },
+] as const;
+const steps = [
+  'Register or sign in with your 16-digit access number.',
+  'Open Top up wallet.',
+  'Select the cryptocurrency and follow the instructions.',
+  'Wait for network confirmation; your API balance updates automatically.',
+];
+---
+<Shell title="Products">
+  <div class="wrap">
+    <header class="bar">
+      <a href="/" class="brand"><span class="logo"><Icon name="terminal" size={14} /></span><span>edgey<span class="accent">cli</span>.com</span></a>
+      <nav><a href="/products" class="on">Products</a><a>Support</a><a>Terms</a></nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="kicker"><i class="dot"></i>CRYPTO SERVICES</p>
+        <h1>Build more with your <span class="accent">edgey</span> workspace.</h1>
+        <p class="lead">Buy weighted API units for supported AI models using cryptocurrency. Your balance is shared by your API keys and edgeyCLI.</p>
+        <div class="cta">
+          <a href="/#register" class="btn primary">Create an account and view checkout <Icon name="arrowRight" size={14} /></a>
+          <a href="/" class="btn">Sign in</a>
+        </div>
+      </section>
+
+      <section class="grid">
+        {features.map((f, i) => (
+          <article class="card feat">
+            <div class="feat-top">
+              <span class="g-icon"><Icon name={f.icon} /></span>
+              <span class="idx">0{i + 1}</span>
+            </div>
+            <h2>{f.title}</h2>
+            <p>{f.text}</p>
+          </article>
+        ))}
+      </section>
+
+      <section class="card how">
+        <div class="how-head">
+          <p class="card-title"><Icon name="terminal" /> How it works</p>
+          <span class="tag">4 steps</span>
+        </div>
+        <ol>
+          {steps.map((s, i) => (
+            <li><span class="n">{String(i + 1).padStart(2, '0')}</span><span class="p">$</span><span>{s}</span></li>
+          ))}
+        </ol>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <span>© {new Date().getFullYear()} edgeycli.com</span>
+      <span class="accent">One number. Your workspace.</span>
+    </footer>
+  </div>
+</Shell>
+
+<style>
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 16px; min-height: 100svh; display: flex; flex-direction: column; }
+  .bar { display: flex; justify-content: space-between; align-items: center; height: 84px; border-bottom: 1px solid var(--border); }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; }
+  .logo { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 7px; color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line); view-transition-name: brand-logo; }
+  .accent { color: var(--accent); }
+  nav { display: flex; gap: 20px; font-size: 13px; color: var(--muted); }
+  nav a[href]:hover, nav .on { color: var(--fg); }
+  main { flex: 1; padding: 72px 0 64px; }
+  .kicker { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em; color: var(--accent); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+  h1 { margin-top: 18px; max-width: 820px; font-size: clamp(38px, 7vw, 68px); line-height: 1.02; letter-spacing: -0.045em; font-weight: 700; }
+  .lead { margin-top: 22px; max-width: 600px; font-size: 16px; line-height: 1.6; color: var(--muted); }
+  .cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+  .cta .btn { height: 46px; padding: 0 20px; font-size: 13px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 64px; }
+  .feat { position: relative; padding: 22px; overflow: hidden; transition: border-color 0.2s, transform 0.2s; }
+  .feat::after { content: ''; position: absolute; inset: 0 0 auto; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0; transition: opacity 0.2s; }
+  .feat:hover { border-color: var(--accent-line); transform: translateY(-3px); }
+  .feat:hover::after { opacity: 1; }
+  .feat-top { display: flex; justify-content: space-between; align-items: center; }
+  .feat .g-icon { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
+  .idx { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .feat h2 { margin-top: 20px; font-size: 15px; font-weight: 600; }
+  .feat p { margin-top: 8px; font-size: 12.5px; line-height: 1.65; color: var(--muted); }
+  .how { margin-top: 16px; }
+  .how-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid var(--border); }
+  .how-head .card-title { display: flex; align-items: center; gap: 10px; }
+  ol { list-style: none; padding: 10px 22px 18px; font-family: var(--mono); font-size: 12.5px; }
+  li { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px dashed var(--border); }
+  li:last-child { border-bottom: 0; }
+  .n { color: var(--muted); }
+  .p { color: var(--accent); }
+  .foot { display: flex; justify-content: space-between; gap: 12px; padding: 20px 0 28px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: #3d4c55; }
+  @media (max-width: 800px) {
+    .grid { grid-template-columns: 1fr; }
+    main { padding-top: 48px; }
+  }
+  @media (max-width: 480px) {
+    nav { gap: 12px; font-size: 12px; }
+    .brand > span:last-child { font-size: 14px; }
+    .cta .btn { width: 100%; }
+    .foot { flex-direction: column; align-items: center; }
+  }
+</style>
