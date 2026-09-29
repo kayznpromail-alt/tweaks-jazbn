@@ -7,6 +7,7 @@ const summary = [
   { icon: 'wallet', text: 'You buy API units with crypto. They top up one shared wallet.' },
   { icon: 'badgeCheck', text: 'Credit lands only once the payment is confirmed and matched.' },
   { icon: 'shield', text: 'Your access number and keys are yours to keep private.' },
+  { icon: 'cpu', text: 'If a provider is down, a request may switch to another channel.' },
 ] as const;
 const sections = [
   {
@@ -15,6 +16,14 @@ const sections = [
     body: [
       'edgeycli.com sells weighted API units for its AI workspace, the API at api.edgeycli.com and edgeyCLI.',
       'A top-up adds units to your wallet balance. It does not guarantee access to any specific third-party model or provider, which may change over time.',
+    ],
+  },
+  {
+    id: 'routing',
+    title: 'Model routing and fallback',
+    body: [
+      'Requests are served through upstream providers. If a provider does not respond or is unavailable, your request may be switched automatically to a different channel serving the same model, so that it can still complete.',
+      'Availability, latency and limits can therefore vary between requests. Usage is always billed at the rate of the model you requested.',
     ],
   },
   {
@@ -118,7 +127,7 @@ const sections = [
 </script>
 
 <style is:global>
-  .pub .tldr { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 48px; }
+  .pub .tldr { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 48px; }
   .pub .tl { display: flex; gap: 14px; align-items: center; padding: 16px 18px; }
   .pub .tl .g-icon { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
   .pub .tl p { font-size: 12.5px; line-height: 1.5; }
