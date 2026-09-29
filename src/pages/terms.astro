@@ -1,0 +1,144 @@
+---
+import Public from '../layouts/Public.astro';
+import Icon from '../components/Icon.astro';
+
+const UPDATED = '29 September 2026';
+const summary = [
+  { icon: 'wallet', text: 'You buy API units with crypto. They top up one shared wallet.' },
+  { icon: 'badgeCheck', text: 'Credit lands only once the payment is confirmed and matched.' },
+  { icon: 'shield', text: 'Your access number and keys are yours to keep private.' },
+] as const;
+const sections = [
+  {
+    id: 'service',
+    title: 'What you are buying',
+    body: [
+      'edgeycli.com sells weighted API units for its AI workspace, the API at api.edgeycli.com and edgeyCLI.',
+      'A top-up adds units to your wallet balance. It does not guarantee access to any specific third-party model or provider, which may change over time.',
+    ],
+  },
+  {
+    id: 'account',
+    title: 'Your account and access number',
+    body: [
+      'Your account is identified by a 16-digit access number. There is no email or password, so whoever holds the number can use the account.',
+      'Store it somewhere safe and never share it, or your API keys, with anyone, including people claiming to be support.',
+    ],
+  },
+  {
+    id: 'payment',
+    title: 'How payment works',
+    body: [
+      'Payments are made in the authenticated checkout. You pick an available cryptocurrency and network, and the checkout shows the exact amount, address, network and expiry before you pay.',
+      'Your balance is credited only after the payment is confirmed on the network and matched to your order.',
+    ],
+  },
+  {
+    id: 'issues',
+    title: 'Partial, wrong or late payments',
+    body: [
+      'Payments that are partial, sent after expiry, or sent with a different asset or network cannot be matched automatically. They are reviewed by support.',
+      'Always send the exact amount, on the network shown, before the checkout expires.',
+    ],
+  },
+  {
+    id: 'refunds',
+    title: 'Refunds',
+    body: [
+      'Refund requests are reviewed one by one. Approved refunds go back to the wallet that sent the payment, where technically and legally possible, minus network or processing costs.',
+    ],
+  },
+  {
+    id: 'changes',
+    title: 'Changes to these terms',
+    body: [
+      'These terms may be updated. The date at the top of this page always shows the latest version, which applies to purchases made after it.',
+    ],
+  },
+  {
+    id: 'contact',
+    title: 'Support and contact',
+    body: [
+      'For any question about a payment or your account, contact us through the official edgey Discord community listed on the Support page. Never post credentials or private keys.',
+    ],
+  },
+];
+---
+<Public title="Terms" active="terms">
+  <section class="hero">
+    <p class="kicker"><i class="dot"></i>TERMS &amp; PAYMENT POLICY</p>
+    <h1>Straight terms for your <span class="accent">wallet</span> top-ups.</h1>
+    <p class="lead">Last updated {UPDATED}. These terms apply to every purchase made through edgeycli.com.</p>
+  </section>
+
+  <section class="tldr">
+    {summary.map((s) => (
+      <div class="card tl"><span class="g-icon"><Icon name={s.icon} /></span><p>{s.text}</p></div>
+    ))}
+  </section>
+
+  <div class="doc">
+    <aside class="toc" aria-label="On this page">
+      <p class="tag">On this page</p>
+      <ol>
+        {sections.map((s, i) => (
+          <li><a href={`#${s.id}`} data-toc={s.id}><span>{String(i + 1).padStart(2, '0')}</span>{s.title}</a></li>
+        ))}
+      </ol>
+    </aside>
+    <div class="sections">
+      {sections.map((s, i) => (
+        <section id={s.id} class="sec">
+          <p class="num">§ {String(i + 1).padStart(2, '0')}</p>
+          <h2>{s.title}</h2>
+          {s.body.map((p) => <p>{p}</p>)}
+          {s.id === 'contact' && (
+            <a href="/support" class="btn">Go to Support <Icon name="arrowUpRight" size={13} /></a>
+          )}
+        </section>
+      ))}
+    </div>
+  </div>
+</Public>
+
+<script>
+  // Highlight the section being read in the table of contents.
+  const links = new Map([...document.querySelectorAll<HTMLAnchorElement>('[data-toc]')].map((a) => [a.dataset.toc, a]));
+  const seen = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        links.forEach((a) => a.classList.remove('on'));
+        links.get(e.target.id)?.classList.add('on');
+      }
+    },
+    { rootMargin: '-30% 0px -60% 0px' },
+  );
+  document.querySelectorAll('.sec').forEach((s) => seen.observe(s));
+</script>
+
+<style is:global>
+  .pub .tldr { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 48px; }
+  .pub .tl { display: flex; gap: 14px; align-items: center; padding: 16px 18px; }
+  .pub .tl .g-icon { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
+  .pub .tl p { font-size: 12.5px; line-height: 1.5; }
+  .pub .doc { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 48px; margin-top: 56px; }
+  .pub .toc { position: sticky; top: 24px; align-self: start; }
+  .pub .toc ol { list-style: none; margin-top: 12px; border-left: 1px solid var(--border); }
+  .pub .toc a { display: flex; gap: 10px; padding: 7px 0 7px 14px; margin-left: -1px; border-left: 1px solid transparent; font-size: 12px; color: var(--muted); transition: color 0.15s, border-color 0.15s; }
+  .pub .toc a span { font-family: var(--mono); font-size: 10.5px; opacity: 0.7; }
+  .pub .toc a:hover { color: var(--fg); }
+  .pub .toc a.on { color: var(--accent); border-left-color: var(--accent); }
+  .pub .sec { padding: 28px 0; border-top: 1px solid var(--border); scroll-margin-top: 24px; }
+  .pub .sec:first-child { border-top: 0; padding-top: 0; }
+  .pub .sec .num { font-family: var(--mono); font-size: 11px; color: var(--accent); }
+  .pub .sec h2 { margin: 8px 0 12px; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .pub .sec p:not(.num) { font-size: 14px; line-height: 1.75; color: #b6c3cb; max-width: 640px; }
+  .pub .sec p + p { margin-top: 10px; }
+  .pub .sec .btn { margin-top: 16px; }
+  @media (max-width: 800px) {
+    .pub .tldr { grid-template-columns: 1fr; }
+    .pub .doc { grid-template-columns: 1fr; gap: 24px; }
+    .pub .toc { position: static; }
+  }
+</style>

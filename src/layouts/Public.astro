@@ -4,7 +4,7 @@ import Icon from '../components/Icon.astro';
 
 interface Props {
   title: string;
-  active?: 'products' | 'support';
+  active?: 'products' | 'support' | 'terms';
 }
 const { title, active } = Astro.props;
 ---
@@ -15,7 +15,7 @@ const { title, active } = Astro.props;
       <nav>
         <a href="/products" class:list={{ on: active === 'products' }}>Products</a>
         <a href="/support" class:list={{ on: active === 'support' }}>Support</a>
-        <a>Terms</a>
+        <a href="/terms" class:list={{ on: active === 'terms' }}>Terms</a>
       </nav>
     </header>
     <main><slot /></main>
@@ -54,9 +54,9 @@ const { title, active } = Astro.props;
   .pub .how { margin-top: 16px; }
   .pub .how-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 22px; border-bottom: 1px solid var(--border); }
   .pub .how-head .card-title { display: flex; align-items: center; gap: 10px; }
-  .pub ol { list-style: none; padding: 10px 22px 18px; font-family: var(--mono); font-size: 12.5px; }
-  .pub li { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px dashed var(--border); }
-  .pub li:last-child { border-bottom: 0; }
+  .pub .how ol { list-style: none; padding: 10px 22px 18px; font-family: var(--mono); font-size: 12.5px; }
+  .pub .how li { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px dashed var(--border); }
+  .pub .how li:last-child { border-bottom: 0; }
   .pub .n { color: var(--muted); }
   .pub .p { color: var(--accent); }
   .pub .foot { display: flex; justify-content: space-between; gap: 12px; padding: 20px 0 28px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; color: #3d4c55; }
