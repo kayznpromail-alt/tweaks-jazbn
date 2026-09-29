@@ -31,9 +31,9 @@ export function loadConfig(env = process.env) {
     pepper: required('SECRET_PEPPER'),
     // Password for the /admin panel. Admin routes stay off while it is empty.
     adminToken: env.ADMIN_TOKEN || null,
-    allowedOrigins: list(env.ALLOWED_ORIGINS ?? 'https://edgeycli.com'),
-    publicApiUrl: (env.PUBLIC_API_URL ?? 'https://api.edgeycli.com').replace(/\/+$/, ''),
-    siteUrl: (env.SITE_URL ?? 'https://edgeycli.com').replace(/\/+$/, ''),
+    allowedOrigins: list(env.ALLOWED_ORIGINS ?? 'https://cli.edgey.shop'),
+    publicApiUrl: (env.PUBLIC_API_URL ?? 'https://api.edgey.shop').replace(/\/+$/, ''),
+    siteUrl: (env.SITE_URL ?? 'https://cli.edgey.shop').replace(/\/+$/, ''),
     sessionDays: Number(env.SESSION_DAYS ?? 30),
     nowpayments: {
       apiKey: env.NOWPAYMENTS_API_KEY || null,

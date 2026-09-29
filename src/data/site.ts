@@ -1,7 +1,7 @@
 // Shared with the API server (server/), so prices and rates never drift apart.
 import catalog from '../../shared/catalog.json';
 
-export const API_ROOT = 'https://api.edgeycli.com';
+export const API_ROOT = 'https://api.edgey.shop';
 export const API_BASE = `${API_ROOT}/v1`;
 export const DISCORD_URL = 'https://discord.gg/edgey';
 

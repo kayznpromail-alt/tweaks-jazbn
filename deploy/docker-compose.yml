@@ -15,7 +15,7 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      API_DOMAIN: ${API_DOMAIN:-api.edgeycli.com}
+      API_DOMAIN: ${API_DOMAIN:-api.edgey.shop}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./caddy:/data

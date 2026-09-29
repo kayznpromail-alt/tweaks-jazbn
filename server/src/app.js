@@ -264,7 +264,7 @@ export function createApp({ cfg, db, clock = now }) {
         orderId,
         eur: pack.eur,
         coin: coin.id,
-        description: `edgeycli.com top-up: ${pack.tokens.toLocaleString('en-US')} tokens`,
+        description: `cli.edgey.shop top-up: ${pack.tokens.toLocaleString('en-US')} tokens`,
       });
       return c.json({ invoiceUrl: invoice.invoice_url, paymentId: id });
     } catch (err) {
@@ -330,7 +330,7 @@ export function createApp({ cfg, db, clock = now }) {
         return c.json(errorBody(kind, 404, 'not_found_error', `Model "${body.model}" is not available.`), 404);
       if (billed && key.balance <= 0)
         return c.json(
-          errorBody(kind, 402, 'insufficient_balance', 'Your wallet is empty. Top up at edgeycli.com.'),
+          errorBody(kind, 402, 'insufficient_balance', 'Your wallet is empty. Top up at cli.edgey.shop.'),
           402,
         );
 

@@ -1,6 +1,6 @@
 # API admin (pour brancher ton panel existant)
 
-Base : `https://api.edgeycli.com/admin` (ou `https://IP.sslip.io/admin` avant le domaine).
+Base : `https://api.edgey.shop/admin` (ou `https://IP.sslip.io/admin` avant le domaine).
 Chaque requête envoie le jeton admin : `Authorization: Bearer <ADMIN_TOKEN>` (valeur dans `.env` sur le VPS).
 
 ⚠️ Appelle ces routes **depuis le serveur de ton panel**, jamais depuis du JavaScript public : le jeton donne
@@ -30,7 +30,7 @@ pour retrouver un client, utilise `/lookup` avec le numéro qu'il te donne.
 Exemple (créditer un pack de 65 € au compte 12) :
 
 ```sh
-curl -X POST https://api.edgeycli.com/admin/accounts/12/credit \
+curl -X POST https://api.edgey.shop/admin/accounts/12/credit \
   -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
   -d '{"packEur":65,"note":"paypal discord"}'
 ```

@@ -83,9 +83,9 @@ function setup(overrides = {}) {
     upstreamKey: UPSTREAM_KEY,
     pepper: 'test-pepper',
     upstreamNames: ['acmeprov'],
-    allowedOrigins: ['https://edgeycli.com'],
-    publicApiUrl: 'https://api.edgeycli.com',
-    siteUrl: 'https://edgeycli.com',
+    allowedOrigins: ['https://cli.edgey.shop'],
+    publicApiUrl: 'https://api.edgey.shop',
+    siteUrl: 'https://cli.edgey.shop',
     sessionDays: 30,
     nowpayments: { apiKey: null, ipnSecret: 'ipn-secret', base: 'http://127.0.0.1:1' },
     ...overrides,
@@ -180,8 +180,8 @@ describe('accounts and keys', () => {
 
   test('CORS only for the site origin', async () => {
     const ctx = setup();
-    const ok = await ctx.call('/me', { method: 'OPTIONS', headers: { origin: 'https://edgeycli.com', 'access-control-request-method': 'GET' } });
-    assert.equal(ok.headers.get('access-control-allow-origin'), 'https://edgeycli.com');
+    const ok = await ctx.call('/me', { method: 'OPTIONS', headers: { origin: 'https://cli.edgey.shop', 'access-control-request-method': 'GET' } });
+    assert.equal(ok.headers.get('access-control-allow-origin'), 'https://cli.edgey.shop');
     const bad = await ctx.call('/me', { method: 'OPTIONS', headers: { origin: 'https://evil.example', 'access-control-request-method': 'GET' } });
     assert.equal(bad.headers.get('access-control-allow-origin'), null);
   });

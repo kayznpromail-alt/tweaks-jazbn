@@ -9,7 +9,7 @@ const path = Astro.url.pathname.replace(/(\.html|\/)$/, '') || '/';
   <div class="inner">
     <a href="/overview" class="brand">
       <span class="logo"><Icon name="terminal" size={14} /></span>
-      <span>edgey<span class="accent">cli</span>.com</span>
+      <span>edgey<span class="accent">cli</span></span>
     </a>
 
     <div class="nav-slot"><SiteNav client:load path={path} /></div>

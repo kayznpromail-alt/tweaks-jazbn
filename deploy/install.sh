@@ -24,7 +24,7 @@ cd "$DIR/deploy"
 if [ ! -f .env ]; then
   IP="$(curl -fsS https://api.ipify.org || hostname -I | awk '{print $1}')"
   echo
-  echo "Domaine de l'API : tape api.edgeycli.com si son DNS pointe deja vers $IP,"
+  echo "Domaine de l'API : tape api.edgey.shop si son DNS pointe deja vers $IP,"
   read -rp "sinon appuie sur Entree pour utiliser ${IP}.sslip.io : " DOMAIN </dev/tty
   DOMAIN="${DOMAIN:-$IP.sslip.io}"
   read -rp "Adresse de l'API du fournisseur (ex: https://api.fournisseur.com) : " UPSTREAM </dev/tty

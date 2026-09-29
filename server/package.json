@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "version": "0.1.0",
-  "description": "edgeycli.com API gateway: accounts, API keys, token billing and relay to the upstream provider.",
+  "description": "cli.edgey.shop API gateway: accounts, API keys, token billing and relay to the upstream provider.",
   "engines": {
     "node": ">=22.12"
   },

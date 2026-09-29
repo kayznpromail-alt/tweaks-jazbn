@@ -10,7 +10,7 @@ const steps = ['Claim your number.', 'Copy it or save it as a file.', 'Use it wh
     <header class="bar">
       <a href="/" class="brand">
         <span class="logo"><Icon name="terminal" size={14} /></span>
-        <span>edgey<span class="accent">cli</span>.com</span>
+        <span>edgey<span class="accent">cli</span></span>
       </a>
       <span class="motto">YOUR AI WORKSPACE</span>
     </header>
@@ -19,7 +19,7 @@ const steps = ['Claim your number.', 'Copy it or save it as a file.', 'Use it wh
       <section class="card hero">
         <p class="kicker"><i class="dot"></i><span>SIXTEEN DIGITS. <b>ONE WORKSPACE.</b></span></p>
         <div class="mid">
-          <p class="site">edgeycli.com</p>
+          <p class="site">cli.edgey.shop</p>
           <h1>Your number.<br /><span>Your space.</span></h1>
           <p class="digits" data-digits aria-hidden="true">
             {[0, 1, 2, 3].map(() => (
@@ -100,7 +100,7 @@ const steps = ['Claim your number.', 'Copy it or save it as a file.', 'Use it wh
     </main>
 
     <footer class="foot">
-      <span>© {year} edgeycli.com</span>
+      <span>© {year} cli.edgey.shop</span>
       <span class="links">
         <a href="/products">Products</a> · <a href="/support">Support</a> · <a href="/terms">Terms</a> · One number. Your workspace.
       </span>
@@ -149,7 +149,7 @@ const steps = ['Claim your number.', 'Copy it or save it as a file.', 'Use it wh
     const code = err instanceof ApiError ? err.code : 'error';
     if (code === 'unknown_number') return 'No account uses this number.';
     if (code === 'too_many_requests') return 'Too many attempts. Wait a minute and try again.';
-    if (code === 'network') return "Can't reach edgeycli.com right now. Try again shortly.";
+    if (code === 'network') return "Can't reach cli.edgey.shop right now. Try again shortly.";
     return 'Something went wrong. Try again.';
   };
   const enter = (form: HTMLElement) => {
@@ -180,7 +180,7 @@ const steps = ['Claim your number.', 'Copy it or save it as a file.', 'Use it wh
           form.querySelector<HTMLElement>('[data-register-btn]')!.hidden = true;
           form.querySelector<HTMLElement>('[data-copy-number]')!.dataset.copy = number;
           form.querySelector('[data-save-number]')!.addEventListener('click', () => {
-            const blob = new Blob([`edgeycli.com access number\n${pretty}\n\nKeep it private. It is the only way into your account.\n`], { type: 'text/plain' });
+            const blob = new Blob([`cli.edgey.shop access number\n${pretty}\n\nKeep it private. It is the only way into your account.\n`], { type: 'text/plain' });
             const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'edgeycli-access-number.txt' });
             a.click();
             URL.revokeObjectURL(a.href);

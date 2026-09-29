@@ -11,7 +11,7 @@ const { title, active } = Astro.props;
 <Shell title={title}>
   <div class="pub">
     <header class="bar">
-      <a href="/" class="brand"><span class="logo"><Icon name="terminal" size={14} /></span><span>edgey<span class="accent">cli</span>.com</span></a>
+      <a href="/" class="brand"><span class="logo"><Icon name="terminal" size={14} /></span><span>edgey<span class="accent">cli</span></span></a>
       <nav>
         <a href="/products" class:list={{ on: active === 'products' }}>Products</a>
         <a href="/support" class:list={{ on: active === 'support' }}>Support</a>
@@ -21,7 +21,7 @@ const { title, active } = Astro.props;
     <main><slot /></main>
     <footer class="foot">
       <a href="/support" class="accent">Contact support</a>
-      <span>© {new Date().getFullYear()} edgeycli.com</span>
+      <span>© {new Date().getFullYear()} cli.edgey.shop</span>
     </footer>
   </div>
 </Shell>
