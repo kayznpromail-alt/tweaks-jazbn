@@ -1,6 +1,6 @@
 ---
 import Icon from './Icon.astro';
-import { providers } from '../data/site';
+import { providers, formatRate } from '../data/site';
 
 interface Props { full?: boolean }
 const { full = false } = Astro.props;
@@ -33,7 +33,7 @@ const { full = false } = Astro.props;
           {p.models.map((m) => (
             <li>
               <code>{m.id}</code>
-              <span class="rate">×{m.rate.toFixed(1)}</span>
+              <span class="rate">{formatRate(m.rate)}</span>
             </li>
           ))}
         </ul>

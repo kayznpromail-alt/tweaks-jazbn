@@ -1,7 +1,195 @@
 ---
 import Base from '../layouts/Base.astro';
-import ModelRates from '../components/ModelRates.astro';
+import Icon from '../components/Icon.astro';
+import { providers, formatRate, formatPrice } from '../data/site';
+
+const all = providers.flatMap((p) => p.models.map((m) => ({ ...m, provider: p.name, badge: p.badge })));
+const cheapest = Math.min(...all.map((m) => m.rate));
 ---
 <Base title="Models" crumb="MODELS" heading="Models & rates." sub="Every model your key can reach, and what it costs from your wallet.">
-  <ModelRates full />
+  <section class="card catalog" data-catalog>
+    <div class="bar">
+      <div class="filters" role="tablist" aria-label="Provider">
+        <button class="on" role="tab" aria-selected="true" data-filter="all">All <span>{all.length}</span></button>
+        {providers.map((p) => (
+          <button role="tab" aria-selected="false" data-filter={p.name}>{p.name} <span>{p.models.length}</span></button>
+        ))}
+      </div>
+      <div class="tools">
+        <label class="search">
+          <Icon name="search" size={14} />
+          <input type="search" placeholder="Search models…" aria-label="Search models" data-search />
+        </label>
+        <div class="select">
+          <select aria-label="Sort" data-sort>
+            <option value="default">Featured</option>
+            <option value="asc">Cheapest first</option>
+            <option value="desc">Priciest first</option>
+          </select>
+          <Icon name="chevronDown" size={14} />
+        </div>
+      </div>
+    </div>
+
+    <p class="legend">
+      <Icon name="wallet" size={13} /> ×1 costs <code>{formatPrice(1)}</code> per 1M standard tokens. Cached tokens cost the same.
+    </p>
+
+    <div class="grid" data-grid>
+      {all.map((m, i) => (
+        <article class="model" data-provider={m.provider} data-id={m.id} data-rate={m.rate} data-order={i}>
+          <div class="top">
+            <span class="badge">{m.badge}</span>
+            <span class="prov">{m.provider}</span>
+            {m.rate === cheapest && <span class="deal">Lowest</span>}
+            <span class="mult">{formatRate(m.rate)}</span>
+          </div>
+          <div class="name">
+            <code>{m.id}</code>
+            <button class="copy" data-copy={m.id} aria-label={`Copy ${m.id}`} title="Copy model ID"><Icon name="copy" size={13} /></button>
+          </div>
+          <div class="cost">
+            <p class="big">{formatRate(m.rate)}<span>units / token</span></p>
+            <p class="price"><strong>{formatPrice(m.rate)}</strong> / 1M tokens</p>
+          </div>
+          <div class="meter" aria-hidden="true"><i style={`width:${Math.max(3, Math.min(100, (m.rate / 10) * 100))}%`}></i></div>
+          <a href="/setup" class="setup">Use it <Icon name="arrowUpRight" size={12} /></a>
+        </article>
+      ))}
+    </div>
+    <div class="none" data-none hidden>
+      <span class="icon-btn"><Icon name="cpu" /></span>
+      <p class="card-title">No model matches</p>
+      <p class="card-sub">Try another name or provider.</p>
+    </div>
+  </section>
 </Base>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-catalog]');
+  if (root) {
+    const grid = root.querySelector<HTMLElement>('[data-grid]')!;
+    const cards = [...grid.querySelectorAll<HTMLElement>('.model')];
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[data-filter]')];
+    const search = root.querySelector<HTMLInputElement>('[data-search]')!;
+    const sort = root.querySelector<HTMLSelectElement>('[data-sort]')!;
+    const none = root.querySelector<HTMLElement>('[data-none]')!;
+    let filter = 'all';
+
+    const render = () => {
+      const q = search.value.trim().toLowerCase();
+      const key = (c: HTMLElement) => (sort.value === 'default' ? Number(c.dataset.order) : Number(c.dataset.rate));
+      const sorted = [...cards].sort((a, b) => (sort.value === 'desc' ? key(b) - key(a) : key(a) - key(b)));
+      let shown = 0;
+      for (const c of sorted) {
+        const ok = (filter === 'all' || c.dataset.provider === filter) && (!q || c.dataset.id!.includes(q));
+        c.hidden = !ok;
+        if (ok) shown++;
+        grid.append(c);
+      }
+      none.hidden = shown > 0;
+    };
+
+    tabs.forEach((t) =>
+      t.addEventListener('click', () => {
+        filter = t.dataset.filter!;
+        tabs.forEach((b) => {
+          b.classList.toggle('on', b === t);
+          b.setAttribute('aria-selected', String(b === t));
+        });
+        render();
+      }),
+    );
+    search.addEventListener('input', render);
+    sort.addEventListener('change', render);
+  }
+</script>
+
+<style>
+  .catalog { padding: 20px; }
+  .bar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; }
+  .filters button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    font-size: 12px;
+    color: var(--muted);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .filters button span { font-family: var(--mono); font-size: 10px; opacity: 0.7; }
+  .filters button:hover { color: var(--fg); }
+  .filters button.on { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
+  .tools { display: flex; gap: 8px; }
+  .search, .select {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border-2);
+    background: var(--bg);
+    color: var(--muted);
+  }
+  .search { gap: 8px; padding: 0 12px; width: 210px; min-width: 0; }
+  .search:focus-within, .select:focus-within { border-color: var(--accent-line); }
+  .search input { flex: 1; width: 100%; min-width: 0; background: none; border: 0; outline: none; font-size: 12px; color: var(--fg); }
+  .select select { appearance: none; height: 100%; padding: 0 30px 0 12px; background: none; border: 0; outline: none; font: inherit; font-size: 12px; color: var(--fg); cursor: pointer; }
+  .select :global(svg) { position: absolute; right: 9px; pointer-events: none; }
+  .legend { display: flex; align-items: center; gap: 8px; margin: 16px 0; font-size: 11.5px; color: var(--muted); }
+  .legend code { color: var(--accent); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+  .model {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .model:hover { border-color: var(--accent-line); transform: translateY(-2px); }
+  .top { display: flex; align-items: center; gap: 8px; }
+  .badge {
+    display: grid;
+    place-items: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 4px;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+  }
+  .prov { font-size: 11px; color: var(--muted); }
+  .deal { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; color: #031217; background: var(--accent); }
+  .mult { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .name { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .name code { font-size: 13.5px; font-weight: 700; color: var(--fg); overflow-wrap: anywhere; }
+  .copy { display: grid; place-items: center; flex: none; width: 26px; height: 26px; border-radius: 6px; color: var(--muted); transition: color 0.15s, background 0.15s; }
+  .copy:hover, .copy:global(.copied) { color: var(--accent); background: var(--accent-soft); }
+  .cost { display: flex; flex-direction: column; gap: 8px; }
+  .big { display: flex; align-items: baseline; gap: 6px; font-size: 26px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+  .big span { font-size: 10px; font-weight: 400; letter-spacing: 0; color: var(--muted); white-space: nowrap; }
+  .price { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+  .price strong { color: var(--fg); }
+  .meter { height: 3px; border-radius: 3px; background: var(--surface-2); overflow: hidden; }
+  .meter i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+  .setup { display: inline-flex; align-items: center; gap: 6px; align-self: flex-end; font-size: 11px; font-weight: 600; color: var(--muted); transition: color 0.15s; }
+  .setup:hover { color: var(--accent); }
+  .none { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 40px 16px; text-align: center; }
+  .none .icon-btn { width: 40px; height: 40px; color: var(--accent); }
+  @media (max-width: 640px) {
+    .tools { width: 100%; }
+    .search { flex: 1; width: auto; }
+  }
+</style>
