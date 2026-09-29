@@ -1,1 +1,1 @@
-# Nouveau projet
+# EDGEY CLI
