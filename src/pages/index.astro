@@ -3,7 +3,8 @@ import Base from '../layouts/Base.astro';
 import Icon from '../components/Icon.astro';
 import Usage from '../components/Usage.astro';
 import ModelRates from '../components/ModelRates.astro';
-import { wallet, keys, MAX_KEYS, DISCORD_URL } from '../data/site';
+import RecentRequests from '../components/RecentRequests.astro';
+import { wallet, keys, DISCORD_URL } from '../data/site';
 ---
 <Base crumb="OVERVIEW" heading="Welcome, Member." sub="Your models, keys, and balance in one place.">
   <div class="top-grid">
@@ -31,25 +32,29 @@ import { wallet, keys, MAX_KEYS, DISCORD_URL } from '../data/site';
     <section class="card pad">
       <div class="card-head">
         <p class="card-title">Your API keys</p>
-        <a href="/keys" class="icon-btn" aria-label="API keys"><Icon name="key" /></a>
+        <a href="/api" class="icon-btn" aria-label="API keys"><Icon name="key" /></a>
       </div>
-      <a href="/keys" class="keys-count">
+      <a href="/api" class="keys-count">
         <span class="n">{keys.length}</span>
-        <span>
-          <span class="k">active keys</span>
-          <span class="card-sub small">{MAX_KEYS - keys.length} slots available</span>
-        </span>
+        <span class="k">active keys</span>
         <Icon name="arrowUpRight" size={14} class="go" />
       </a>
-      <a href="/keys" class="key-row">
-        <code>{keys[0].masked}</code>
-        <Icon name="chevronRight" size={14} />
-      </a>
+      {keys.length > 0 ? (
+        <a href="/api" class="key-row">
+          <code>{keys[0].masked}</code>
+          <Icon name="chevronRight" size={14} />
+        </a>
+      ) : (
+        <a href="/api" class="key-row empty">
+          <span>Create your first key</span>
+          <Icon name="plus" size={14} />
+        </a>
+      )}
     </section>
   </div>
 
   <a href={DISCORD_URL} class="card pad discord">
-    <span class="icon-btn big"><Icon name="chat" size={18} /></span>
+    <span class="icon-btn big"><Icon name="discord" size={20} /></span>
     <span class="grow">
       <span class="card-title">Discord community</span>
       <span class="card-sub">Service news, model updates, and promo codes.</span>
@@ -61,6 +66,8 @@ import { wallet, keys, MAX_KEYS, DISCORD_URL } from '../data/site';
     <Usage />
     <ModelRates />
   </div>
+
+  <div class="gap"><RecentRequests /></div>
 </Base>
 
 <style>
@@ -94,7 +101,7 @@ import { wallet, keys, MAX_KEYS, DISCORD_URL } from '../data/site';
     margin: 26px 0 18px;
   }
   .keys-count .n { font-size: 36px; font-weight: 600; line-height: 1; color: var(--accent); }
-  .keys-count .k { display: block; font-size: 11px; font-weight: 600; }
+  .keys-count .k { font-size: 11px; font-weight: 600; }
   .keys-count :global(.go) { margin-left: auto; color: var(--muted); }
   .keys-count:hover :global(.go) { color: var(--accent); }
   .key-row {
@@ -109,6 +116,8 @@ import { wallet, keys, MAX_KEYS, DISCORD_URL } from '../data/site';
     transition: border-color 0.15s;
   }
   .key-row:hover { border-color: var(--accent-line); }
+  .key-row.empty { border-style: dashed; color: var(--muted); }
+  .key-row.empty:hover { color: var(--accent); }
   .discord {
     display: flex;
     align-items: center;
@@ -126,6 +135,7 @@ import { wallet, keys, MAX_KEYS, DISCORD_URL } from '../data/site';
     margin-top: 20px;
     align-items: start;
   }
+  .gap { margin-top: 20px; }
   @media (max-width: 1000px) {
     .top-grid, .bottom-grid { grid-template-columns: 1fr; }
   }

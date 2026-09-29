@@ -1,0 +1,69 @@
+---
+import CodeRow from './CodeRow.astro';
+
+interface Props {
+  shells: { id: string; label: string; code: string }[];
+}
+const { shells } = Astro.props;
+---
+<div class="shells" data-shells>
+  <div class="seg" role="tablist" aria-label="Shell">
+    {shells.map((s, i) => (
+      <button role="tab" class:list={{ on: i === 0 }} aria-selected={String(i === 0)} data-shell={s.id}>
+        {s.label}
+      </button>
+    ))}
+  </div>
+  <div class="desc"><slot name="desc" /></div>
+  {shells.map((s, i) => <CodeRow label={s.label} code={s.code} shell={s.id} hidden={i > 0} />)}
+  <div class="note"><slot name="note" /></div>
+</div>
+
+<script>
+  // Default to the macOS / Linux tab outside Windows.
+  const isWindows = /Win/i.test(navigator.userAgent);
+  document.querySelectorAll<HTMLElement>('[data-shells]').forEach((box) => {
+    const tabs = box.querySelectorAll<HTMLButtonElement>('[data-shell]');
+    const rows = box.querySelectorAll<HTMLElement>('[data-shell-row]');
+    const select = (id: string) => {
+      tabs.forEach((t) => {
+        const on = t.dataset.shell === id;
+        t.classList.toggle('on', on);
+        t.setAttribute('aria-selected', String(on));
+      });
+      rows.forEach((r) => (r.hidden = r.dataset.shellRow !== id));
+    };
+    tabs.forEach((t) => t.addEventListener('click', () => select(t.dataset.shell ?? '')));
+    if (!isWindows && box.querySelector('[data-shell="sh"]')) select('sh');
+  });
+</script>
+
+<style>
+  .seg {
+    display: inline-flex;
+    gap: 2px;
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .seg button {
+    padding: 7px 12px;
+    border-radius: 7px;
+    font-size: 11px;
+    color: var(--muted);
+    transition: color 0.15s;
+  }
+  .seg button:hover { color: var(--fg); }
+  .seg button.on { background: var(--accent); color: #031217; font-weight: 600; }
+  .desc {
+    margin: 14px 0 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+  .note { margin-top: 20px; font-size: 11.5px; color: var(--muted); }
+  .desc :global(code),
+  .note :global(code) { color: var(--fg); font-weight: 600; }
+</style>

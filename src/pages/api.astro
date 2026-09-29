@@ -2,9 +2,9 @@
 import Base from '../layouts/Base.astro';
 import Icon from '../components/Icon.astro';
 import Connect from '../components/Connect.astro';
-import { keys, MAX_KEYS } from '../data/site';
+import { keys } from '../data/site';
 ---
-<Base title="API keys" crumb="KEYS" heading="Your API keys." sub="Your AI tools, in one place.">
+<Base title="API" crumb="API" heading="Your API keys." sub="Your AI tools, in one place.">
   <section class="card">
     <div class="card-head pad">
       <div>
@@ -12,8 +12,7 @@ import { keys, MAX_KEYS } from '../data/site';
         <p class="card-sub">Use these keys with edgeyCLI or api.edgeycli.com. One shared balance.</p>
       </div>
       <div class="count">
-        <p class="mono">{keys.length} / {MAX_KEYS} keys</p>
-        <p class="card-sub">{MAX_KEYS - keys.length} slots available</p>
+        <p class="mono">{keys.length} keys</p>
       </div>
     </div>
     <form class="create" onsubmit="return false">
@@ -39,6 +38,9 @@ import { keys, MAX_KEYS } from '../data/site';
               </td>
             </tr>
           ))}
+          {keys.length === 0 && (
+            <tr><td colspan="4" class="empty">No API keys yet. Create your first key above.</td></tr>
+          )}
         </tbody>
       </table>
     </div>
@@ -87,6 +89,7 @@ import { keys, MAX_KEYS } from '../data/site';
   .strong { font-size: 12px; font-weight: 600; }
   .muted { font-size: 10.5px; color: var(--muted); }
   .actions { display: flex; gap: 8px; }
+  .empty { text-align: center; color: var(--muted); font-size: 12px; padding: 36px 24px; }
   .gap { margin-top: 32px; }
   @media (max-width: 640px) {
     .card-head { flex-direction: column; }

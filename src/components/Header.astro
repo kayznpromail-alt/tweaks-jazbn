@@ -4,8 +4,8 @@ import Icon from './Icon.astro';
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 const nav = [
   { href: '/', icon: 'grid', label: 'Overview' },
-  { href: '/keys', icon: 'key', label: 'API keys' },
-  { href: '/setup', icon: 'terminal', label: 'Setup', text: true },
+  { href: '/api', icon: 'key', label: 'API' },
+  { href: '/setup', icon: 'terminal', label: 'Setup', pill: true },
   { href: '/models', icon: 'cpu', label: 'Models' },
   { href: '/activity', icon: 'activity', label: 'Activity' },
 ] as const;
@@ -18,21 +18,27 @@ const nav = [
     </a>
 
     <nav>
-      {nav.map((n) => (
-        <a
-          href={n.href}
-          class:list={['nav-btn', { active: path === n.href, 'has-text': 'text' in n }]}
-          title={n.label}
-          aria-label={n.label}
-        >
-          <Icon name={n.icon} size={15} />
-          {'text' in n && <span>{n.label}</span>}
-        </a>
-      ))}
+      {nav.map((n) => {
+        const active = path === n.href;
+        const labeled = active || 'pill' in n;
+        return (
+          <a
+            href={n.href}
+            class:list={['nav-btn', { active, labeled, boxed: 'pill' in n }]}
+            title={n.label}
+            aria-label={n.label}
+            aria-current={active ? 'page' : undefined}
+          >
+            <Icon name={n.icon} size={15} />
+            {labeled && <span>{n.label}</span>}
+          </a>
+        );
+      })}
     </nav>
 
     <div class="user">
       <button class="ghost" aria-label="Theme"><Icon name="sun" size={15} /></button>
+      <span class="sep"></span>
       <span class="avatar">M</span>
       <span class="name">Member</span>
       <button class="ghost" aria-label="Log out"><Icon name="logout" size={15} /></button>
@@ -92,7 +98,8 @@ const nav = [
     font-size: 12px;
     transition: color 0.15s, background 0.15s, border-color 0.15s;
   }
-  .nav-btn.has-text { padding: 0 12px; border-color: var(--border); }
+  .nav-btn.labeled { padding: 0 12px; font-weight: 600; }
+  .nav-btn.boxed { border-color: var(--border); }
   .nav-btn:hover { color: var(--fg); background: var(--surface-2); }
   .nav-btn.active {
     color: var(--accent);
@@ -112,11 +119,12 @@ const nav = [
     place-items: center;
     width: 28px;
     height: 28px;
-    border-radius: 999px;
+    border-radius: 8px;
     border: 1px solid var(--border);
     background: var(--surface-2);
     font-size: 10px;
   }
+  .sep { width: 1px; height: 20px; background: var(--border-2); }
   @media (max-width: 760px) {
     .inner { grid-template-columns: 1fr auto; height: auto; padding: 12px 16px; }
     nav { grid-column: 1 / -1; grid-row: 2; justify-content: center; }

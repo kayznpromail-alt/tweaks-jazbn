@@ -1,0 +1,43 @@
+---
+import Icon from './Icon.astro';
+import type { IconName } from './icons';
+
+interface Props {
+  id: string;
+  icon: IconName;
+  title: string;
+  open?: boolean;
+}
+const { id, icon, title, open = false } = Astro.props;
+---
+<section class="panel" data-panel={id} hidden={!open} aria-label={title}>
+  <div class="head">
+    <span class="g-icon"><Icon name={icon} /></span>
+    <h2>{title}</h2>
+    <button class="close" data-close aria-label="Close"><Icon name="x" /></button>
+  </div>
+  <slot />
+</section>
+
+<style>
+  .panel {
+    padding: 22px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    scroll-margin-top: 96px;
+  }
+  .head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  h2 { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .close {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    margin-left: auto;
+    border-radius: 7px;
+    color: var(--muted);
+    transition: color 0.15s, background 0.15s;
+  }
+  .close:hover { color: var(--fg); background: var(--surface-2); }
+</style>

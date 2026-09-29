@@ -13,6 +13,13 @@ const { full = false } = Astro.props;
     </div>
     <a href="/models" class="icon-btn" aria-label="All models"><Icon name="cpu" /></a>
   </div>
+  {providers.length === 0 ? (
+    <div class="none">
+      <span class="icon-btn"><Icon name="cpu" /></span>
+      <p class="card-title">No models yet</p>
+      <p class="card-sub">Models and their rates will show up here.</p>
+    </div>
+  ) : (
   <div class:list={['list', { full }]}>
     {providers.map((p, i) => (
       <details open={full && i === 0}>
@@ -33,6 +40,10 @@ const { full = false } = Astro.props;
       </details>
     ))}
   </div>
+  )}
+  {!full && (
+    <a href="/models" class="all">View all models <Icon name="arrowUpRight" size={13} /></a>
+  )}
 </section>
 
 <style>
@@ -49,6 +60,26 @@ const { full = false } = Astro.props;
     scrollbar-color: var(--border-2) transparent;
   }
   .list.full { max-height: none; }
+  .all {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 24px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+    transition: color 0.15s;
+  }
+  .all:hover { color: var(--accent); }
+  .none {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 40px 16px;
+    text-align: center;
+  }
+  .none .icon-btn { width: 40px; height: 40px; margin-bottom: 6px; color: var(--accent); }
   details {
     border: 1px solid var(--border);
     border-radius: 10px;

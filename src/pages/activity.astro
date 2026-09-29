@@ -1,7 +1,13 @@
 ---
 import Base from '../layouts/Base.astro';
 import Usage from '../components/Usage.astro';
+import RecentRequests from '../components/RecentRequests.astro';
 ---
 <Base title="Activity" crumb="ACTIVITY" heading="Activity." sub="Requests and token usage across all your keys.">
   <Usage />
+  <div class="gap"><RecentRequests /></div>
 </Base>
+
+<style>
+  .gap { margin-top: 20px; }
+</style>

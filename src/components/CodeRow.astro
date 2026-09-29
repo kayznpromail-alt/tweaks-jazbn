@@ -1,0 +1,30 @@
+---
+import CodeBox from './CodeBox.astro';
+
+interface Props {
+  label: string;
+  code: string;
+  wrap?: boolean;
+  shell?: string;
+  hidden?: boolean;
+}
+const { label, code, wrap, shell, hidden } = Astro.props;
+---
+<div class="code-row" data-shell-row={shell} hidden={hidden}>
+  <p class="label">{label}</p>
+  <CodeBox code={code} wrap={wrap} />
+</div>
+
+<style>
+  .code-row {
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr);
+    gap: 10px 20px;
+    align-items: start;
+  }
+  .label { font-size: 12px; font-weight: 600; padding-top: 12px; }
+  @media (max-width: 700px) {
+    .code-row { grid-template-columns: minmax(0, 1fr); }
+    .label { padding-top: 0; }
+  }
+</style>

@@ -1,0 +1,116 @@
+---
+import Icon from './Icon.astro';
+---
+<section class="card recent" id="requests">
+  <div class="card-head pad">
+    <div>
+      <p class="card-title">Recent requests</p>
+      <p class="card-sub">Monitor your API activity in real time</p>
+    </div>
+    <div class="tools">
+      <label class="search">
+        <Icon name="search" size={14} />
+        <input type="search" placeholder="Model or key…" aria-label="Filter by model or key" />
+      </label>
+      <div class="select">
+        <select aria-label="Status">
+          <option>All</option>
+          <option>Successful</option>
+          <option>Failed</option>
+        </select>
+        <Icon name="chevronDown" size={14} />
+      </div>
+      <button class="icon-btn refresh" aria-label="Refresh"><Icon name="refresh" size={14} /></button>
+    </div>
+  </div>
+  <div class="empty">
+    <span class="icon-btn"><Icon name="activity" /></span>
+    <p class="card-title">Your requests, all in one place</p>
+    <p class="card-sub">Connect a tool to start tracking responses and usage.</p>
+    <a href="/setup" class="btn">Set up your connection <Icon name="arrowUpRight" size={13} /></a>
+  </div>
+  <details class="how">
+    <summary><Icon name="chevronRight" size={12} /> How usage is measured</summary>
+    <p>Usage is counted in tokens, as reported by the API for each request.</p>
+  </details>
+</section>
+
+<style>
+  .recent { min-width: 0; }
+  .pad { padding: 24px; border-bottom: 1px solid var(--border); align-items: center; }
+  .tools { display: flex; gap: 8px; }
+  .search,
+  .select {
+    position: relative;
+    display: flex;
+    align-items: center;
+    height: 38px;
+    border-radius: 8px;
+    border: 1px solid var(--border-2);
+    background: var(--bg);
+    color: var(--muted);
+    transition: border-color 0.15s;
+  }
+  .search { gap: 8px; padding: 0 12px; width: 200px; }
+  .search:focus-within,
+  .select:focus-within { border-color: var(--accent-line); }
+  .search input {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    background: none;
+    border: 0;
+    outline: none;
+    color: var(--fg);
+    font-size: 12px;
+  }
+  .select select {
+    appearance: none;
+    height: 100%;
+    width: 116px;
+    padding: 0 32px 0 12px;
+    background: none;
+    border: 0;
+    outline: none;
+    color: var(--fg);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .select :global(svg) { position: absolute; right: 10px; pointer-events: none; }
+  .refresh { width: 38px; height: 38px; }
+  .empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 48px 16px;
+    text-align: center;
+  }
+  .empty .card-sub { max-width: 260px; }
+  .empty .icon-btn { width: 40px; height: 40px; margin-bottom: 6px; color: var(--accent); }
+  .empty .btn { margin-top: 10px; }
+  .how {
+    padding: 14px 24px;
+    border-top: 1px solid var(--border);
+    font-size: 10.5px;
+    color: var(--muted);
+  }
+  .how summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    list-style: none;
+    cursor: pointer;
+  }
+  .how summary::-webkit-details-marker { display: none; }
+  .how summary:hover { color: var(--fg); }
+  .how summary :global(svg) { transition: transform 0.2s; }
+  .how[open] summary :global(svg) { transform: rotate(90deg); }
+  .how p { margin-top: 10px; max-width: 560px; line-height: 1.6; }
+  @media (max-width: 760px) {
+    .pad { flex-direction: column; align-items: stretch; }
+    .search { flex: 1; width: auto; min-width: 0; }
+  }
+</style>

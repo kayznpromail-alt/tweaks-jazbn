@@ -7,10 +7,8 @@ const endpoints = [
   { method: 'POST', title: 'OpenAI-compatible chat', path: '/chat/completions', desc: 'For Codex and OpenAI-compatible clients.' },
   { method: 'POST', title: 'Anthropic messages', path: '/messages', desc: 'For Claude Code and Anthropic clients.' },
 ];
-const curl = `curl ${API_BASE}/chat/completions \\
-  -H "Authorization: Bearer $EDGEY_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{"model":"gpt-5-mini","messages":[{"role":"user","content":"hello"}]}'`;
+const curl = `curl ${API_BASE}/models \\
+  -H "Authorization: Bearer $EDGEY_API_KEY"`;
 ---
 <section class="card connect">
   <div class="card-head pad">
