@@ -5,11 +5,12 @@ import CodeBox from '../components/CodeBox.astro';
 import CodeRow from '../components/CodeRow.astro';
 import GuidePanel from '../components/GuidePanel.astro';
 import ShellSnippet from '../components/ShellSnippet.astro';
-import { API_BASE, API_ROOT, keys } from '../data/site';
+import { API_BASE, API_ROOT, DISCORD_URL } from '../data/site';
 
 const KEY = 'YOUR_EDGEY_API_KEY';
 const apiHost = new URL(API_ROOT).host;
-const install = String.raw`curl.exe -fL https://edgeycli.com/install.cmd -o "%TEMP%\edgey-install.cmd" && call "%TEMP%\edgey-install.cmd"`;
+// Served from public/install.cmd on the site.
+const install = String.raw`curl.exe -fL https://cli.edgey.shop/install.cmd -o "%TEMP%\edgey-install.cmd" && call "%TEMP%\edgey-install.cmd"`;
 
 const guides = [
   { id: 'cli', icon: 'terminal', title: 'edgeyCLI', desc: 'Recommended terminal workspace for supported models.', tag: 'Recommended' },
@@ -122,17 +123,12 @@ const routes = [
           <li>
             <span class="num">02</span>
             <div>
-              <p class="t">Connect your API key</p>
-              <p class="d">Paste your personal API key when the installer or edgeyCLI asks. This is separate from your 16-digit access number.</p>
-              {keys.length > 0 ? (
-                <div class="keybox"><code>{keys[0].masked}</code></div>
-              ) : (
-                <a href="/api" class="keybox empty">
-                  <span>No API key yet. Create one in API.</span>
-                  <Icon name="arrowUpRight" size={13} />
-                </a>
-              )}
-              <p class="hint">Connected to {apiHost}. Your CLI and website share the same API balance.</p>
+              <p class="t">Enter your CLI key</p>
+              <p class="d">Paste the CLI key you received with your purchase when the installer asks. This is separate from your 16-digit access number.</p>
+              <a href={DISCORD_URL} class="keybox empty" target="_blank" rel="noopener">
+                <span>No CLI key yet? Get one on Discord.</span>
+                <Icon name="arrowUpRight" size={13} />
+              </a>
             </div>
           </li>
           <li>
