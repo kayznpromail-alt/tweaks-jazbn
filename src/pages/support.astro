@@ -1,0 +1,64 @@
+---
+import Public from '../layouts/Public.astro';
+import Icon from '../components/Icon.astro';
+import { DISCORD_URL } from '../data/site';
+
+const topics = [
+  {
+    icon: 'wallet',
+    title: 'Payment support',
+    text: 'Include your payment reference, currency, network and approximate time. We can investigate pending, partial, expired or incorrectly routed payments.',
+  },
+  {
+    icon: 'key',
+    title: 'Account support',
+    text: 'For sign-in or API access issues, tell us the account name and the error message. Keep credentials private.',
+  },
+] as const;
+const checklist = [
+  'Check payment status in workspace history.',
+  'Confirm the asset and network matched checkout.',
+  'Keep the reference and transaction hash available.',
+];
+---
+<Public title="Support" active="support">
+      <section class="hero">
+        <p class="kicker"><i class="dot"></i>CUSTOMER SUPPORT</p>
+        <h1>We can help with your <span class="accent">account</span> or payment.</h1>
+        <p class="lead">Use the official edgey Discord community for customer support. Never post an access number, API key, wallet seed or private key.</p>
+        <div class="cta">
+          <a href={DISCORD_URL} class="btn primary"><Icon name="discord" size={16} /> Open edgey support on Discord <Icon name="arrowUpRight" size={13} /></a>
+        </div>
+      </section>
+
+      <section class="grid two">
+        {topics.map((t, i) => (
+          <article class="card feat">
+            <div class="feat-top">
+              <span class="g-icon"><Icon name={t.icon} /></span>
+              <span class="idx">0{i + 1}</span>
+            </div>
+            <h2>{t.title}</h2>
+            <p>{t.text}</p>
+          </article>
+        ))}
+      </section>
+
+      <section class="card how">
+        <div class="how-head">
+          <p class="card-title"><Icon name="check" /> Before contacting us</p>
+          <span class="tag"><Icon name="shield" size={11} /> Never share secrets</span>
+        </div>
+        <ol>
+          {checklist.map((s) => (
+            <li><span class="p">[✓]</span><span>{s}</span></li>
+          ))}
+        </ol>
+      </section>
+</Public>
+
+<style is:global>
+  .pub .grid.two { grid-template-columns: repeat(2, 1fr); }
+  .pub .how-head .tag { display: inline-flex; align-items: center; gap: 6px; }
+  @media (max-width: 800px) { .pub .grid.two { grid-template-columns: 1fr; } }
+</style>
