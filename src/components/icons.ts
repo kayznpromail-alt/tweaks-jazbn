@@ -28,7 +28,11 @@ export const paths = {
   arrowRight: '<path d="M5 12h14M13 6l6 6-6 6"/>',
   wallet: '<path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h14a2 2 0 0 1 2 2v3M21 12v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5"/><path d="M17 13h4v4h-4a2 2 0 0 1 0-4z"/>',
   badgeCheck: '<path d="m9 12 2 2 4-4"/><path d="M12 3l2.4 1.8 3-.2.9 2.9 2.4 1.8-1 2.8 1 2.8-2.4 1.8-.9 2.9-3-.2L12 21l-2.4-1.8-3 .2-.9-2.9L3.3 14.6l1-2.8-1-2.8 2.4-1.8.9-2.9 3 .2z"/>',
-    sliders: '<path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>',
+    card: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
+  coins: '<circle cx="9" cy="9" r="6"/><path d="M15.4 9.6A6 6 0 1 1 9.6 15.4"/><path d="M9 7v4M7 9h4"/>',
+  history: '<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>',
+  paypal: '<path d="M7 20H4L7 4h7a4 4 0 0 1 0 8h-4l-1.5 8"/><path d="M10 12h4a4 4 0 0 0 4-4"/>',
+  sliders: '<path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>',
 };
 
 export type IconName = keyof typeof paths;

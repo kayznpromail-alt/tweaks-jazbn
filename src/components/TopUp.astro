@@ -1,0 +1,274 @@
+---
+import Icon from './Icon.astro';
+import { PACKS, COINS, wallet, DISCORD_URL } from '../data/site';
+
+const best = PACKS.reduce((a, b) => (b.tokens / b.eur > a.tokens / a.eur ? b : a));
+const fmt = (n: number) => n.toLocaleString('en-US');
+const short = (n: number) => (n >= 1e9 ? `${n / 1e9}B` : `${n / 1e6}M`);
+---
+<dialog class="topup" data-topup aria-labelledby="topup-title">
+  <form method="dialog" class="shell" data-topup-form>
+    <header class="head">
+      <span class="g-icon big"><Icon name="wallet" size={18} /></span>
+      <div>
+        <p class="kicker">YOUR WORKSPACE, REFUELLED</p>
+        <h2 id="topup-title">Top up your wallet</h2>
+        <p class="sub">More room to build. One balance for all your API keys.</p>
+      </div>
+      <button type="button" class="close" data-topup-close aria-label="Close"><Icon name="x" /></button>
+    </header>
+
+    <div class="cols">
+      <div class="left">
+        <section class="box">
+          <p class="lbl">PAYMENT METHOD</p>
+          <div class="methods" role="radiogroup" aria-label="Payment method">
+            <label class="method">
+              <input type="radio" name="method" value="crypto" checked />
+              <span class="g-icon"><Icon name="coins" /></span>
+              <span class="txt"><b>Crypto</b><small>Pay with cryptocurrency</small></span>
+              <span class="tick"><Icon name="check" size={12} /></span>
+            </label>
+            <label class="method">
+              <input type="radio" name="method" value="paypal" />
+              <span class="g-icon"><Icon name="paypal" /></span>
+              <span class="txt"><b>PayPal</b><small>Arrange on Discord</small></span>
+              <span class="tick"><Icon name="check" size={12} /></span>
+            </label>
+            <label class="method">
+              <input type="radio" name="method" value="card" />
+              <span class="g-icon"><Icon name="card" /></span>
+              <span class="txt"><b>Card</b><small>Arrange on Discord</small></span>
+              <span class="tick"><Icon name="check" size={12} /></span>
+            </label>
+          </div>
+
+          <div data-crypto-only>
+            <p class="lbl">CRYPTOCURRENCY &amp; NETWORK</p>
+            <div class="coin">
+              <span class="sym" data-coin-sym>{COINS[0].symbol}</span>
+              <select name="coin" aria-label="Cryptocurrency" data-coin>
+                {COINS.map((c) => (
+                  <option value={c.id} data-sym={c.symbol} data-net={c.network}>{c.name} · {c.symbol}</option>
+                ))}
+              </select>
+              <span class="net" data-coin-net>{COINS[0].network}</span>
+              <Icon name="chevronDown" size={14} class="chev" />
+            </div>
+            <p class="hint">Your address and QR code will appear here, without leaving edgeycli.com.</p>
+          </div>
+          <p class="hint" data-discord-only hidden>
+            PayPal and card payments are handled by our team on Discord. Open a ticket with the pack you want.
+          </p>
+        </section>
+
+        <section class="box">
+          <p class="lbl">CHOOSE A PACK</p>
+          <div class="packs" role="radiogroup" aria-label="Pack">
+            {PACKS.map((p, i) => (
+              <label class="pack">
+                <input type="radio" name="pack" value={i} checked={i === 0} data-eur={p.eur} data-tokens={p.tokens} />
+                {p === best && <span class="flag">Best value</span>}
+                <span class="tok">{short(p.tokens)}</span>
+                <span class="unit">tokens</span>
+                <span class="eur">€{p.eur}</span>
+                <span class="per">{fmt(Math.round(p.tokens / p.eur / 1e4) / 100)}M / €</span>
+              </label>
+            ))}
+          </div>
+        </section>
+        <p class="safe"><Icon name="shield" size={13} /> Your balance updates after your payment is confirmed.</p>
+      </div>
+
+      <div class="right">
+        <section class="box pay">
+          <p class="lbl">YOU PAY</p>
+          <p class="amount"><span data-eur-out>€25.00</span><small>EUR</small></p>
+          <p class="hint">Network and processing fees are shown at checkout.</p>
+          <dl class="lines">
+            <div><dt>Current balance</dt><dd data-cur={wallet.balance}>{fmt(wallet.balance)} tokens</dd></div>
+            <div><dt>You receive</dt><dd class="plus" data-recv>+{fmt(PACKS[0].tokens)} tokens</dd></div>
+            <div class="total"><dt>Balance after payment</dt><dd data-after>{fmt(wallet.balance + PACKS[0].tokens)} tokens</dd></div>
+          </dl>
+          <button type="button" class="btn primary go" data-proceed>
+            <span data-proceed-label>Proceed to payment</span> <Icon name="arrowUpRight" size={14} />
+          </button>
+          <p class="msg" data-topup-msg role="status" hidden></p>
+          <p class="note">Tokens are billed as weighted API units. Model multipliers apply.</p>
+        </section>
+
+        <section class="box">
+          <p class="lbl">PROMO CODE</p>
+          <div class="promo">
+            <input name="promo" placeholder="Enter code" aria-label="Promo code" autocomplete="off" data-promo />
+            <button type="button" class="btn" data-promo-apply>Apply</button>
+          </div>
+          <p class="msg" data-promo-msg role="status" hidden></p>
+          <a href="/activity" class="history"><Icon name="history" size={15} /> Payment history <Icon name="arrowUpRight" size={13} class="end" /></a>
+        </section>
+      </div>
+    </div>
+
+    <footer class="foot">
+      <span>edgeycli.com</span>
+      <span class="motto"><i></i>ONE WALLET. EVERY MODEL.</span>
+    </footer>
+  </form>
+</dialog>
+
+<script define:vars={{ DISCORD_URL }}>
+  const dlg = document.querySelector('[data-topup]');
+  if (dlg) {
+    const $ = (s) => dlg.querySelector(s);
+    const fmt = (n) => n.toLocaleString('en-US');
+    const eur = (n) => '€' + n.toFixed(2);
+    const current = Number($('[data-cur]').dataset.cur) || 0;
+
+    const update = () => {
+      const pack = $('input[name="pack"]:checked');
+      const tokens = Number(pack.dataset.tokens);
+      $('[data-eur-out]').textContent = eur(Number(pack.dataset.eur));
+      $('[data-recv]').textContent = '+' + fmt(tokens) + ' tokens';
+      $('[data-after]').textContent = fmt(current + tokens) + ' tokens';
+
+      const method = $('input[name="method"]:checked').value;
+      const crypto = method === 'crypto';
+      $('[data-crypto-only]').hidden = !crypto;
+      $('[data-discord-only]').hidden = crypto;
+      $('[data-proceed-label]').textContent = crypto ? 'Proceed to payment' : 'Continue on Discord';
+      $('[data-topup-msg]').hidden = true;
+
+      const opt = $('[data-coin]').selectedOptions[0];
+      $('[data-coin-sym]').textContent = opt.dataset.sym;
+      $('[data-coin-net]').textContent = opt.dataset.net;
+    };
+    dlg.addEventListener('change', update);
+
+    $('[data-proceed]').addEventListener('click', () => {
+      const method = $('input[name="method"]:checked').value;
+      if (method !== 'crypto') {
+        window.open(DISCORD_URL, '_blank', 'noopener');
+        return;
+      }
+      // NOWPayments is not connected yet.
+      const msg = $('[data-topup-msg]');
+      msg.textContent = 'Crypto checkout is being set up. Use Discord for now.';
+      msg.hidden = false;
+    });
+
+    $('[data-promo-apply]').addEventListener('click', () => {
+      const msg = $('[data-promo-msg]');
+      msg.textContent = $('[data-promo]').value.trim() ? "This code isn't valid." : 'Enter a code first.';
+      msg.hidden = false;
+    });
+
+    const open = () => {
+      update();
+      dlg.showModal();
+    };
+    document.querySelectorAll('[data-topup-open]').forEach((b) => b.addEventListener('click', open));
+    $('[data-topup-close]').addEventListener('click', () => dlg.close());
+    // Click on the dimmed backdrop closes it.
+    dlg.addEventListener('click', (e) => {
+      if (e.target === dlg) dlg.close();
+    });
+    dlg.addEventListener('close', () => history.replaceState(null, '', location.pathname));
+    if (location.hash === '#topup') open();
+  }
+</script>
+
+<style>
+  .topup {
+    width: min(880px, calc(100% - 24px));
+    max-height: calc(100dvh - 24px);
+    margin: auto;
+    padding: 0;
+    border: 1px solid var(--border-2);
+    border-radius: 18px;
+    background: linear-gradient(180deg, var(--surface-2), var(--bg));
+    color: var(--fg);
+    box-shadow: 0 40px 120px -30px rgb(0 0 0 / 0.9), 0 0 0 1px rgb(34 211 238 / 0.05);
+  }
+  .topup[open] { animation: pop-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .topup::backdrop { background: rgb(2 6 8 / 0.7); backdrop-filter: blur(6px); }
+  @keyframes pop-in {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  }
+  .shell { padding: 22px; }
+  .head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; }
+  .g-icon.big { width: 44px; height: 44px; border-radius: 12px; color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
+  .kicker, .lbl { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.18em; color: var(--muted); }
+  h2 { margin-top: 4px; font-size: 22px; font-weight: 700; letter-spacing: -0.02em; }
+  .sub { margin-top: 4px; font-size: 12px; color: var(--muted); }
+  .close { display: grid; place-items: center; width: 34px; height: 34px; margin-left: auto; border-radius: 9px; border: 1px solid var(--border-2); color: var(--muted); transition: color 0.15s, border-color 0.15s; }
+  .close:hover { color: var(--fg); border-color: var(--accent-line); }
+
+  .cols { display: grid; grid-template-columns: 1.15fr 1fr; gap: 14px; }
+  .left, .right { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .box { padding: 16px; border-radius: 14px; border: 1px solid var(--border); background: var(--surface); }
+  .box .lbl + * { margin-top: 10px; }
+  .hint { margin-top: 10px; font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+  .methods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  .method { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 12px; border-radius: 11px; border: 1px solid var(--border-2); background: var(--bg); cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .method input, .pack input { position: absolute; opacity: 0; pointer-events: none; }
+  .method .g-icon { width: 30px; height: 30px; }
+  .txt { display: flex; flex-direction: column; min-width: 0; }
+  .txt b { font-size: 12.5px; }
+  .txt small { font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tick { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border-2); color: transparent; }
+  .method:has(input:checked) { border-color: var(--accent-line); background: var(--accent-soft); }
+  .method:has(input:checked) .tick { color: #031217; background: var(--accent); border-color: var(--accent); }
+  .method:has(input:checked) .g-icon { color: var(--accent); border-color: var(--accent-line); }
+  .method:has(input:focus-visible), .pack:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .coin { position: relative; display: flex; align-items: center; gap: 10px; height: 50px; padding: 0 12px; border-radius: 11px; border: 1px solid var(--border-2); background: var(--bg); }
+  .coin:focus-within { border-color: var(--accent-line); }
+  .sym { display: grid; place-items: center; min-width: 34px; height: 26px; padding: 0 6px; border-radius: 7px; font-family: var(--mono); font-size: 10.5px; font-weight: 700; color: #031217; background: var(--accent); }
+  .coin select { flex: 1; min-width: 0; height: 100%; appearance: none; background: none; border: 0; outline: none; font: inherit; font-size: 13px; font-weight: 600; color: var(--fg); cursor: pointer; }
+  .net { font-size: 10px; padding: 3px 7px; border-radius: 6px; border: 1px solid var(--border-2); color: var(--muted); white-space: nowrap; margin-right: 18px; }
+  .coin :global(.chev) { position: absolute; right: 12px; color: var(--muted); pointer-events: none; }
+
+  .packs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .pack { position: relative; display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 2px 8px; padding: 14px; border-radius: 12px; border: 1px solid var(--border-2); background: var(--bg); cursor: pointer; transition: border-color 0.15s, background 0.15s, transform 0.15s; }
+  .pack:hover { border-color: var(--accent-line); transform: translateY(-1px); }
+  .pack:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 3px rgb(34 211 238 / 0.08); }
+  .tok { font-size: 24px; font-weight: 700; letter-spacing: -0.03em; }
+  .unit { grid-row: 2; font-size: 10px; color: var(--muted); }
+  .eur { grid-row: 1; grid-column: 2; font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--accent); }
+  .per { grid-row: 2; grid-column: 2; font-family: var(--mono); font-size: 9.5px; color: var(--muted); white-space: nowrap; text-align: right; }
+  .flag { position: absolute; top: -8px; right: 10px; padding: 2px 7px; border-radius: 5px; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #031217; background: var(--accent); }
+  .safe { display: flex; align-items: center; gap: 8px; font-size: 10.5px; color: var(--muted); padding: 0 4px; }
+
+  .amount { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; font-size: 38px; font-weight: 700; letter-spacing: -0.04em; }
+  .amount small { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--muted); }
+  .lines { margin-top: 16px; border-top: 1px solid var(--border); }
+  .lines div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 11.5px; }
+  .lines dt { color: var(--muted); }
+  .lines dd { font-family: var(--mono); font-weight: 600; text-align: right; }
+  .lines .plus { color: var(--accent); }
+  .lines .total dd { font-size: 13px; color: var(--fg); }
+  .go { width: 100%; height: 46px; margin-top: 16px; font-size: 13px; }
+  .msg { margin-top: 10px; font-size: 11px; color: var(--accent); }
+  .note { margin-top: 12px; font-size: 10px; text-align: center; color: var(--muted); }
+  .promo { display: flex; gap: 8px; }
+  .promo input { flex: 1; min-width: 0; height: 40px; padding: 0 12px; border-radius: 9px; border: 1px solid var(--border-2); background: var(--bg); outline: none; font-size: 12px; }
+  .promo input:focus { border-color: var(--accent-line); }
+  .promo .btn { height: 40px; }
+  .history { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); font-size: 12px; transition: border-color 0.15s, color 0.15s; }
+  .history:hover { border-color: var(--accent-line); color: var(--accent); }
+  .history :global(.end) { margin-left: auto; }
+
+  .foot { display: flex; justify-content: space-between; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 9.5px; color: var(--muted); }
+  .motto { display: flex; align-items: center; gap: 8px; letter-spacing: 0.14em; color: var(--accent); }
+  .motto i { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+
+  @media (max-width: 760px) {
+    .cols { grid-template-columns: 1fr; }
+    .methods { grid-template-columns: 1fr; }
+    .method { flex-direction: row; align-items: center; }
+    .tick { top: 50%; transform: translateY(-50%); }
+    .tok { font-size: 20px; }
+    .shell { padding: 16px; }
+  }
+</style>

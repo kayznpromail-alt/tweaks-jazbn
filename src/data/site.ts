@@ -6,7 +6,28 @@ export type ApiKey = { name: string; masked: string; budget: string; models: str
 export type Provider = { name: string; badge: string; models: { id: string; rate: number }[] };
 
 // Vide pour l'instant : à remplir avec les vraies données.
-export const wallet = { tokens: '0' };
+// Current balance in tokens (0 until accounts exist).
+export const wallet = { balance: 0 };
+
+export const compactTokens = (n: number) =>
+  n >= 1e9 ? `${+(n / 1e9).toFixed(2)}B` : n >= 1e6 ? `${+(n / 1e6).toFixed(1)}M` : n.toLocaleString('en-US');
+
+// Top-up packs, priced in euros.
+export const PACKS = [
+  { eur: 25, tokens: 200_000_000 },
+  { eur: 65, tokens: 500_000_000 },
+  { eur: 140, tokens: 1_000_000_000 },
+  { eur: 180, tokens: 2_000_000_000 },
+];
+
+// Coins offered once NOWPayments is connected.
+export const COINS = [
+  { id: 'ltc', name: 'Litecoin', symbol: 'LTC', network: 'Litecoin' },
+  { id: 'btc', name: 'Bitcoin', symbol: 'BTC', network: 'Bitcoin' },
+  { id: 'eth', name: 'Ethereum', symbol: 'ETH', network: 'Ethereum' },
+  { id: 'usdttrc20', name: 'Tether', symbol: 'USDT', network: 'TRON (TRC20)' },
+  { id: 'sol', name: 'Solana', symbol: 'SOL', network: 'Solana' },
+];
 export const keys: ApiKey[] = [];
 // Price per 1M standard tokens for a ×1 rate (cached tokens cost the same).
 export const PRICE_PER_UNIT = 0.05;

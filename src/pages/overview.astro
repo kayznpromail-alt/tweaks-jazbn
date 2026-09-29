@@ -4,17 +4,18 @@ import Icon from '../components/Icon.astro';
 import Usage from '../components/Usage.astro';
 import ModelRates from '../components/ModelRates.astro';
 import RecentRequests from '../components/RecentRequests.astro';
-import { wallet, keys, DISCORD_URL } from '../data/site';
+import { wallet, keys, DISCORD_URL, compactTokens } from '../data/site';
+import TopUp from '../components/TopUp.astro';
 ---
 <Base crumb="OVERVIEW" heading="Welcome, Member." sub="Your models, keys, and balance in one place.">
   <div class="top-grid">
     <section class="card pad wallet">
       <div class="card-head">
         <p class="card-title">Your wallet</p>
-        <button class="icon-btn" aria-label="Deposit"><Icon name="arrowDownLeft" /></button>
+        <button class="icon-btn" aria-label="Top up wallet" data-topup-open><Icon name="arrowDownLeft" /></button>
       </div>
-      <p class="figure">{wallet.tokens}<span class="tag">tokens</span></p>
-      <button class="btn primary wide">Top up wallet <Icon name="plus" size={14} /></button>
+      <p class="figure">{compactTokens(wallet.balance)}<span class="tag">tokens</span></p>
+      <button class="btn primary wide" data-topup-open>Top up wallet <Icon name="plus" size={14} /></button>
     </section>
 
     <section class="card pad">
@@ -68,6 +69,7 @@ import { wallet, keys, DISCORD_URL } from '../data/site';
   </div>
 
   <div class="gap"><RecentRequests /></div>
+  <TopUp />
 </Base>
 
 <style>
