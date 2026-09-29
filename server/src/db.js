@@ -52,6 +52,15 @@ CREATE TABLE IF NOT EXISTS usage (
 );
 CREATE INDEX IF NOT EXISTS usage_account_time ON usage(account_id, created_at);
 
+CREATE TABLE IF NOT EXISTS cli_keys (
+  account_id INTEGER PRIMARY KEY REFERENCES accounts(id) ON DELETE CASCADE,
+  key_sealed TEXT NOT NULL,                -- encrypted, see security.sealSecret
+  masked TEXT NOT NULL,
+  snapshot TEXT,                           -- last usage read from upstream (normalized JSON)
+  checked_at INTEGER,
+  created_at INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS payments (
   id INTEGER PRIMARY KEY,
   account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
@@ -71,6 +80,9 @@ export function openDb(path) {
   if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
   const db = new DatabaseSync(path);
   db.exec(SCHEMA);
+  // Added after the first release: whether a paid top-up was also loaded at the provider.
+  if (!db.prepare('PRAGMA table_info(payments)').all().some((c) => c.name === 'fulfilled'))
+    db.exec('ALTER TABLE payments ADD COLUMN fulfilled INTEGER NOT NULL DEFAULT 0');
   return db;
 }
 

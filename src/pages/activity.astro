@@ -1,13 +1,55 @@
 ---
 import Base from '../layouts/Base.astro';
-import Usage from '../components/Usage.astro';
-import RecentRequests from '../components/RecentRequests.astro';
+import Icon from '../components/Icon.astro';
 ---
-<Base title="Activity" crumb="ACTIVITY" heading="Activity." sub="Requests and token usage across all your keys.">
-  <Usage />
-  <div class="gap"><RecentRequests /></div>
+<Base title="Usage" crumb="ACTIVITY" heading="Usage." sub="How much of your plan your CLI key has used.">
+  <section class="card pad usage">
+    <div class="card-head">
+      <div>
+        <p class="card-title">Plan usage</p>
+        <p class="card-sub">Plan <span data-cli="plan">–</span> · expires <span data-cli="expires">–</span></p>
+      </div>
+      <div class="state" data-cli-state="none"><i></i><span data-cli="status">Not linked</span></div>
+    </div>
+    <div class="numbers">
+      <p class="big"><span data-cli="used">0</span><small>used</small></p>
+      <p class="of">of <span data-cli="limit">–</span> · <span data-cli="percent"></span></p>
+    </div>
+    <div class="bar"><i data-cli-bar></i></div>
+    <dl class="facts">
+      <div><dt>Available</dt><dd data-cli="available">–</dd></div>
+      <div><dt>Requests left (estimate)</dt><dd data-cli="requests">–</dd></div>
+      <div><dt>Last checked</dt><dd data-cli="updated">–</dd></div>
+    </dl>
+    <p class="note"><Icon name="activity" size={13} /> Usage refreshes about once a minute. Tokens are weighted by each model's multiplier.</p>
+  </section>
 </Base>
 
+<script>
+  import { API_ENABLED, api } from '../lib/api';
+  import { fillCli, type Cli } from '../lib/cli';
+
+  if (API_ENABLED) api<{ cli: Cli }>('/me').then(({ cli }) => fillCli(cli));
+</script>
+
 <style>
-  .gap { margin-top: 20px; }
+  .pad { padding: 24px; }
+  .usage .card-head { align-items: center; }
+  .numbers { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 28px; flex-wrap: wrap; }
+  .big { display: flex; align-items: baseline; gap: 10px; font-size: 48px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; }
+  .big small { font-size: 12px; font-weight: 500; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+  .of { font-size: 13px; color: var(--muted); }
+  .bar { height: 10px; margin-top: 16px; border-radius: 10px; background: var(--surface-2); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; border-radius: 10px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.9s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 22px; }
+  .facts div { padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); }
+  .facts dt { font-size: 11px; color: var(--muted); }
+  .facts dd { margin-top: 4px; font-size: 16px; font-weight: 600; }
+  .state { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border-2); font-size: 12px; font-weight: 600; }
+  .state i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .state[data-cli-state='active'] i { background: #4ade80; box-shadow: 0 0 10px #4ade80; }
+  .state[data-cli-state='exhausted'] i, .state[data-cli-state='paused'] i { background: #fbbf24; }
+  .state[data-cli-state='expired'] i { background: #f87171; }
+  .note { display: flex; align-items: center; gap: 8px; margin-top: 18px; font-size: 11.5px; color: var(--muted); }
+  @media (max-width: 700px) { .facts { grid-template-columns: 1fr; } }
 </style>

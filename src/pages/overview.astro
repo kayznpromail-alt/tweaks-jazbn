@@ -1,56 +1,45 @@
 ---
 import Base from '../layouts/Base.astro';
 import Icon from '../components/Icon.astro';
-import Usage from '../components/Usage.astro';
 import ModelRates from '../components/ModelRates.astro';
-import RecentRequests from '../components/RecentRequests.astro';
-import { wallet, keys, DISCORD_URL, compactTokens } from '../data/site';
+import { DISCORD_URL } from '../data/site';
 import TopUp from '../components/TopUp.astro';
 ---
-<Base crumb="OVERVIEW" heading="Welcome, Member." sub="Your models, keys, and balance in one place.">
+<Base crumb="OVERVIEW" heading="Welcome back." sub="Your plan, CLI key, and usage in one place.">
   <div class="top-grid">
     <section class="card pad wallet">
       <div class="card-head">
-        <p class="card-title">Your wallet</p>
-        <button class="icon-btn" aria-label="Top up wallet" data-topup-open><Icon name="arrowDownLeft" /></button>
+        <p class="card-title">Tokens available</p>
+        <button class="icon-btn" aria-label="Top up" data-topup-open><Icon name="arrowDownLeft" /></button>
       </div>
-      <p class="figure"><span data-balance>{compactTokens(wallet.balance)}</span><span class="tag">tokens</span></p>
-      <button class="btn primary wide" data-topup-open>Top up wallet <Icon name="plus" size={14} /></button>
+      <p class="figure"><span data-cli="available">–</span><span class="tag">tokens</span></p>
+      <button class="btn primary wide" data-topup-open>Top up <Icon name="plus" size={14} /></button>
     </section>
 
     <section class="card pad">
       <div class="card-head">
-        <p class="card-title">Requests in the last 24 hours</p>
-        <a href="/activity" class="icon-btn" aria-label="Activity"><Icon name="activity" /></a>
+        <p class="card-title">Usage</p>
+        <a href="/activity" class="icon-btn" aria-label="Usage details"><Icon name="activity" /></a>
       </div>
       <div class="req">
-        <p class="figure" data-req24>0</p>
-        <div class="succ"><p class="dash" data-ok24>–</p><p class="tag">successful</p></div>
+        <p class="figure"><span data-cli="used">0</span><span class="tag">used</span></p>
+        <div class="succ"><p class="dash" data-cli="limit">–</p><p class="tag">limit</p></div>
       </div>
-      <p class="card-sub small"><span data-req90>0</span> requests · last 90 days</p>
+      <div class="bar"><i data-cli-bar></i></div>
+      <p class="card-sub small"><span data-cli="requests">–</span> requests left · <span data-cli="percent"></span></p>
     </section>
 
     <section class="card pad">
       <div class="card-head">
-        <p class="card-title">Your API keys</p>
-        <a href="/api" class="icon-btn" aria-label="API keys"><Icon name="key" /></a>
+        <p class="card-title">Your CLI key</p>
+        <a href="/api" class="icon-btn" aria-label="CLI key"><Icon name="key" /></a>
       </div>
-      <a href="/api" class="keys-count">
-        <span class="n" data-keycount>{keys.length}</span>
-        <span class="k">active keys</span>
-        <Icon name="arrowUpRight" size={14} class="go" />
+      <div class="state" data-cli-state="none"><i></i><span data-cli="status">Not linked</span></div>
+      <a href="/api" class="key-row">
+        <code data-cli="masked">No CLI key yet</code>
+        <Icon name="chevronRight" size={14} />
       </a>
-      {keys.length > 0 ? (
-        <a href="/api" class="key-row">
-          <code>{keys[0].masked}</code>
-          <Icon name="chevronRight" size={14} />
-        </a>
-      ) : (
-        <a href="/api" class="key-row empty">
-          <span>Create your first key</span>
-          <Icon name="plus" size={14} />
-        </a>
-      )}
+      <p class="card-sub small">Plan <span data-cli="plan">–</span> · expires <span data-cli="expires">–</span></p>
     </section>
   </div>
 
@@ -63,40 +52,23 @@ import TopUp from '../components/TopUp.astro';
     <span class="btn">Open <Icon name="arrowUpRight" size={13} /></span>
   </a>
 
-  <div class="bottom-grid">
-    <Usage />
-    <ModelRates />
-  </div>
-
-  <div class="gap"><RecentRequests /></div>
+  <div class="gap"><ModelRates /></div>
   <TopUp />
 </Base>
 
 <script>
-  import { compactTokens } from '../data/site';
   import { API_ENABLED, ApiError, api, fmt } from '../lib/api';
-
-  type Me = { balance: number; keyCount: number; firstKey: string | null; requests24h: number; successful24h: number; requests90d: number };
-  const set = (sel: string, text: string) => document.querySelectorAll(sel).forEach((el) => (el.textContent = text));
+  import { fillCli, type Cli } from '../lib/cli';
 
   if (API_ENABLED) {
-    api<Me>('/me').then((me) => {
-      set('[data-balance]', compactTokens(me.balance));
-      set('[data-req24]', fmt(me.requests24h));
-      set('[data-ok24]', me.requests24h ? fmt(me.successful24h) : '–');
-      set('[data-req90]', fmt(me.requests90d));
-      set('[data-keycount]', String(me.keyCount));
-      const row = document.querySelector<HTMLAnchorElement>('.key-row');
-      if (row && me.firstKey) {
-        row.classList.remove('empty');
-        row.innerHTML = `<code></code><span>›</span>`;
-        row.querySelector('code')!.textContent = me.firstKey;
-      }
-      // Top-up dialog: real current balance.
+    api<{ cli: Cli }>('/me').then(({ cli }) => {
+      fillCli(cli);
+      // Top-up dialog: tokens currently available on the CLI key.
       const cur = document.querySelector<HTMLElement>('[data-cur]');
+      const available = cli?.account?.available ?? 0;
       if (cur) {
-        cur.dataset.cur = String(me.balance);
-        cur.textContent = `${fmt(me.balance)} tokens`;
+        cur.dataset.cur = String(available);
+        cur.textContent = `${fmt(available)} tokens`;
       }
     });
 
@@ -138,6 +110,13 @@ import TopUp from '../components/TopUp.astro';
   .succ { text-align: right; margin-bottom: 22px; }
   .dash { font-size: 18px; font-weight: 600; }
   .small { font-size: 10.5px; }
+  .bar { height: 6px; margin: -8px 0 12px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; border-radius: 6px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .state { display: inline-flex; align-items: center; gap: 8px; margin: 26px 0 16px; font-size: 13px; font-weight: 600; }
+  .state i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .state[data-cli-state='active'] i { background: #4ade80; box-shadow: 0 0 10px #4ade80; }
+  .state[data-cli-state='exhausted'] i, .state[data-cli-state='paused'] i { background: #fbbf24; }
+  .state[data-cli-state='expired'] i { background: #f87171; }
   .keys-count {
     display: flex;
     align-items: center;

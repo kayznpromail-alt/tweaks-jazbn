@@ -20,6 +20,15 @@ function fakeUpstream(req, res) {
   req.on('end', () => {
     const body = JSON.parse(raw || '{}');
     seen.push({ url: req.url, headers: req.headers, body });
+    if (req.url === '/v1/account') {
+      if (req.headers.authorization !== 'Bearer cli-good-key-123456') return res.writeHead(401).end('{}');
+      res.writeHead(200, { 'content-type': 'application/json' });
+      return res.end(JSON.stringify({
+        version: 1, unit: 'weighted_provider_units', updatedAt: new Date().toISOString(), status: 'active',
+        plan: 'Custom', expiresAt: '2026-12-31T00:00:00Z', limit: 200000000, used: 50000000, reserved: 0,
+        available: 150000000, estimatedRequests: 900, secretProviderField: 'acmeprov internal',
+      }));
+    }
     if (body.model === 'glm-5.2') {
       res.writeHead(401, { 'content-type': 'application/json' });
       return res.end(JSON.stringify({ error: { message: 'acmeprov key revoked, see acmeprov.com/billing' } }));
@@ -83,6 +92,7 @@ function setup(overrides = {}) {
     upstreamKey: UPSTREAM_KEY,
     pepper: 'test-pepper',
     upstreamNames: ['acmeprov'],
+    openRegistration: true,
     allowedOrigins: ['https://cli.edgey.shop'],
     publicApiUrl: 'https://api.edgey.shop',
     siteUrl: 'https://cli.edgey.shop',
@@ -370,5 +380,50 @@ describe('provider stays hidden', () => {
     assert.ok(badBody.error.message.includes('Prompt too long'));
     assert.ok(!/acmeprov|127\.0\.0\.1/i.test(JSON.stringify(badBody)), JSON.stringify(badBody));
     assert.equal(balanceOf(ctx.db), 10_000, 'errors are not billed');
+  });
+});
+
+describe('CLI keys (usage read from the provider)', () => {
+  const ADMIN = 'admin-secret-token';
+  const asAdmin = (ctx, path, opts = {}) => ctx.call(path, { ...opts, token: ADMIN });
+
+  test('sign-up is closed unless OPEN_REGISTRATION is on', async () => {
+    const ctx = setup({ openRegistration: false });
+    assert.equal((await ctx.call('/auth/register', { method: 'POST' })).status, 403);
+  });
+
+  test('admin creates an account with a CLI key; the customer sees usage, never the key', async () => {
+    const ctx = setup({ adminToken: ADMIN });
+    const bad = await asAdmin(ctx, '/admin/accounts', { method: 'POST', body: { cliKey: 'wrong-key-000000' } });
+    assert.equal(bad.status, 400);
+    assert.equal((await (await asAdmin(ctx, '/admin/stats')).json()).accounts, 0, 'no half-created account');
+
+    const created = await (await asAdmin(ctx, '/admin/accounts', { method: 'POST', body: { cliKey: 'cli-good-key-123456' } })).json();
+    assert.equal(created.account.cli.masked, 'cli-go…3456');
+    assert.ok(!JSON.stringify(ctx.db.prepare('SELECT * FROM cli_keys').all()).includes('cli-good-key-123456'), 'stored encrypted');
+
+    const { token } = await (await ctx.call('/auth/login', { method: 'POST', body: { number: created.number } })).json();
+    const me = await (await ctx.call('/me', { token })).json();
+    assert.equal(me.cli.account.status, 'active');
+    assert.equal(me.cli.account.available, 150_000_000);
+    assert.equal(me.cli.account.plan, 'Custom');
+    const text = JSON.stringify(me);
+    assert.ok(!text.includes('cli-good-key-123456') && !/acmeprov/i.test(text), text);
+
+    await asAdmin(ctx, `/admin/accounts/${created.account.id}/cli`, { method: 'POST', body: { key: null } });
+    assert.equal((await (await ctx.call('/me', { token })).json()).cli, null);
+  });
+
+  test('paid top-ups can be marked as loaded at the provider', async () => {
+    const ctx = setup({ adminToken: ADMIN });
+    const a = await account(ctx);
+    const t = Date.now();
+    const id = Number(ctx.db.prepare(
+      `INSERT INTO payments (account_id, provider, reference, amount_eur, tokens, status, credited, created_at, updated_at)
+       VALUES (1, 'nowpayments', 'edgey_9', 25, 200000000, 'finished', 1, ?, ?)`).run(t, t).lastInsertRowid);
+    assert.equal((await (await asAdmin(ctx, '/admin/stats')).json()).paymentsToFulfil, 1);
+    await asAdmin(ctx, `/admin/payments/${id}/fulfilled`, { method: 'POST', body: { fulfilled: true } });
+    assert.equal((await (await asAdmin(ctx, '/admin/stats')).json()).paymentsToFulfil, 0);
+    assert.ok(a.token);
   });
 });

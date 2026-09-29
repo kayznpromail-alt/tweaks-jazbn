@@ -17,7 +17,7 @@ const sameSecret = (a, b) => {
 };
 
 /** /admin/*: stats, accounts, manual credits. Protected by ADMIN_TOKEN (Bearer). */
-export function adminRoutes({ cfg, db, clock = now }) {
+export function adminRoutes({ cfg, db, clock = now, cli }) {
   const admin = new Hono();
   const failures = createLimiter({ windowMs: 15 * 60_000, max: 20, clock });
   const ip = (c) => c.req.header('x-forwarded-for')?.split(',')[0].trim() || 'local';
@@ -51,6 +51,7 @@ export function adminRoutes({ cfg, db, clock = now }) {
     createdAt: a.created_at,
     keys: db.prepare('SELECT COUNT(*) AS n FROM api_keys WHERE account_id = ?').get(a.id).n,
     lastRequestAt: db.prepare('SELECT MAX(created_at) AS t FROM usage WHERE account_id = ?').get(a.id).t,
+    cli: cli.cached(a.id),
   });
 
   admin.get('/stats', (c) => {
@@ -65,6 +66,8 @@ export function adminRoutes({ cfg, db, clock = now }) {
       .prepare("SELECT COUNT(*) AS n, IFNULL(SUM(amount_eur), 0) AS eur FROM payments WHERE credited = 1 AND updated_at >= ?")
       .get(t - 30 * DAY);
     const active = db.prepare('SELECT COUNT(DISTINCT account_id) AS n FROM usage WHERE created_at >= ?').get(t - DAY).n;
+    const toFulfil = db.prepare("SELECT COUNT(*) AS n FROM payments WHERE credited = 1 AND fulfilled = 0 AND provider = 'nowpayments'").get().n;
+    const linked = db.prepare('SELECT COUNT(*) AS n FROM cli_keys').get().n;
     return c.json({
       accounts: a.n,
       activeAccounts24h: active,
@@ -75,6 +78,8 @@ export function adminRoutes({ cfg, db, clock = now }) {
       requests24h: u.n,
       tokens24h: u.tokens,
       charged24h: u.charged,
+      cliKeys: linked,
+      paymentsToFulfil: toFulfil,
     });
   });
 
@@ -93,25 +98,48 @@ export function adminRoutes({ cfg, db, clock = now }) {
     return a ? c.json(summary(a)) : c.json({ error: 'not_found' }, 404);
   });
 
-  admin.post('/accounts', (c) => {
+  admin.post('/accounts', async (c) => {
+    const { cliKey } = await c.req.json().catch(() => ({}));
     const number = newAccessNumber();
     const id = Number(
       db.prepare('INSERT INTO accounts (number_hash, created_at) VALUES (?, ?)').run(hashSecret(cfg.pepper, number), clock())
         .lastInsertRowid,
     );
+    if (cliKey) {
+      const out = await cli.link(id, cliKey);
+      if (out.error) {
+        db.prepare('DELETE FROM accounts WHERE id = ?').run(id);
+        return c.json({ error: out.error }, out.error === 'provider_unavailable' ? 502 : 400);
+      }
+    }
     return c.json({ number, account: summary(account(id)) }, 201);
   });
 
-  admin.get('/accounts/:id', (c) => {
+  // Link (or replace) the CLI key an account uses; { key: null } removes it.
+  admin.post('/accounts/:id/cli', async (c) => {
+    const a = account(Number(c.req.param('id')));
+    if (!a) return c.json({ error: 'not_found' }, 404);
+    const { key } = await c.req.json().catch(() => ({}));
+    if (key === null) {
+      cli.unlink(a.id);
+      return c.json(summary(account(a.id)));
+    }
+    const out = await cli.link(a.id, key);
+    if (out.error) return c.json({ error: out.error }, out.error === 'provider_unavailable' ? 502 : 400);
+    return c.json(summary(account(a.id)));
+  });
+
+  admin.get('/accounts/:id', async (c) => {
     const a = account(Number(c.req.param('id')));
     if (!a) return c.json({ error: 'not_found' }, 404);
     return c.json({
       ...summary(a),
+      cli: await cli.status(a.id),
       apiKeys: db
         .prepare('SELECT id, name, masked, enabled, created_at, last_used_at FROM api_keys WHERE account_id = ? ORDER BY id')
         .all(a.id),
       payments: db
-        .prepare('SELECT id, provider, amount_eur, tokens, status, note, created_at FROM payments WHERE account_id = ? ORDER BY id DESC LIMIT 50')
+        .prepare('SELECT id, provider, amount_eur, tokens, status, note, credited, fulfilled, created_at FROM payments WHERE account_id = ? ORDER BY id DESC LIMIT 50')
         .all(a.id),
       usage: db
         .prepare('SELECT model, status, total_tokens, charged, created_at FROM usage WHERE account_id = ? ORDER BY id DESC LIMIT 50')
@@ -159,10 +187,20 @@ export function adminRoutes({ cfg, db, clock = now }) {
     return c.json({
       payments: db
         .prepare(
-          'SELECT id, account_id, provider, amount_eur, tokens, status, note, credited, created_at FROM payments ORDER BY id DESC LIMIT ?',
+          'SELECT id, account_id, provider, amount_eur, tokens, status, note, credited, fulfilled, created_at FROM payments ORDER BY id DESC LIMIT ?',
         )
         .all(limit),
     });
+  });
+
+  // Paid top-up loaded at the provider (tokens added to the customer's CLI key).
+  admin.post('/payments/:id/fulfilled', async (c) => {
+    const p = db.prepare('SELECT id FROM payments WHERE id = ?').get(Number(c.req.param('id')));
+    if (!p) return c.json({ error: 'not_found' }, 404);
+    const { fulfilled } = await c.req.json().catch(() => ({}));
+    if (typeof fulfilled !== 'boolean') return c.json({ error: 'invalid_request' }, 400);
+    db.prepare('UPDATE payments SET fulfilled = ?, updated_at = ? WHERE id = ?').run(fulfilled ? 1 : 0, clock(), p.id);
+    return c.json({ ok: true });
   });
 
   return admin;

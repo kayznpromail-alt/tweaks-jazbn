@@ -1,9 +1,10 @@
 ---
 import Shell from '../layouts/Shell.astro';
 import Icon from '../components/Icon.astro';
+import { DISCORD_URL } from '../data/site';
 
 const year = new Date().getFullYear();
-const steps = ['Claim your number.', 'Copy it or save it as a file.', 'Use it whenever you sign in.'];
+const steps = ['Buy a plan on Discord.', 'Receive your edgey ID and your CLI key.', 'Sign in here and install the CLI.'];
 ---
 <Shell title="Sign in">
   <div class="auth">
@@ -43,14 +44,14 @@ const steps = ['Claim your number.', 'Copy it or save it as a file.', 'Use it wh
       <section class="panel">
         <div class="tabs" role="tablist" aria-label="Account">
           <button class="on" role="tab" aria-selected="true" data-tab="signin">Sign in</button>
-          <button role="tab" aria-selected="false" data-tab="register">Register</button>
+          <button role="tab" aria-selected="false" data-tab="register">Get access</button>
         </div>
 
         <form class="view" data-view="signin" novalidate>
           <p class="eyebrow">WELCOME BACK</p>
           <h2>Make yourself at home.</h2>
-          <p class="lead">Enter the 16-digit number you saved when you registered.</p>
-          <label for="access" class="label">Access number</label>
+          <p class="lead">Enter the 16-digit edgey ID you received with your purchase.</p>
+          <label for="access" class="label">edgey ID</label>
           <div class="field">
             <input
               id="access"
@@ -70,32 +71,21 @@ const steps = ['Claim your number.', 'Copy it or save it as a file.', 'Use it wh
           </div>
           <button type="submit" class="btn primary big">Sign in <Icon name="arrowRight" size={14} /></button>
           <p class="msg" data-msg role="status" hidden></p>
-          <p class="small">New here? <button type="button" class="link" data-go="register">Claim your number.</button></p>
+          <p class="small">New here? <button type="button" class="link" data-go="register">Get your access.</button></p>
         </form>
 
-        <form class="view register" data-view="register" novalidate hidden>
-          <p class="eyebrow">A FRESH START</p>
-          <h2>Claim your space.</h2>
-          <p class="lead">One click creates your account and a unique 16-digit access number. No email or password needed.</p>
+        <div class="view register" data-view="register" hidden>
+          <p class="eyebrow">NEW HERE</p>
+          <h2>Get your access.</h2>
+          <p class="lead">Your edgey ID and CLI key are delivered with your purchase. No email or password needed.</p>
           <ol class="steps">
             {steps.map((s, i) => (
               <li><span class="n">{String(i + 1).padStart(2, '0')}</span>{s}</li>
             ))}
           </ol>
-          <div class="reveal" data-reveal hidden>
-            <p class="label">Your access number</p>
-            <p class="number" data-new-number></p>
-            <div class="reveal-actions">
-              <button type="button" class="btn" data-copy-number><Icon name="copy" size={14} /> <span class="label">Copy</span></button>
-              <button type="button" class="btn" data-save-number><Icon name="arrowDownLeft" size={14} /> Save as file</button>
-            </div>
-            <p class="small">This is the only way into your account. It will not be shown again.</p>
-            <a href="/overview" class="btn primary big">I saved it, continue <Icon name="arrowRight" size={14} /></a>
-          </div>
-          <button type="submit" class="btn primary big" data-register-btn>Register <Icon name="arrowRight" size={14} /></button>
-          <p class="msg" data-msg role="status" hidden></p>
-          <p class="small accent">Your account starts with no API credit. API access is assigned separately.</p>
-        </form>
+          <a href={DISCORD_URL} class="btn primary big" target="_blank" rel="noopener">Get access on Discord <Icon name="arrowUpRight" size={14} /></a>
+          <p class="small accent">Keep your edgey ID and CLI key private. Staff will never ask for them.</p>
+        </div>
       </section>
     </main>
 
@@ -147,7 +137,7 @@ const steps = ['Claim your number.', 'Copy it or save it as a file.', 'Use it wh
 
   const errorText = (err: unknown) => {
     const code = err instanceof ApiError ? err.code : 'error';
-    if (code === 'unknown_number') return 'No account uses this number.';
+    if (code === 'unknown_number') return 'No account uses this edgey ID.';
     if (code === 'too_many_requests') return 'Too many attempts. Wait a minute and try again.';
     if (code === 'network') return "Can't reach cli.edgey.shop right now. Try again shortly.";
     return 'Something went wrong. Try again.';
@@ -168,30 +158,7 @@ const steps = ['Claim your number.', 'Copy it or save it as a file.', 'Use it wh
       };
       msg.hidden = true;
 
-      if (form.dataset.view === 'register') {
-        // Preview mode (no API yet): registration stays closed.
-        if (!API_ENABLED) return say("Registration isn't open yet.");
-        try {
-          const { number, token } = await api<{ number: string; token: string }>('/auth/register', { method: 'POST' });
-          session.set(token);
-          const pretty = number.replace(/(\d{4})(?=\d)/g, '$1 ');
-          form.querySelector('[data-new-number]')!.textContent = pretty;
-          form.querySelector<HTMLElement>('[data-reveal]')!.hidden = false;
-          form.querySelector<HTMLElement>('[data-register-btn]')!.hidden = true;
-          form.querySelector<HTMLElement>('[data-copy-number]')!.dataset.copy = number;
-          form.querySelector('[data-save-number]')!.addEventListener('click', () => {
-            const blob = new Blob([`cli.edgey.shop access number\n${pretty}\n\nKeep it private. It is the only way into your account.\n`], { type: 'text/plain' });
-            const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'edgeycli-access-number.txt' });
-            a.click();
-            URL.revokeObjectURL(a.href);
-          });
-        } catch (err) {
-          say(errorText(err));
-        }
-        return;
-      }
-
-      if (digitCount() < 16) return say('Enter all 16 digits of your access number.');
+      if (digitCount() < 16) return say('Enter all 16 digits of your edgey ID.');
       // Preview mode (no API yet): any complete number opens the workspace.
       if (!API_ENABLED) return enter(form);
       try {

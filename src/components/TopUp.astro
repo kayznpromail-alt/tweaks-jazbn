@@ -86,9 +86,9 @@ const short = (n: number) => (n >= 1e9 ? `${n / 1e9}B` : `${n / 1e6}M`);
           <p class="amount"><span data-eur-out>€25.00</span><small>EUR</small></p>
           <p class="hint">Network and processing fees are shown at checkout.</p>
           <dl class="lines">
-            <div><dt>Current balance</dt><dd data-cur={wallet.balance}>{fmt(wallet.balance)} tokens</dd></div>
+            <div><dt>Available now</dt><dd data-cur={wallet.balance}>{fmt(wallet.balance)} tokens</dd></div>
             <div><dt>You receive</dt><dd class="plus" data-recv>+{fmt(PACKS[0].tokens)} tokens</dd></div>
-            <div class="total"><dt>Balance after payment</dt><dd data-after>{fmt(wallet.balance + PACKS[0].tokens)} tokens</dd></div>
+            <div class="total"><dt>Available after top-up</dt><dd data-after>{fmt(wallet.balance + PACKS[0].tokens)} tokens</dd></div>
           </dl>
           <button type="button" class="btn primary go" data-proceed>
             <span data-proceed-label>Proceed to payment</span> <Icon name="arrowUpRight" size={14} />

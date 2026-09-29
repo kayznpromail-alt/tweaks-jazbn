@@ -6,6 +6,7 @@ import { creditPayment, now, tx } from './db.js';
 import { createInvoice, verifyIpn } from './nowpayments.js';
 import { createLimiter } from './ratelimit.js';
 import { adminRoutes } from './admin-routes.js';
+import { cliAccounts } from './cli-account.js';
 import { errorBody, relay } from './relay.js';
 import {
   hashSecret,
@@ -30,6 +31,7 @@ export function createApp({ cfg, db, clock = now }) {
   const hash = (v) => hashSecret(cfg.pepper, v);
   const ip = (c) => c.req.header('x-forwarded-for')?.split(',')[0].trim() || 'local';
 
+  const cli = cliAccounts({ cfg, db, clock });
   const loginLimit = createLimiter({ windowMs: 60_000, max: 10, clock });
   const registerLimit = createLimiter({ windowMs: 3_600_000, max: 5, clock });
 
@@ -106,6 +108,7 @@ export function createApp({ cfg, db, clock = now }) {
   );
 
   site.post('/auth/register', (c) => {
+    if (!cfg.openRegistration) return c.json({ error: 'registration_closed' }, 403);
     if (!registerLimit(ip(c))) return c.json({ error: 'too_many_requests' }, 429);
     let number;
     let id;
@@ -154,7 +157,7 @@ export function createApp({ cfg, db, clock = now }) {
     return c.json({ ok: true });
   });
 
-  site.get('/me', (c) => {
+  site.get('/me', async (c) => {
     const a = c.get('account');
     const t = clock();
     const day = q.countSince.get(a.id, t - DAY);
@@ -170,6 +173,8 @@ export function createApp({ cfg, db, clock = now }) {
       requests24h: day.n,
       successful24h: day.ok ?? 0,
       requests90d: quarter.n,
+      // CLI key linked by the admin: plan, status and usage read from the provider.
+      cli: await cli.status(a.id),
     });
   });
 
@@ -275,7 +280,7 @@ export function createApp({ cfg, db, clock = now }) {
   });
 
   app.route('/', site);
-  app.route('/admin', adminRoutes({ cfg, db, clock }));
+  app.route('/admin', adminRoutes({ cfg, db, clock, cli }));
 
   // ---------------------------------------------------------------- NOWPayments callbacks
   app.post('/webhooks/nowpayments', async (c) => {
