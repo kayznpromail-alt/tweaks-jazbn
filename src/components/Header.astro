@@ -1,15 +1,9 @@
 ---
 import Icon from './Icon.astro';
+import SiteNav from './SiteNav';
 
 // Works for /api, /api/ and /api.html alike.
 const path = Astro.url.pathname.replace(/(\.html|\/)$/, '') || '/';
-const nav = [
-  { href: '/overview', icon: 'grid', label: 'Overview' },
-  { href: '/api', icon: 'key', label: 'API' },
-  { href: '/setup', icon: 'terminal', label: 'Setup', pill: true },
-  { href: '/models', icon: 'cpu', label: 'Models' },
-  { href: '/activity', icon: 'activity', label: 'Activity' },
-] as const;
 ---
 <header class="top">
   <div class="inner">
@@ -18,24 +12,7 @@ const nav = [
       <span>edgey<span class="accent">cli</span>.com</span>
     </a>
 
-    <nav>
-      {nav.map((n) => {
-        const active = path === n.href;
-        const labeled = active || 'pill' in n;
-        return (
-          <a
-            href={n.href}
-            class:list={['nav-btn', { active, labeled, boxed: 'pill' in n }]}
-            title={n.label}
-            aria-label={n.label}
-            aria-current={active ? 'page' : undefined}
-          >
-            <Icon name={n.icon} size={15} />
-            {labeled && <span>{n.label}</span>}
-          </a>
-        );
-      })}
-    </nav>
+    <div class="nav-slot"><SiteNav client:load path={path} /></div>
 
     <div class="user">
       <button class="ghost" aria-label="Theme"><Icon name="sun" size={15} /></button>
@@ -129,12 +106,17 @@ const nav = [
   /* Kept still during page changes; the active tab highlight slides to the new tab. */
   .top { view-transition-name: site-header; }
   .logo { view-transition-name: brand-logo; }
-  .nav-btn.active { view-transition-name: nav-active; }
+  .nav-slot { view-transition-name: site-nav; display: flex; justify-content: center; }
   .ghost { display: grid; place-items: center; transition: color 0.15s; }
   .ghost:hover { color: var(--accent); }
   @media (max-width: 760px) {
     .inner { grid-template-columns: 1fr auto; height: auto; padding: 12px 16px; }
-    nav { grid-column: 1 / -1; grid-row: 2; justify-content: center; }
+    .inner { grid-template-columns: 1fr auto; }
+    /* backdrop-filter would trap the fixed bar inside the header. */
+    .top { backdrop-filter: none; background: var(--bg); }
+    /* On phones the nav becomes a real bottom bar. */
+    .nav-slot { position: fixed; left: 0; right: 0; bottom: 16px; z-index: 20; }
+    :global(body) { padding-bottom: 84px; }
     .name { display: none; }
   }
 </style>

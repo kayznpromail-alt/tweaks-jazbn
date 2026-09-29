@@ -1,0 +1,16 @@
+/* Tailwind without its preflight reset: the site keeps its own base styles (layered below utilities). */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* shadcn tokens mapped onto the site palette (defined on :root in Shell.astro). */
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: var(--fg);
+  --color-card: var(--surface-2);
+  --color-border: var(--border-2);
+  --color-sidebar-border: var(--border-2);
+  --color-primary: var(--accent);
+  --color-muted: var(--surface);
+  --color-muted-foreground: var(--muted);
+}
