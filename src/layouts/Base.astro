@@ -1,6 +1,7 @@
 ---
 import Header from '../components/Header.astro';
 import Icon from '../components/Icon.astro';
+import Intro from '../components/Intro.astro';
 
 interface Props {
   title?: string;
@@ -15,10 +16,18 @@ const { title, crumb, heading, sub } = Astro.props;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      // Opening effect: once per tab, and never with reduced motion.
+      try {
+        if (!sessionStorage.getItem('edgey-intro') && !matchMedia('(prefers-reduced-motion: reduce)').matches)
+          document.documentElement.classList.add('intro-on');
+      } catch (e) {}
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title ? `${title} · edgeycli.com` : 'edgeycli.com'}</title>
   </head>
   <body>
+    <Intro />
     <Header />
     <main class="page">
       <p class="crumb">WORKSPACE / {crumb}</p>

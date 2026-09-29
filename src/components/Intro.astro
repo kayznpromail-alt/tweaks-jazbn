@@ -1,0 +1,275 @@
+---
+// Codes for the first frame only; the script re-rolls them as soon as it starts.
+const hex = () => Math.floor(Math.random() * 256).toString(16).toUpperCase().padStart(2, '0');
+const pool = Array.from({ length: 10 }, hex);
+const codes = Array.from({ length: 36 }, () => pool[Math.floor(Math.random() * pool.length)]);
+const SLOTS = 9;
+---
+<div class="intro" data-intro aria-hidden="true">
+  <div class="frame">
+    <div class="timer-row">
+      <span class="lbl">BREACH TIME REMAINING</span>
+      <span class="timer" data-timer>33</span>
+    </div>
+    <p class="title">CODE MATRIX</p>
+    <p class="sub">SEQUENCE REQUIRED TO UPLOAD</p>
+    <div class="matrix">
+      {codes.map((c) => <span class="cell" data-cell>{c}</span>)}
+    </div>
+    <div class="buffer">
+      {Array.from({ length: SLOTS }, () => <span class="slot" data-slot>--</span>)}
+    </div>
+    <p class="status" data-status>UPLOADING SEQUENCE...</p>
+  </div>
+  <p class="skip">CLICK TO SKIP</p>
+</div>
+
+<script>
+  const root = document.documentElement;
+  const intro = document.querySelector<HTMLElement>('[data-intro]');
+  if (intro && root.classList.contains('intro-on')) void breach(intro);
+
+  function rand(n: number) {
+    return Math.floor(Math.random() * n);
+  }
+  function pick<T>(list: T[]): T {
+    return list[rand(list.length)];
+  }
+  function hex() {
+    return rand(256).toString(16).toUpperCase().padStart(2, '0');
+  }
+  function wait(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async function breach(el: HTMLElement) {
+    try {
+      sessionStorage.setItem('edgey-intro', '1');
+    } catch {}
+    const N = 6;
+    const cells = [...el.querySelectorAll<HTMLElement>('[data-cell]')];
+    const slots = [...el.querySelectorAll<HTMLElement>('[data-slot]')];
+    const timer = el.querySelector<HTMLElement>('[data-timer]');
+    const status = el.querySelector<HTMLElement>('[data-status]');
+
+    let done = false;
+    let time = 33;
+    const tick = setInterval(() => {
+      time = Math.max(0, time - 1);
+      if (timer) timer.textContent = String(time).padStart(2, '0');
+    }, 110);
+    const finish = () => {
+      if (done) return;
+      done = true;
+      clearInterval(tick);
+      removeEventListener('keydown', finish);
+      el.classList.add('out');
+      setTimeout(() => {
+        el.remove();
+        root.classList.remove('intro-on');
+        root.style.overflow = '';
+      }, 450);
+    };
+    root.style.overflow = 'hidden';
+    el.addEventListener('click', finish);
+    addEventListener('keydown', finish);
+
+    // Decode: every cell cycles through random bytes, then settles on a small pool.
+    const pool = Array.from({ length: 10 }, hex);
+    for (let f = 0; f < 8 && !done; f++) {
+      cells.forEach((c) => (c.textContent = f < 7 ? hex() : pick(pool)));
+      await wait(55);
+    }
+
+    // Breach path: alternate between a row and a column, checking a random free cell each time.
+    const used = new Set<number>();
+    const hover = (i: number) => cells.forEach((c, k) => c.classList.toggle('hover', k === i));
+    let line = 0;
+    let isRow = true;
+    for (const slot of slots) {
+      if (done) return;
+      const free = Array.from({ length: N }, (_, k) => (isRow ? line * N + k : k * N + line)).filter(
+        (i) => !used.has(i),
+      );
+      if (!free.length) break;
+      cells.forEach((c, i) => c.classList.toggle('line', (isRow ? Math.floor(i / N) : i % N) === line));
+      for (let s = 0; s < 2 && !done; s++) {
+        hover(pick(free));
+        await wait(70);
+      }
+      const chosen = pick(free);
+      hover(chosen);
+      await wait(90);
+      used.add(chosen);
+      cells[chosen].classList.remove('hover');
+      cells[chosen].classList.add('picked');
+      slot.textContent = cells[chosen].textContent;
+      slot.classList.add('filled');
+      line = isRow ? chosen % N : Math.floor(chosen / N);
+      isRow = !isRow;
+      await wait(60);
+    }
+    if (done) return;
+
+    cells.forEach((c) => c.classList.remove('line', 'hover'));
+    clearInterval(tick);
+    if (status) status.textContent = 'ACCESS GRANTED';
+    el.classList.add('granted');
+    await wait(700);
+    finish();
+  }
+</script>
+
+<style>
+  .intro {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: none;
+    flex-direction: column;
+    padding: 24px 16px 56px;
+    overflow-y: auto;
+    background:
+      repeating-linear-gradient(0deg, rgb(255 255 255 / 0.02) 0 1px, transparent 1px 3px),
+      radial-gradient(120% 90% at 50% 40%, #061a1d 0%, #030b0d 60%, #020607 100%);
+    font-family: var(--mono);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: opacity 0.45s ease, filter 0.45s ease, transform 0.45s ease;
+    /* Safety net: never keep the site hidden if the script didn't run. */
+    animation: intro-failsafe 0.4s ease 10s forwards;
+  }
+  :global(html.intro-on) .intro { display: flex; }
+  .intro.out { opacity: 0; filter: blur(6px); transform: scale(1.03); pointer-events: none; }
+
+  .frame { margin: auto; width: min(420px, 100%); display: flex; flex-direction: column; align-items: center; }
+  .timer-row {
+    width: min(363px, 100%);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .lbl,
+  .sub,
+  .skip { font-size: 8.5px; letter-spacing: 0.32em; color: #4d6f72; }
+  .lbl { padding-bottom: 4px; }
+  .timer {
+    font-size: 28px;
+    line-height: 1;
+    color: #fcd34d;
+    text-shadow: 0 0 14px rgb(252 211 77 / 0.35);
+    font-variant-numeric: tabular-nums;
+    transition: color 0.2s;
+  }
+  .title {
+    margin-top: 6px;
+    padding-left: 0.5em;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5em;
+    color: var(--accent-2);
+  }
+  .sub { margin-top: 6px; padding-left: 0.32em; }
+
+  .matrix {
+    margin-top: 18px;
+    width: min(363px, 100%);
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 3px;
+  }
+  .cell {
+    height: 42px;
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--accent-2);
+    background: rgb(34 211 238 / 0.035);
+    border: 1px solid rgb(34 211 238 / 0.12);
+    transition: background 0.12s, color 0.12s, border-color 0.12s, box-shadow 0.12s;
+  }
+  .cell.line { background: rgb(34 211 238 / 0.09); border-color: rgb(34 211 238 / 0.25); }
+  .cell.hover {
+    color: #ecfeff;
+    border-color: var(--accent);
+    box-shadow: inset 0 0 0 1px var(--accent), 0 0 14px rgb(34 211 238 / 0.35);
+  }
+  .cell.picked {
+    color: #031217;
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 16px rgb(34 211 238 / 0.45);
+    animation: pop 0.22s ease;
+  }
+
+  .buffer {
+    margin-top: 14px;
+    width: min(418px, 100%);
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 5px;
+  }
+  .slot {
+    height: 32px;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    color: #3f6264;
+    background: rgb(34 211 238 / 0.04);
+    border: 1px solid rgb(34 211 238 / 0.16);
+  }
+  .slot.filled {
+    color: var(--accent);
+    font-weight: 700;
+    background: var(--accent-soft);
+    border-color: var(--accent-line);
+    animation: pop 0.22s ease;
+  }
+
+  .status {
+    margin-top: 64px;
+    padding-left: 0.38em;
+    font-size: 11px;
+    letter-spacing: 0.38em;
+    color: transparent;
+    background: linear-gradient(90deg, #3f6264 0%, #a5f3fc 50%, #3f6264 100%) 0 0 / 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: shimmer 1.6s linear infinite;
+  }
+  .granted .status {
+    color: var(--accent);
+    background: none;
+    animation: none;
+    text-shadow: 0 0 12px rgb(34 211 238 / 0.5);
+  }
+  .granted .timer { color: var(--accent); text-shadow: 0 0 14px rgb(34 211 238 / 0.4); }
+  .skip {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 20px;
+    text-align: center;
+    color: #2b4749;
+  }
+
+  @media (max-height: 600px) {
+    .cell { height: 34px; }
+    .status { margin-top: 28px; }
+  }
+  @keyframes pop {
+    0% { transform: scale(0.85); }
+    60% { transform: scale(1.06); }
+    100% { transform: scale(1); }
+  }
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+  @keyframes intro-failsafe {
+    to { opacity: 0; visibility: hidden; }
+  }
+</style>
