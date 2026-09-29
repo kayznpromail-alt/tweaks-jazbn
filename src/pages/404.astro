@@ -1,0 +1,36 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+---
+<Base title="Not found" crumb="404" heading="Page not found." sub="This page doesn't exist or has moved.">
+  <section class="card lost">
+    <pre><code><span class="p">$</span> edgey open <span data-path>/404</span>
+<span class="err">error</span> route not found (404)</code></pre>
+    <div class="actions">
+      <a href="/" class="btn primary"><Icon name="grid" size={14} /> Back to overview</a>
+      <a href="/setup" class="btn"><Icon name="terminal" size={14} /> Setup</a>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const path = document.querySelector('[data-path]');
+  if (path) path.textContent = location.pathname;
+</script>
+
+<style>
+  .lost { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+  pre {
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--fg);
+    overflow-x: auto;
+  }
+  .p { color: var(--accent); }
+  .err { color: #f87171; font-weight: 600; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+</style>
