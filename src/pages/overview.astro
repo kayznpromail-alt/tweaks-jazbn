@@ -14,7 +14,7 @@ import TopUp from '../components/TopUp.astro';
         <p class="card-title">Your wallet</p>
         <button class="icon-btn" aria-label="Top up wallet" data-topup-open><Icon name="arrowDownLeft" /></button>
       </div>
-      <p class="figure">{compactTokens(wallet.balance)}<span class="tag">tokens</span></p>
+      <p class="figure"><span data-balance>{compactTokens(wallet.balance)}</span><span class="tag">tokens</span></p>
       <button class="btn primary wide" data-topup-open>Top up wallet <Icon name="plus" size={14} /></button>
     </section>
 
@@ -24,10 +24,10 @@ import TopUp from '../components/TopUp.astro';
         <a href="/activity" class="icon-btn" aria-label="Activity"><Icon name="activity" /></a>
       </div>
       <div class="req">
-        <p class="figure">0</p>
-        <div class="succ"><p class="dash">–</p><p class="tag">successful</p></div>
+        <p class="figure" data-req24>0</p>
+        <div class="succ"><p class="dash" data-ok24>–</p><p class="tag">successful</p></div>
       </div>
-      <p class="card-sub small">0 requests · last 90 days</p>
+      <p class="card-sub small"><span data-req90>0</span> requests · last 90 days</p>
     </section>
 
     <section class="card pad">
@@ -36,7 +36,7 @@ import TopUp from '../components/TopUp.astro';
         <a href="/api" class="icon-btn" aria-label="API keys"><Icon name="key" /></a>
       </div>
       <a href="/api" class="keys-count">
-        <span class="n">{keys.length}</span>
+        <span class="n" data-keycount>{keys.length}</span>
         <span class="k">active keys</span>
         <Icon name="arrowUpRight" size={14} class="go" />
       </a>
@@ -71,6 +71,48 @@ import TopUp from '../components/TopUp.astro';
   <div class="gap"><RecentRequests /></div>
   <TopUp />
 </Base>
+
+<script>
+  import { compactTokens } from '../data/site';
+  import { API_ENABLED, ApiError, api, fmt } from '../lib/api';
+
+  type Me = { balance: number; keyCount: number; firstKey: string | null; requests24h: number; successful24h: number; requests90d: number };
+  const set = (sel: string, text: string) => document.querySelectorAll(sel).forEach((el) => (el.textContent = text));
+
+  if (API_ENABLED) {
+    api<Me>('/me').then((me) => {
+      set('[data-balance]', compactTokens(me.balance));
+      set('[data-req24]', fmt(me.requests24h));
+      set('[data-ok24]', me.requests24h ? fmt(me.successful24h) : '–');
+      set('[data-req90]', fmt(me.requests90d));
+      set('[data-keycount]', String(me.keyCount));
+      const row = document.querySelector<HTMLAnchorElement>('.key-row');
+      if (row && me.firstKey) {
+        row.classList.remove('empty');
+        row.innerHTML = `<code></code><span>›</span>`;
+        row.querySelector('code')!.textContent = me.firstKey;
+      }
+      // Top-up dialog: real current balance.
+      const cur = document.querySelector<HTMLElement>('[data-cur]');
+      if (cur) {
+        cur.dataset.cur = String(me.balance);
+        cur.textContent = `${fmt(me.balance)} tokens`;
+      }
+    });
+
+    // Crypto top-up through NOWPayments (hosted invoice).
+    (window as any).edgeyTopup = async (pack: number, coin: string, say: (t: string) => void) => {
+      try {
+        const { invoiceUrl } = await api<{ invoiceUrl: string }>('/topup', { method: 'POST', body: { pack, coin } });
+        location.assign(invoiceUrl);
+      } catch (err) {
+        const code = err instanceof ApiError ? err.code : '';
+        say(code === 'crypto_unavailable' ? 'Crypto checkout is being set up. Use Discord for now.' : 'Payment could not start. Try again.');
+      }
+    };
+  }
+</script>
+
 
 <style>
   .pad { padding: 24px; }

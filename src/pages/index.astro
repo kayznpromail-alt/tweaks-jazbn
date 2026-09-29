@@ -82,7 +82,17 @@ const steps = ['Claim your number.', 'Copy it or save it as a file.', 'Use it wh
               <li><span class="n">{String(i + 1).padStart(2, '0')}</span>{s}</li>
             ))}
           </ol>
-          <button type="submit" class="btn primary big">Register <Icon name="arrowRight" size={14} /></button>
+          <div class="reveal" data-reveal hidden>
+            <p class="label">Your access number</p>
+            <p class="number" data-new-number></p>
+            <div class="reveal-actions">
+              <button type="button" class="btn" data-copy-number><Icon name="copy" size={14} /> <span class="label">Copy</span></button>
+              <button type="button" class="btn" data-save-number><Icon name="arrowDownLeft" size={14} /> Save as file</button>
+            </div>
+            <p class="small">This is the only way into your account. It will not be shown again.</p>
+            <a href="/overview" class="btn primary big">I saved it, continue <Icon name="arrowRight" size={14} /></a>
+          </div>
+          <button type="submit" class="btn primary big" data-register-btn>Register <Icon name="arrowRight" size={14} /></button>
           <p class="msg" data-msg role="status" hidden></p>
           <p class="small accent">Your account starts with no API credit. API access is assigned separately.</p>
         </form>
@@ -99,6 +109,8 @@ const steps = ['Claim your number.', 'Copy it or save it as a file.', 'Use it wh
 </Shell>
 
 <script>
+  import { API_ENABLED, ApiError, api, session } from '../lib/api';
+
   // Tabs: Sign in / Register (#register opens the second one).
   const tabs = [...document.querySelectorAll<HTMLButtonElement>('[data-tab]')];
   const views = [...document.querySelectorAll<HTMLFormElement>('[data-view]')];
@@ -133,22 +145,61 @@ const steps = ['Claim your number.', 'Copy it or save it as a file.', 'Use it wh
     eye.querySelector<HTMLElement>('[data-icon="hide"]')!.hidden = !reveal;
   });
 
-  // No accounts backend yet: any complete number opens the workspace (preview only).
+  const errorText = (err: unknown) => {
+    const code = err instanceof ApiError ? err.code : 'error';
+    if (code === 'unknown_number') return 'No account uses this number.';
+    if (code === 'too_many_requests') return 'Too many attempts. Wait a minute and try again.';
+    if (code === 'network') return "Can't reach edgeycli.com right now. Try again shortly.";
+    return 'Something went wrong. Try again.';
+  };
+  const enter = (form: HTMLElement) => {
+    form.classList.add('granted');
+    setTimeout(() => location.assign('/overview'), 350);
+  };
+
   views.forEach((form) =>
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const msg = form.querySelector<HTMLElement>('[data-msg]');
       if (!msg) return;
+      const say = (text: string) => {
+        msg.textContent = text;
+        msg.hidden = false;
+      };
+      msg.hidden = true;
+
       if (form.dataset.view === 'register') {
-        msg.textContent = "Registration isn't open yet.";
-        msg.hidden = false;
-      } else if (digitCount() < 16) {
-        msg.textContent = 'Enter all 16 digits of your access number.';
-        msg.hidden = false;
-      } else {
-        msg.hidden = true;
-        form.classList.add('granted');
-        setTimeout(() => location.assign('/overview'), 350);
+        // Preview mode (no API yet): registration stays closed.
+        if (!API_ENABLED) return say("Registration isn't open yet.");
+        try {
+          const { number, token } = await api<{ number: string; token: string }>('/auth/register', { method: 'POST' });
+          session.set(token);
+          const pretty = number.replace(/(\d{4})(?=\d)/g, '$1 ');
+          form.querySelector('[data-new-number]')!.textContent = pretty;
+          form.querySelector<HTMLElement>('[data-reveal]')!.hidden = false;
+          form.querySelector<HTMLElement>('[data-register-btn]')!.hidden = true;
+          form.querySelector<HTMLElement>('[data-copy-number]')!.dataset.copy = number;
+          form.querySelector('[data-save-number]')!.addEventListener('click', () => {
+            const blob = new Blob([`edgeycli.com access number\n${pretty}\n\nKeep it private. It is the only way into your account.\n`], { type: 'text/plain' });
+            const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'edgeycli-access-number.txt' });
+            a.click();
+            URL.revokeObjectURL(a.href);
+          });
+        } catch (err) {
+          say(errorText(err));
+        }
+        return;
+      }
+
+      if (digitCount() < 16) return say('Enter all 16 digits of your access number.');
+      // Preview mode (no API yet): any complete number opens the workspace.
+      if (!API_ENABLED) return enter(form);
+      try {
+        const { token } = await api<{ token: string }>('/auth/login', { method: 'POST', body: { number: input!.value } });
+        session.set(token);
+        enter(form);
+      } catch (err) {
+        say(errorText(err));
       }
     }),
   );
@@ -283,7 +334,7 @@ const steps = ['Claim your number.', 'Copy it or save it as a file.', 'Use it wh
   .eyebrow { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.2em; color: var(--muted); }
   h2 { margin-top: 12px; font-size: 26px; font-weight: 700; letter-spacing: -0.03em; }
   .lead { margin-top: 14px; font-size: 12.5px; line-height: 1.65; color: var(--muted); }
-  .label { display: block; margin-top: 32px; font-size: 12px; font-weight: 600; }
+  .view > .label, .reveal > .label { display: block; margin-top: 32px; font-size: 12px; font-weight: 600; }
   .field {
     display: flex;
     align-items: center;
@@ -321,6 +372,11 @@ const steps = ['Claim your number.', 'Copy it or save it as a file.', 'Use it wh
   .big { width: 100%; height: 46px; margin-top: 18px; font-size: 12.5px; }
   .register .big { margin-top: 56px; }
   .msg { margin-top: 12px; font-size: 11.5px; color: var(--accent); }
+  .reveal { margin-top: 28px; padding: 16px; border-radius: 12px; border: 1px solid var(--accent-line); background: var(--accent-soft); }
+  .reveal > .label { margin-top: 0; }
+  .number { margin-top: 8px; font-family: var(--mono); font-size: 20px; font-weight: 700; letter-spacing: 0.08em; color: var(--accent); }
+  .reveal-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .reveal .big { margin-top: 14px; }
   .granted .big { filter: brightness(1.15); box-shadow: 0 0 0 4px var(--accent-soft), 0 0 24px rgb(34 211 238 / 0.35); }
   .small { margin-top: 20px; font-size: 11px; line-height: 1.6; color: var(--muted); }
   .small.accent { color: var(--accent); opacity: 0.85; }

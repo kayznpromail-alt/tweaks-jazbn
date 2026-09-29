@@ -1,0 +1,244 @@
+{
+  "pricePerUnitUsd": 0.05,
+  "providers": [
+    {
+      "name": "GPT",
+      "badge": "GP",
+      "models": [
+        {
+          "id": "gpt-6-astra",
+          "rate": 10
+        },
+        {
+          "id": "gpt-5.6-sol",
+          "rate": 4
+        },
+        {
+          "id": "gpt-5.6-terra",
+          "rate": 1.5
+        },
+        {
+          "id": "gpt-5.6-luna",
+          "rate": 0.5
+        },
+        {
+          "id": "gpt-5.5",
+          "rate": 4
+        },
+        {
+          "id": "gpt-5.4-mini",
+          "rate": 0.9
+        }
+      ]
+    },
+    {
+      "name": "Claude",
+      "badge": "C",
+      "models": [
+        {
+          "id": "claude-opus-5",
+          "rate": 5
+        },
+        {
+          "id": "claude-fable-5",
+          "rate": 8
+        },
+        {
+          "id": "claude-opus-4-8",
+          "rate": 4
+        },
+        {
+          "id": "claude-opus-4-7",
+          "rate": 4
+        },
+        {
+          "id": "claude-sonnet-5",
+          "rate": 2
+        },
+        {
+          "id": "claude-sonnet-4-6",
+          "rate": 2
+        },
+        {
+          "id": "claude-opus-4-6",
+          "rate": 4
+        },
+        {
+          "id": "claude-haiku-4-5",
+          "rate": 0.9
+        }
+      ]
+    },
+    {
+      "name": "Google",
+      "badge": "G",
+      "models": [
+        {
+          "id": "gemini-3.7-flash",
+          "rate": 2
+        },
+        {
+          "id": "gemini-3.8-flash",
+          "rate": 2
+        },
+        {
+          "id": "gemini-3.5-flash",
+          "rate": 2
+        },
+        {
+          "id": "gemini-3.6-flash",
+          "rate": 2
+        }
+      ]
+    },
+    {
+      "name": "xAI",
+      "badge": "X",
+      "models": [
+        {
+          "id": "grok-4.6",
+          "rate": 0.5
+        },
+        {
+          "id": "grok-4.5",
+          "rate": 0.5
+        }
+      ]
+    },
+    {
+      "name": "Chinese",
+      "badge": "中",
+      "models": [
+        {
+          "id": "qwen3.8-max",
+          "rate": 2.5
+        },
+        {
+          "id": "kimi-k3",
+          "rate": 2.5
+        },
+        {
+          "id": "hy4-preview",
+          "rate": 1
+        },
+        {
+          "id": "glm-5.3",
+          "rate": 1.5
+        },
+        {
+          "id": "qwen3.8-flash",
+          "rate": 0.7
+        },
+        {
+          "id": "glm-5.3-flash",
+          "rate": 0.3
+        },
+        {
+          "id": "deepseek-v4-pro",
+          "rate": 0.5
+        },
+        {
+          "id": "deepseek-v4-flash",
+          "rate": 0.1
+        },
+        {
+          "id": "glm-5.2",
+          "rate": 1.5
+        },
+        {
+          "id": "minimax-m3",
+          "rate": 0.3
+        },
+        {
+          "id": "kimi-k2.7-code",
+          "rate": 0.9
+        },
+        {
+          "id": "mimo-v2.5-pro",
+          "rate": 0.3
+        },
+        {
+          "id": "mimo-v2.5",
+          "rate": 0.05
+        }
+      ]
+    },
+    {
+      "name": "Other",
+      "badge": "··",
+      "models": [
+        {
+          "id": "gpt-6-sol",
+          "rate": 3
+        },
+        {
+          "id": "gpt-6-luna",
+          "rate": 0.38
+        },
+        {
+          "id": "claude-fable-5-1",
+          "rate": 8
+        },
+        {
+          "id": "grok-4.7",
+          "rate": 0.5
+        },
+        {
+          "id": "deepseek-v4.1-flash",
+          "rate": 0.1
+        }
+      ]
+    }
+  ],
+  "packs": [
+    {
+      "eur": 25,
+      "tokens": 200000000
+    },
+    {
+      "eur": 65,
+      "tokens": 500000000
+    },
+    {
+      "eur": 140,
+      "tokens": 1000000000
+    },
+    {
+      "eur": 180,
+      "tokens": 2000000000
+    }
+  ],
+  "coins": [
+    {
+      "id": "ltc",
+      "name": "Litecoin",
+      "symbol": "LTC",
+      "network": "Litecoin"
+    },
+    {
+      "id": "btc",
+      "name": "Bitcoin",
+      "symbol": "BTC",
+      "network": "Bitcoin"
+    },
+    {
+      "id": "eth",
+      "name": "Ethereum",
+      "symbol": "ETH",
+      "network": "Ethereum"
+    },
+    {
+      "id": "usdttrc20",
+      "name": "Tether",
+      "symbol": "USDT",
+      "network": "TRON (TRC20)"
+    },
+    {
+      "id": "sol",
+      "name": "Solana",
+      "symbol": "SOL",
+      "network": "Solana"
+    }
+  ],
+  "maxKeysPerAccount": 6
+}

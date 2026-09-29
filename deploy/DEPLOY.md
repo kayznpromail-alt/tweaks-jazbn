@@ -1,0 +1,74 @@
+# Mettre l'API en ligne (api.edgeycli.com)
+
+Le serveur (`server/`) gère les comptes à 16 chiffres, les clés `sk_edgey_…`, le décompte des tokens
+et relaie les requêtes vers dawvq avec **ta** clé, qui ne quitte jamais le VPS.
+
+## 1. Ce qu'il faut avant
+
+- Un VPS **Ubuntu 24.04** (2 vCPU / 2–4 Go RAM suffisent), son IP publique et un accès SSH.
+- Le domaine `edgeycli.com`. Dans ses DNS, ajoute un enregistrement **A** :
+  `api` → IP du VPS. Chez Cloudflare, mets-le en **DNS only** (nuage gris).
+
+## 2. Installer (sur le VPS, en SSH)
+
+```sh
+# Docker
+curl -fsSL https://get.docker.com | sh
+
+# Le code
+git clone https://github.com/kayznpromail-alt/tweaks-jazbn.git edgey
+cd edgey/deploy
+
+# La config
+cp .env.example .env
+openssl rand -hex 32        # copie le résultat dans SECRET_PEPPER
+nano .env                   # colle ta clé dawvq dans UPSTREAM_API_KEY, puis SECRET_PEPPER
+
+# Lancer
+docker compose up -d --build
+```
+
+Vérifier : `curl https://api.edgeycli.com/health` doit répondre `{"ok":true}`.
+
+⚠️ Ne change jamais `SECRET_PEPPER` après le lancement : tous les numéros et toutes les clés deviendraient invalides.
+
+## 3. Brancher le site
+
+Dans `src/data/site.ts`, passe `API_ENABLED` à `true` et envoie sur `main`.
+La connexion, les clés, le solde et le Top up utiliseront alors le vrai serveur.
+
+## 4. Au quotidien (depuis `edgey/deploy`)
+
+```sh
+# Créditer une vente PayPal / carte faite sur Discord
+docker compose exec api npm run -s admin -- pack "1234 5678 9012 3456" 25
+
+# Montant libre (200M, 1.5B…) avec le prix payé en euros
+docker compose exec api npm run -s admin -- credit "1234 5678 9012 3456" 200M 25 paypal
+
+# Infos d'un compte, bloquer / débloquer
+docker compose exec api npm run -s admin -- info "1234 5678 9012 3456"
+docker compose exec api npm run -s admin -- disable "1234 5678 9012 3456"
+
+# Tokens dus à tous tes clients : ton wallet dawvq doit toujours couvrir ce total
+docker compose exec api npm run -s admin -- stats
+
+# Mettre à jour après un changement du code
+git pull && docker compose up -d --build
+
+# Voir les logs
+docker compose logs -f api
+```
+
+## 5. Sauvegardes
+
+Toute la base est dans `deploy/data/edgey.db`. Copie-la régulièrement ailleurs (au minimum une fois par jour).
+
+## 6. NOWPayments (crypto), plus tard
+
+1. Crée le compte NOWPayments, ajoute ton wallet de réception.
+2. Dans *Settings → Payments*, génère une **API key** et un **IPN secret**.
+3. Mets-les dans `.env` (`NOWPAYMENTS_API_KEY`, `NOWPAYMENTS_IPN_SECRET`), puis `docker compose up -d`.
+4. L'URL de callback est déjà envoyée avec chaque paiement : `https://api.edgeycli.com/webhooks/nowpayments`.
+
+Un paiement n'est crédité qu'une fois, seulement quand NOWPayments le marque `finished` avec une signature valide.

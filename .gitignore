@@ -3,3 +3,7 @@ dist/
 .astro/
 .env
 .DS_Store
+server/data/
+deploy/.env
+deploy/data/
+deploy/caddy/

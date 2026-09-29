@@ -1,0 +1,19 @@
+{
+  "name": "edgey-api",
+  "private": true,
+  "type": "module",
+  "version": "0.1.0",
+  "description": "edgeycli.com API gateway: accounts, API keys, token billing and relay to the upstream provider.",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/index.js",
+    "admin": "node --disable-warning=ExperimentalWarning src/admin.js",
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.js"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.3",
+    "hono": "^4.13.11"
+  }
+}

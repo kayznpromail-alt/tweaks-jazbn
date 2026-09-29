@@ -1,0 +1,8 @@
+# HTTPS certificates are obtained automatically for the domain.
+{$API_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy api:8787 {
+		# Stream model answers to the client as they arrive.
+		flush_interval -1
+	}
+}

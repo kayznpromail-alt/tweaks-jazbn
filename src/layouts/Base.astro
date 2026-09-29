@@ -27,6 +27,21 @@ const { title, crumb, heading, sub } = Astro.props;
   </footer>
 </Shell>
 
+<script>
+  import { API_ENABLED, api, session } from '../lib/api';
+
+  // Dashboard pages need a session once the API is live.
+  if (API_ENABLED && !session.get()) location.replace('/');
+
+  document.querySelector('[aria-label="Log out"]')?.addEventListener('click', async (e) => {
+    if (!API_ENABLED) return;
+    e.preventDefault();
+    await api('/auth/logout', { method: 'POST' }).catch(() => {});
+    session.clear();
+    location.assign('/');
+  });
+</script>
+
 <style is:global>
   .page { max-width: 1256px; margin: 0 auto; padding: 48px 16px 80px; }
   .crumb {

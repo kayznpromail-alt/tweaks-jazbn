@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import Icon from '../components/Icon.astro';
 import Connect from '../components/Connect.astro';
-import { keys } from '../data/site';
+import { keys, MAX_KEYS } from '../data/site';
 ---
 <Base title="API" crumb="API" heading="Your API keys." sub="Your AI tools, in one place.">
   <section class="card">
@@ -12,19 +12,27 @@ import { keys } from '../data/site';
         <p class="card-sub">Use these keys with edgeyCLI or api.edgeycli.com. One shared balance.</p>
       </div>
       <div class="count">
-        <p class="mono">{keys.length} keys</p>
+        <p class="mono"><span data-count>{keys.length}</span> / {MAX_KEYS} keys</p>
       </div>
     </div>
-    <form class="create" onsubmit="return false">
-      <input placeholder="Key name, e.g. My laptop" aria-label="Key name" />
+    <form class="create" data-create>
+      <input placeholder="Key name, e.g. My laptop" aria-label="Key name" maxlength="40" data-key-name />
       <button class="btn primary"><Icon name="plus" size={14} /> Create API key</button>
     </form>
+    <p class="msg" data-key-msg role="status" hidden></p>
+    <div class="newkey" data-newkey hidden>
+      <p class="strong">Your new key. Copy it now, it will not be shown again.</p>
+      <div class="newkey-row">
+        <code data-newkey-value></code>
+        <button type="button" class="btn" data-newkey-copy><Icon name="copy" size={14} /> <span class="label">Copy</span></button>
+      </div>
+    </div>
     <div class="table-wrap">
       <table>
         <thead>
           <tr><th>Name / key</th><th>Budget / models</th><th>Status</th><th>Actions</th></tr>
         </thead>
-        <tbody>
+        <tbody data-keys>
           {keys.map((k) => (
             <tr>
               <td><p class="strong">{k.name}</p><code class="muted">{k.masked}</code></td>
@@ -48,6 +56,82 @@ import { keys } from '../data/site';
 
   <div class="gap"><Connect /></div>
 </Base>
+
+<script>
+  import { paths } from '../components/icons';
+  import { API_ENABLED, ApiError, api } from '../lib/api';
+
+  type Key = { id: number; name: string; masked: string; enabled: boolean };
+  const tbody = document.querySelector<HTMLElement>('[data-keys]')!;
+  const msg = document.querySelector<HTMLElement>('[data-key-msg]')!;
+  const say = (text: string) => {
+    msg.textContent = text;
+    msg.hidden = !text;
+  };
+  const icon = (name: keyof typeof paths) =>
+    `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]}</svg>`;
+
+  function row(k: Key) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><p class="strong"></p><code class="muted"></code></td>
+      <td><p class="strong">Uses shared wallet</p><p class="muted">All offered models</p></td>
+      <td><span class="pill ${k.enabled ? '' : 'off'}">${k.enabled ? 'Enabled' : 'Disabled'}</span></td>
+      <td><div class="actions">
+        <button class="icon-btn" data-act="rename" aria-label="Rename">${icon('pencil')}</button>
+        <button class="icon-btn" data-act="toggle" aria-label="${k.enabled ? 'Disable' : 'Enable'}">${icon(k.enabled ? 'eyeOff' : 'eye')}</button>
+        <button class="icon-btn" data-act="delete" aria-label="Delete">${icon('x')}</button>
+      </div></td>`;
+    tr.querySelector('p.strong')!.textContent = k.name;
+    tr.querySelector('code')!.textContent = k.masked;
+    tr.querySelectorAll<HTMLButtonElement>('[data-act]').forEach((b) =>
+      b.addEventListener('click', async () => {
+        try {
+          if (b.dataset.act === 'rename') {
+            const name = prompt('New name for this key', k.name)?.trim();
+            if (name) await api(`/keys/${k.id}`, { method: 'PATCH', body: { name } });
+          } else if (b.dataset.act === 'toggle') {
+            await api(`/keys/${k.id}`, { method: 'PATCH', body: { enabled: !k.enabled } });
+          } else if (confirm(`Delete "${k.name}"? Apps using it will stop working.`)) {
+            await api(`/keys/${k.id}`, { method: 'DELETE' });
+          }
+          await load();
+        } catch {
+          say('That did not work. Try again.');
+        }
+      }),
+    );
+    return tr;
+  }
+
+  async function load() {
+    const { keys } = await api<{ keys: Key[] }>('/keys');
+    tbody.replaceChildren(...keys.map(row));
+    if (!keys.length) tbody.innerHTML = '<tr><td colspan="4" class="empty">No API keys yet. Create your first key above.</td></tr>';
+    document.querySelector('[data-count]')!.textContent = String(keys.length);
+  }
+
+  const form = document.querySelector<HTMLFormElement>('[data-create]')!;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!API_ENABLED) return say('Keys can be created once your account is live.');
+    const input = form.querySelector<HTMLInputElement>('[data-key-name]')!;
+    try {
+      const created = await api<Key & { key: string }>('/keys', { method: 'POST', body: { name: input.value } });
+      input.value = '';
+      say('');
+      document.querySelector('[data-newkey-value]')!.textContent = created.key;
+      document.querySelector<HTMLElement>('[data-newkey-copy]')!.dataset.copy = created.key;
+      document.querySelector<HTMLElement>('[data-newkey]')!.hidden = false;
+      await load();
+    } catch (err) {
+      say(err instanceof ApiError && err.code === 'key_limit' ? 'You already have the maximum number of keys.' : 'Could not create the key. Try again.');
+    }
+  });
+
+  if (API_ENABLED) load();
+</script>
+
 
 <style>
   .pad { padding: 24px; }
@@ -85,11 +169,17 @@ import { keys } from '../data/site';
     padding: 14px 24px;
     border-bottom: 1px solid var(--border);
   }
-  td { padding: 18px 24px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-  .strong { font-size: 12px; font-weight: 600; }
-  .muted { font-size: 10.5px; color: var(--muted); }
-  .actions { display: flex; gap: 8px; }
-  .empty { text-align: center; color: var(--muted); font-size: 12px; padding: 36px 24px; }
+  .table-wrap :global(td) { padding: 18px 24px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .table-wrap :global(.strong) { font-size: 12px; font-weight: 600; }
+  .table-wrap :global(.muted) { font-size: 10.5px; color: var(--muted); }
+  .table-wrap :global(.actions) { display: flex; gap: 8px; }
+  .msg { padding: 0 24px 16px; font-size: 12px; color: var(--accent); }
+  .newkey { margin: 0 24px 20px; padding: 14px; border-radius: 10px; border: 1px solid var(--accent-line); background: var(--accent-soft); }
+  .newkey .strong { font-size: 12px; font-weight: 600; }
+  .newkey-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .newkey-row code { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 12.5px; color: var(--accent); }
+  .table-wrap :global(.off) { color: var(--muted); border-color: var(--border-2); background: none; }
+  .table-wrap :global(.empty) { text-align: center; color: var(--muted); font-size: 12px; padding: 36px 24px; }
   .gap { margin-top: 32px; }
   @media (max-width: 640px) {
     .card-head { flex-direction: column; }

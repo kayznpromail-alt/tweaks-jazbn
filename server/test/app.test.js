@@ -1,0 +1,303 @@
+import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
+import { after, before, describe, test } from 'node:test';
+
+import { createApp } from '../src/app.js';
+import { createUsageTracker } from '../src/billing.js';
+import { creditPayment, openDb } from '../src/db.js';
+import { signIpn } from '../src/nowpayments.js';
+import { isAccessNumber, isApiKey, newAccessNumber, newApiKey } from '../src/security.js';
+
+const UPSTREAM_KEY = 'upstream-secret';
+const seen = [];
+let upstream;
+let base;
+
+// Fake upstream provider speaking both API dialects.
+function fakeUpstream(req, res) {
+  let raw = '';
+  req.on('data', (d) => (raw += d));
+  req.on('end', () => {
+    const body = JSON.parse(raw || '{}');
+    seen.push({ url: req.url, headers: req.headers, body });
+    const sse = (events) => {
+      res.writeHead(200, { 'content-type': 'text/event-stream' });
+      // Split mid-line on purpose to exercise the tracker's buffering.
+      const text = events.map((e) => `data: ${typeof e === 'string' ? e : JSON.stringify(e)}\n\n`).join('');
+      const cut = Math.floor(text.length / 2);
+      res.write(text.slice(0, cut));
+      setTimeout(() => res.end(text.slice(cut)), 5);
+    };
+
+    if (req.url === '/v1/chat/completions') {
+      if (req.headers.authorization !== `Bearer ${UPSTREAM_KEY}`) return res.writeHead(401).end('{}');
+      if (body.stream) {
+        const events = [{ choices: [{ delta: { content: 'Hi' } }] }];
+        if (body.stream_options?.include_usage)
+          events.push({ choices: [], usage: { prompt_tokens: 40, completion_tokens: 10, total_tokens: 50 } });
+        events.push('[DONE]');
+        return sse(events);
+      }
+      res.writeHead(200, { 'content-type': 'application/json' });
+      return res.end(JSON.stringify({ choices: [], usage: { prompt_tokens: 100, completion_tokens: 50, total_tokens: 150 } }));
+    }
+    if (req.url === '/v1/messages') {
+      if (req.headers['x-api-key'] !== UPSTREAM_KEY) return res.writeHead(401).end('{}');
+      if (body.stream)
+        return sse([
+          { type: 'message_start', message: { usage: { input_tokens: 200, cache_read_input_tokens: 50, output_tokens: 1 } } },
+          { type: 'content_block_delta', delta: { text: 'Hello' } },
+          { type: 'message_delta', usage: { output_tokens: 80 } },
+          { type: 'message_stop' },
+        ]);
+      res.writeHead(200, { 'content-type': 'application/json' });
+      return res.end(JSON.stringify({ content: [], usage: { input_tokens: 30, output_tokens: 20 } }));
+    }
+    if (req.url === '/v1/messages/count_tokens') {
+      res.writeHead(200, { 'content-type': 'application/json' });
+      return res.end(JSON.stringify({ input_tokens: 12 }));
+    }
+    res.writeHead(404).end('{}');
+  });
+}
+
+before(async () => {
+  upstream = createServer(fakeUpstream);
+  await new Promise((r) => upstream.listen(0, '127.0.0.1', r));
+  base = `http://127.0.0.1:${upstream.address().port}`;
+});
+after(() => upstream.close());
+
+function setup(overrides = {}) {
+  const db = openDb(':memory:');
+  const cfg = {
+    upstreamBase: base,
+    upstreamKey: UPSTREAM_KEY,
+    pepper: 'test-pepper',
+    allowedOrigins: ['https://edgeycli.com'],
+    publicApiUrl: 'https://api.edgeycli.com',
+    siteUrl: 'https://edgeycli.com',
+    sessionDays: 30,
+    nowpayments: { apiKey: null, ipnSecret: 'ipn-secret', base: 'http://127.0.0.1:1' },
+    ...overrides,
+  };
+  const app = createApp({ cfg, db });
+  const call = (path, { method = 'GET', token, key, body, headers = {} } = {}) =>
+    app.request(path, {
+      method,
+      headers: {
+        ...(body ? { 'content-type': 'application/json' } : {}),
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
+        ...(key ? { authorization: `Bearer ${key}` } : {}),
+        ...headers,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  return { db, app, call };
+}
+
+async function account(ctx, balance = 0) {
+  const reg = await ctx.call('/auth/register', { method: 'POST' });
+  const { number, token } = await reg.json();
+  if (balance) ctx.db.prepare('UPDATE accounts SET balance = ?').run(balance);
+  const created = await (await ctx.call('/keys', { method: 'POST', token, body: { name: 'laptop' } })).json();
+  return { number, token, key: created.key, keyId: created.id };
+}
+const balanceOf = (db) => db.prepare('SELECT balance FROM accounts').get().balance;
+
+describe('secrets', () => {
+  test('access numbers and API keys have the right shape', () => {
+    for (let i = 0; i < 200; i++) {
+      assert.ok(isAccessNumber(newAccessNumber()));
+      assert.ok(isApiKey(newApiKey()));
+    }
+  });
+});
+
+describe('usage tracker', () => {
+  test('reads OpenAI usage from a split stream', () => {
+    const t = createUsageTracker('openai');
+    const text = 'data: {"choices":[]}\n\ndata: {"usage":{"prompt_tokens":7,"completion_tokens":3,"total_tokens":10}}\n\ndata: [DONE]\n\n';
+    for (const ch of text) t.feed(ch);
+    assert.deepEqual(t.result(), { input: 7, output: 3, total: 10 });
+  });
+  test('reads Anthropic usage including cache tokens', () => {
+    const t = createUsageTracker('anthropic');
+    t.feed('data: {"type":"message_start","message":{"usage":{"input_tokens":10,"cache_creation_input_tokens":5,"output_tokens":1}}}\n');
+    t.feed('data: {"type":"message_delta","usage":{"output_tokens":42}}\n');
+    assert.deepEqual(t.result(), { input: 15, output: 42, total: 57 });
+  });
+});
+
+describe('accounts and keys', () => {
+  test('register, log in with the number, log out', async () => {
+    const ctx = setup();
+    const reg = await ctx.call('/auth/register', { method: 'POST' });
+    assert.equal(reg.status, 201);
+    const { number } = await reg.json();
+    const spaced = number.replace(/(\d{4})(?=\d)/g, '$1 ');
+    const login = await ctx.call('/auth/login', { method: 'POST', body: { number: spaced } });
+    assert.equal(login.status, 200);
+    const { token } = await login.json();
+    const me = await (await ctx.call('/me', { token })).json();
+    assert.equal(me.balance, 0);
+    assert.equal(me.maxKeys, 6);
+    assert.equal((await ctx.call('/auth/logout', { method: 'POST', token })).status, 200);
+    assert.equal((await ctx.call('/me', { token })).status, 401);
+    assert.equal((await ctx.call('/auth/login', { method: 'POST', body: { number: '1234123412341234' } })).status, 401);
+  });
+
+  test('the access number is never stored in clear', async () => {
+    const ctx = setup();
+    const { number } = await (await ctx.call('/auth/register', { method: 'POST' })).json();
+    const dump = JSON.stringify(ctx.db.prepare('SELECT * FROM accounts').all());
+    assert.ok(!dump.includes(number));
+  });
+
+  test('keys: shown once, masked after, limited to 6, can be disabled', async () => {
+    const ctx = setup();
+    const a = await account(ctx);
+    assert.ok(isApiKey(a.key));
+    const list = (await (await ctx.call('/keys', { token: a.token })).json()).keys;
+    assert.equal(list.length, 1);
+    assert.ok(!JSON.stringify(list).includes(a.key));
+    for (let i = 0; i < 5; i++) assert.equal((await ctx.call('/keys', { method: 'POST', token: a.token, body: {} })).status, 201);
+    assert.equal((await ctx.call('/keys', { method: 'POST', token: a.token, body: {} })).status, 409);
+
+    await ctx.call(`/keys/${a.keyId}`, { method: 'PATCH', token: a.token, body: { enabled: false } });
+    const res = await ctx.call('/v1/models', { key: a.key });
+    assert.equal(res.status, 401);
+  });
+
+  test('CORS only for the site origin', async () => {
+    const ctx = setup();
+    const ok = await ctx.call('/me', { method: 'OPTIONS', headers: { origin: 'https://edgeycli.com', 'access-control-request-method': 'GET' } });
+    assert.equal(ok.headers.get('access-control-allow-origin'), 'https://edgeycli.com');
+    const bad = await ctx.call('/me', { method: 'OPTIONS', headers: { origin: 'https://evil.example', 'access-control-request-method': 'GET' } });
+    assert.equal(bad.headers.get('access-control-allow-origin'), null);
+  });
+});
+
+describe('relay and billing', () => {
+  test('OpenAI chat, non-streamed: tokens x multiplier are charged', async () => {
+    const ctx = setup();
+    const a = await account(ctx, 10_000);
+    const res = await ctx.call('/v1/chat/completions', { method: 'POST', key: a.key, body: { model: 'claude-opus-5', messages: [] } });
+    assert.equal(res.status, 200);
+    await res.text();
+    assert.equal(balanceOf(ctx.db), 10_000 - 150 * 5);
+    const last = seen.at(-1);
+    assert.equal(last.headers.authorization, `Bearer ${UPSTREAM_KEY}`);
+    assert.ok(!JSON.stringify(last.headers).includes(a.key), 'customer key must not reach upstream');
+  });
+
+  test('OpenAI chat, streamed: usage is requested and charged', async () => {
+    const ctx = setup();
+    const a = await account(ctx, 10_000);
+    const res = await ctx.call('/v1/chat/completions', {
+      method: 'POST',
+      key: a.key,
+      body: { model: 'gpt-5.6-luna', stream: true, messages: [] },
+    });
+    const text = await res.text();
+    assert.ok(text.includes('[DONE]'));
+    assert.equal(seen.at(-1).body.stream_options.include_usage, true);
+    assert.equal(balanceOf(ctx.db), 10_000 - Math.ceil(50 * 0.5));
+  });
+
+  test('Anthropic messages, streamed with x-api-key: cache tokens count', async () => {
+    const ctx = setup();
+    const a = await account(ctx, 10_000);
+    const res = await ctx.call('/v1/messages', {
+      method: 'POST',
+      headers: { 'x-api-key': a.key, 'anthropic-version': '2023-06-01' },
+      body: { model: 'claude-sonnet-5', stream: true, max_tokens: 10, messages: [] },
+    });
+    await res.text();
+    assert.equal(seen.at(-1).headers['x-api-key'], UPSTREAM_KEY);
+    assert.equal(balanceOf(ctx.db), 10_000 - (200 + 50 + 80) * 2);
+    const log = await (await ctx.call('/requests', { token: a.token })).json();
+    assert.equal(log.requests[0].charged, 660);
+    assert.equal(log.requests[0].model, 'claude-sonnet-5');
+  });
+
+  test('count_tokens is relayed but not billed', async () => {
+    const ctx = setup();
+    const a = await account(ctx, 100);
+    const res = await ctx.call('/v1/messages/count_tokens', { method: 'POST', headers: { 'x-api-key': a.key }, body: { model: 'claude-opus-5', messages: [] } });
+    assert.deepEqual(await res.json(), { input_tokens: 12 });
+    assert.equal(balanceOf(ctx.db), 100);
+  });
+
+  test('empty wallet, unknown model and bad key are refused before reaching upstream', async () => {
+    const ctx = setup();
+    const a = await account(ctx, 0);
+    const before = seen.length;
+    const empty = await ctx.call('/v1/chat/completions', { method: 'POST', key: a.key, body: { model: 'gpt-5.5', messages: [] } });
+    assert.equal(empty.status, 402);
+    ctx.db.prepare('UPDATE accounts SET balance = 1000').run();
+    const unknown = await ctx.call('/v1/messages', { method: 'POST', headers: { 'x-api-key': a.key }, body: { model: 'nope', messages: [] } });
+    assert.equal(unknown.status, 404);
+    assert.equal((await unknown.json()).type, 'error');
+    const bad = await ctx.call('/v1/chat/completions', { method: 'POST', key: 'sk_edgey_' + 'x'.repeat(32), body: { model: 'gpt-5.5' } });
+    assert.equal(bad.status, 401);
+    assert.equal(seen.length, before);
+  });
+
+  test('usage stats reflect requests', async () => {
+    const ctx = setup();
+    const a = await account(ctx, 10_000);
+    await (await ctx.call('/v1/chat/completions', { method: 'POST', key: a.key, body: { model: 'gpt-5.5', messages: [] } })).text();
+    const u = await (await ctx.call('/usage?range=24h', { token: a.token })).json();
+    assert.equal(u.requests, 1);
+    assert.equal(u.tokens, 150);
+    assert.equal(u.buckets.length, 24);
+    const me = await (await ctx.call('/me', { token: a.token })).json();
+    assert.equal(me.requests24h, 1);
+    assert.equal(me.successful24h, 1);
+  });
+});
+
+describe('payments', () => {
+  test('crypto top-up is refused until NOWPayments is configured', async () => {
+    const ctx = setup();
+    const a = await account(ctx);
+    const res = await ctx.call('/topup', { method: 'POST', token: a.token, body: { pack: 0, coin: 'ltc' } });
+    assert.equal(res.status, 503);
+  });
+
+  test('signed IPN credits once, bad signature and partial payments do not', async () => {
+    const ctx = setup();
+    const a = await account(ctx);
+    const t = Date.now();
+    const id = Number(
+      ctx.db
+        .prepare(
+          `INSERT INTO payments (account_id, provider, reference, amount_eur, tokens, status, created_at, updated_at)
+           VALUES (1, 'nowpayments', 'edgey_1', 25, 200000000, 'pending', ?, ?)`,
+        )
+        .run(t, t).lastInsertRowid,
+    );
+    const send = (event, sig = signIpn('ipn-secret', event)) =>
+      ctx.app.request('/webhooks/nowpayments', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-nowpayments-sig': sig },
+        body: JSON.stringify(event),
+      });
+
+    const partial = { order_id: 'edgey_1', payment_status: 'partially_paid', price_amount: 25, price_currency: 'eur' };
+    assert.equal((await send(partial)).status, 200);
+    assert.equal(balanceOf(ctx.db), 0);
+
+    const done = { order_id: 'edgey_1', payment_status: 'finished', price_amount: 25, price_currency: 'eur' };
+    assert.equal((await send(done, 'deadbeef')).status, 401);
+    assert.equal(balanceOf(ctx.db), 0);
+
+    await send(done);
+    await send(done); // duplicate callback
+    assert.equal(balanceOf(ctx.db), 200_000_000);
+    assert.equal(creditPayment(ctx.db, id), false);
+    const pays = await (await ctx.call('/payments', { token: a.token })).json();
+    assert.equal(pays.payments[0].status, 'finished');
+  });
+});

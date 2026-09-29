@@ -122,14 +122,14 @@ const short = (n: number) => (n >= 1e9 ? `${n / 1e9}B` : `${n / 1e6}M`);
     const $ = (s) => dlg.querySelector(s);
     const fmt = (n) => n.toLocaleString('en-US');
     const eur = (n) => '€' + n.toFixed(2);
-    const current = Number($('[data-cur]').dataset.cur) || 0;
+    const current = () => Number($('[data-cur]').dataset.cur) || 0;
 
     const update = () => {
       const pack = $('input[name="pack"]:checked');
       const tokens = Number(pack.dataset.tokens);
       $('[data-eur-out]').textContent = eur(Number(pack.dataset.eur));
       $('[data-recv]').textContent = '+' + fmt(tokens) + ' tokens';
-      $('[data-after]').textContent = fmt(current + tokens) + ' tokens';
+      $('[data-after]').textContent = fmt(current() + tokens) + ' tokens';
 
       const method = $('input[name="method"]:checked').value;
       const crypto = method === 'crypto';
@@ -150,10 +150,17 @@ const short = (n: number) => (n >= 1e9 ? `${n / 1e9}B` : `${n / 1e6}M`);
         window.open(DISCORD_URL, '_blank', 'noopener');
         return;
       }
-      // NOWPayments is not connected yet.
       const msg = $('[data-topup-msg]');
-      msg.textContent = 'Crypto checkout is being set up. Use Discord for now.';
-      msg.hidden = false;
+      const say = (text) => {
+        msg.textContent = text;
+        msg.hidden = false;
+      };
+      // Live API: create a NOWPayments invoice (set up by the overview page).
+      if (window.edgeyTopup) {
+        const pack = Number($('input[name="pack"]:checked').value);
+        return window.edgeyTopup(pack, $('[data-coin]').value, say);
+      }
+      say('Crypto checkout is being set up. Use Discord for now.');
     });
 
     $('[data-promo-apply]').addEventListener('click', () => {

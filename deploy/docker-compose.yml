@@ -1,0 +1,24 @@
+# On the VPS, from the deploy/ folder: docker compose up -d --build
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    env_file: .env
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      API_DOMAIN: ${API_DOMAIN:-api.edgeycli.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy:/data
+    depends_on:
+      - api
+    restart: unless-stopped
