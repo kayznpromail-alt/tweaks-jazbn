@@ -9,6 +9,46 @@ export function errorBody(kind, status, type, message) {
 
 const PASS_HEADERS = ['anthropic-version', 'anthropic-beta', 'accept'];
 
+// Errors about the request itself keep their (scrubbed) message; anything about our own upstream
+// account, limits or outages becomes a neutral message, so customers never see the provider.
+const REQUEST_ERRORS = new Set([400, 404, 409, 413, 422]);
+const NEUTRAL = {
+  429: [429, 'rate_limit_error', 'Too many requests right now. Slow down and try again.'],
+  overloaded: [503, 'overloaded_error', 'The model is busy. Try again in a moment.'],
+  default: [502, 'upstream_error', 'The model could not answer this request. Try again shortly.'],
+};
+
+function scrub(text, cfg) {
+  let out = String(text ?? '');
+  const host = (() => {
+    try {
+      return new URL(cfg.upstreamBase).host;
+    } catch {
+      return '';
+    }
+  })();
+  if (host) out = out.split(host).join('api.edgey.shop');
+  for (const name of cfg.upstreamNames ?? []) {
+    if (name) out = out.replace(new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), 'edgey');
+  }
+  return out.slice(0, 500);
+}
+
+/** What the customer sees when the upstream answers with an error. */
+export function publicError(kind, status, text, cfg) {
+  if (REQUEST_ERRORS.has(status)) {
+    let message = 'The request was rejected. Check the model name and parameters.';
+    try {
+      const j = JSON.parse(text);
+      message = j?.error?.message ?? j?.message ?? message;
+    } catch {}
+    const type = status === 404 ? 'not_found_error' : 'invalid_request_error';
+    return { status, body: errorBody(kind, status, type, scrub(message, cfg)) };
+  }
+  const [s, type, message] = status === 429 ? NEUTRAL[429] : status === 503 || status === 529 ? NEUTRAL.overloaded : NEUTRAL.default;
+  return { status: s, body: errorBody(kind, s, type, message) };
+}
+
 /**
  * Forwards a request to the upstream provider with the server's own key, streams the answer back
  * and reports the token usage once it is known (end of body, client disconnect, or error).
@@ -87,10 +127,17 @@ export async function relay({ cfg, kind, path, body, incoming, onDone }) {
   }
 
   const text = await res.text();
+  if (!res.ok) {
+    settle(null, res.status);
+    if (res.status >= 500 || res.status === 401 || res.status === 403 || res.status === 402)
+      console.error(`upstream ${res.status}: ${text.slice(0, 300)}`);
+    const out = publicError(kind, res.status, text, cfg);
+    return Response.json(out.body, { status: out.status });
+  }
   let json = null;
   try {
     json = JSON.parse(text);
   } catch {}
-  settle(res.ok ? usageFromJson(kind, json) : null, res.status);
+  settle(usageFromJson(kind, json), res.status);
   return new Response(text, { status: res.status, headers: { 'content-type': ctype } });
 }

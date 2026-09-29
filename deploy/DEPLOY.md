@@ -1,7 +1,7 @@
 # Mettre l'API en ligne (api.edgeycli.com)
 
 Le serveur (`server/`) gère les comptes à 16 chiffres, les clés `sk_edgey_…`, le décompte des tokens
-et relaie les requêtes vers dawvq avec **ta** clé, qui ne quitte jamais le VPS.
+et relaie les requêtes vers ton fournisseur avec **ta** clé, qui ne quitte jamais le VPS.
 
 ## 1. Ce qu'il faut avant
 
@@ -17,7 +17,7 @@ Connecte-toi au VPS en root (`ssh root@IP_DU_VPS`), puis :
 curl -fsSL https://raw.githubusercontent.com/kayznpromail-alt/tweaks-jazbn/main/deploy/install.sh | bash
 ```
 
-Le script installe Docker, télécharge le code dans `/opt/edgey`, demande ta clé dawvq (invisible à l'écran),
+Le script installe Docker, télécharge le code dans `/opt/edgey`, demande l'adresse et ta clé du fournisseur (clé invisible à l'écran),
 génère le secret, et démarre tout. Sans domaine prêt, appuie sur Entrée : l'API sera servie en HTTPS sur
 `IP.sslip.io` (par exemple `194.163.138.26.sslip.io`) en attendant `api.edgeycli.com`.
 
@@ -36,7 +36,7 @@ cd edgey/deploy
 # La config
 cp .env.example .env
 openssl rand -hex 32        # copie le résultat dans SECRET_PEPPER
-nano .env                   # colle ta clé dawvq dans UPSTREAM_API_KEY, puis SECRET_PEPPER
+nano .env                   # UPSTREAM_BASE (adresse du fournisseur), UPSTREAM_API_KEY (ta clé), SECRET_PEPPER
 
 # Lancer (le conteneur écrit en tant qu'utilisateur 1000)
 mkdir -p data && chown 1000:1000 data
@@ -65,7 +65,7 @@ docker compose exec api npm run -s admin -- credit "1234 5678 9012 3456" 200M 25
 docker compose exec api npm run -s admin -- info "1234 5678 9012 3456"
 docker compose exec api npm run -s admin -- disable "1234 5678 9012 3456"
 
-# Tokens dus à tous tes clients : ton wallet dawvq doit toujours couvrir ce total
+# Tokens dus à tous tes clients : ton wallet chez le fournisseur doit toujours couvrir ce total
 docker compose exec api npm run -s admin -- stats
 
 # Mettre à jour après un changement du code

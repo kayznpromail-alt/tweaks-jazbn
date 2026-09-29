@@ -27,14 +27,17 @@ if [ ! -f .env ]; then
   echo "Domaine de l'API : tape api.edgeycli.com si son DNS pointe deja vers $IP,"
   read -rp "sinon appuie sur Entree pour utiliser ${IP}.sslip.io : " DOMAIN </dev/tty
   DOMAIN="${DOMAIN:-$IP.sslip.io}"
-  read -rsp "Colle ta cle API dawvq (elle ne s'affiche pas) puis Entree : " KEY </dev/tty
+  read -rp "Adresse de l'API du fournisseur (ex: https://api.fournisseur.com) : " UPSTREAM </dev/tty
+  [ -n "$UPSTREAM" ] || { echo "Adresse vide, abandon."; exit 1; }
+  read -rsp "Colle ta cle API du fournisseur (elle ne s'affiche pas) puis Entree : " KEY </dev/tty
   echo
   [ -n "$KEY" ] || { echo "Cle vide, abandon."; exit 1; }
 
-  grep -vE '^(API_DOMAIN|PUBLIC_API_URL|UPSTREAM_API_KEY|SECRET_PEPPER|ADMIN_TOKEN)=' .env.example > .env
+  grep -vE '^(API_DOMAIN|PUBLIC_API_URL|UPSTREAM_BASE|UPSTREAM_API_KEY|SECRET_PEPPER|ADMIN_TOKEN)=' .env.example > .env
   {
     echo "API_DOMAIN=$DOMAIN"
     echo "PUBLIC_API_URL=https://$DOMAIN"
+    echo "UPSTREAM_BASE=$UPSTREAM"
     echo "UPSTREAM_API_KEY=$KEY"
     echo "SECRET_PEPPER=$(openssl rand -hex 32)"
     echo "ADMIN_TOKEN=$(openssl rand -hex 24)"

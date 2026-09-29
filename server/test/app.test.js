@@ -20,6 +20,14 @@ function fakeUpstream(req, res) {
   req.on('end', () => {
     const body = JSON.parse(raw || '{}');
     seen.push({ url: req.url, headers: req.headers, body });
+    if (body.model === 'glm-5.2') {
+      res.writeHead(401, { 'content-type': 'application/json' });
+      return res.end(JSON.stringify({ error: { message: 'acmeprov key revoked, see acmeprov.com/billing' } }));
+    }
+    if (body.model === 'glm-5.3') {
+      res.writeHead(400, { 'content-type': 'application/json' });
+      return res.end(JSON.stringify({ error: { message: `Prompt too long for Acmeprov (limit on ${req.headers.host})` } }));
+    }
     const sse = (events) => {
       res.writeHead(200, { 'content-type': 'text/event-stream' });
       // Split mid-line on purpose to exercise the tracker's buffering.
@@ -74,6 +82,7 @@ function setup(overrides = {}) {
     upstreamBase: base,
     upstreamKey: UPSTREAM_KEY,
     pepper: 'test-pepper',
+    upstreamNames: ['acmeprov'],
     allowedOrigins: ['https://edgeycli.com'],
     publicApiUrl: 'https://api.edgeycli.com',
     siteUrl: 'https://edgeycli.com',
@@ -342,5 +351,24 @@ describe('admin panel API', () => {
     const detail = await (await asAdmin(ctx, `/admin/accounts/${found.id}`)).json();
     assert.equal(detail.disabled, true);
     assert.equal(detail.payments[0].note, 'paypal');
+  });
+});
+
+describe('provider stays hidden', () => {
+  test('account errors become neutral, request errors are scrubbed', async () => {
+    const ctx = setup();
+    const a = await account(ctx, 10_000);
+    const auth = await ctx.call('/v1/chat/completions', { method: 'POST', key: a.key, body: { model: 'glm-5.2', messages: [] } });
+    const authText = await auth.text();
+    assert.equal(auth.status, 502);
+    assert.ok(!/acmeprov/i.test(authText), authText);
+
+    const bad = await ctx.call('/v1/messages', { method: 'POST', headers: { 'x-api-key': a.key }, body: { model: 'glm-5.3', messages: [] } });
+    const badBody = await bad.json();
+    assert.equal(bad.status, 400);
+    assert.equal(badBody.type, 'error');
+    assert.ok(badBody.error.message.includes('Prompt too long'));
+    assert.ok(!/acmeprov|127\.0\.0\.1/i.test(JSON.stringify(badBody)), JSON.stringify(badBody));
+    assert.equal(balanceOf(ctx.db), 10_000, 'errors are not billed');
   });
 });

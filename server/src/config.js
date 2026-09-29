@@ -1,3 +1,12 @@
+const hostLabel = (url) => {
+  try {
+    const parts = new URL(url).hostname.split('.');
+    return parts.length > 1 ? parts.at(-2) : parts[0];
+  } catch {
+    return '';
+  }
+};
+
 /** Reads settings from the environment (see deploy/.env.example). */
 export function loadConfig(env = process.env) {
   const required = (name) => {
@@ -14,7 +23,10 @@ export function loadConfig(env = process.env) {
   return {
     port: Number(env.PORT ?? 8787),
     dbPath: env.DATABASE_PATH ?? './data/edgey.db',
-    upstreamBase: (env.UPSTREAM_BASE ?? 'https://api.dawvq.com').replace(/\/+$/, ''),
+    upstreamBase: required('UPSTREAM_BASE').replace(/\/+$/, ''),
+    // Words that must never reach customers in error messages (the provider's name, its domain…).
+    // Defaults to the upstream host's name, e.g. "provider" for https://api.provider.com.
+    upstreamNames: list(env.UPSTREAM_NAMES ?? hostLabel(env.UPSTREAM_BASE)),
     upstreamKey: required('UPSTREAM_API_KEY'),
     pepper: required('SECRET_PEPPER'),
     // Password for the /admin panel. Admin routes stay off while it is empty.
