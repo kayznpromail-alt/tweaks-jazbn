@@ -9,7 +9,21 @@ et relaie les requêtes vers dawvq avec **ta** clé, qui ne quitte jamais le VPS
 - Le domaine `edgeycli.com`. Dans ses DNS, ajoute un enregistrement **A** :
   `api` → IP du VPS. Chez Cloudflare, mets-le en **DNS only** (nuage gris).
 
-## 2. Installer (sur le VPS, en SSH)
+## 2. Installer en une commande (recommandé)
+
+Connecte-toi au VPS en root (`ssh root@IP_DU_VPS`), puis :
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/kayznpromail-alt/tweaks-jazbn/main/deploy/install.sh | bash
+```
+
+Le script installe Docker, télécharge le code dans `/opt/edgey`, demande ta clé dawvq (invisible à l'écran),
+génère le secret, et démarre tout. Sans domaine prêt, appuie sur Entrée : l'API sera servie en HTTPS sur
+`IP.sslip.io` (par exemple `194.163.138.26.sslip.io`) en attendant `api.edgeycli.com`.
+
+Les commandes du quotidien ci-dessous se lancent alors depuis `/opt/edgey/deploy`.
+
+## 2 bis. Installer à la main (sur le VPS, en SSH)
 
 ```sh
 # Docker
@@ -24,7 +38,8 @@ cp .env.example .env
 openssl rand -hex 32        # copie le résultat dans SECRET_PEPPER
 nano .env                   # colle ta clé dawvq dans UPSTREAM_API_KEY, puis SECRET_PEPPER
 
-# Lancer
+# Lancer (le conteneur écrit en tant qu'utilisateur 1000)
+mkdir -p data && chown 1000:1000 data
 docker compose up -d --build
 ```
 
