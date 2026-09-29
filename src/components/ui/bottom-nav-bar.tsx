@@ -38,6 +38,8 @@ type BottomNavBarProps = {
   animateIn?: boolean;
   /** Width of the active item's label, in px. */
   labelWidth?: number;
+  /** Smaller bar for use inside a header. */
+  compact?: boolean;
 };
 
 export function BottomNavBar({
@@ -47,6 +49,7 @@ export function BottomNavBar({
   items = navItems,
   animateIn = true,
   labelWidth = MOBILE_LABEL_WIDTH,
+  compact = false,
 }: BottomNavBarProps) {
   const [activeIndex, setActiveIndex] = useState(defaultIndex);
 
@@ -69,6 +72,7 @@ export function BottomNavBar({
       className={cn(
         "bg-card dark:bg-card border border-border dark:border-sidebar-border rounded-full flex items-center p-2 shadow-xl space-x-1 min-w-[320px] max-w-[95vw] h-[52px]",
         stickyBottom && "fixed inset-x-0 bottom-4 mx-auto z-20 w-fit",
+        compact && "h-[42px] p-1 shadow-md",
         className,
       )}
     >
@@ -81,12 +85,13 @@ export function BottomNavBar({
             ? "bg-primary/10 dark:bg-primary/15 text-primary dark:text-primary gap-2"
             : "bg-transparent text-muted-foreground dark:text-muted-foreground hover:bg-muted dark:hover:bg-muted",
           "focus:outline-none focus-visible:ring-0",
+          compact && "h-8 min-h-8 min-w-9 px-2.5 py-1",
         );
 
         const content = (
           <>
             <Icon
-              size={22}
+              size={compact ? 17 : 22}
               strokeWidth={2}
               aria-hidden
               className="transition-colors duration-200"
@@ -111,6 +116,7 @@ export function BottomNavBar({
                 className={cn(
                   "font-medium text-xs whitespace-nowrap select-none transition-opacity duration-200 overflow-hidden text-ellipsis text-[clamp(0.625rem,0.5263rem+0.5263vw,1rem)] leading-[1.9]",
                   isActive ? "text-primary dark:text-primary" : "opacity-0",
+                  compact && "text-xs",
                 )}
                 title={item.label}
               >
