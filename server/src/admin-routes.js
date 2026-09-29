@@ -6,7 +6,7 @@ import { cors } from 'hono/cors';
 import { catalog } from './billing.js';
 import { creditPayment, now } from './db.js';
 import { createLimiter } from './ratelimit.js';
-import { hashSecret, isAccessNumber, newAccessNumber, normalizeNumber } from './security.js';
+import { hashSecret, isAccessNumber, maskSecret, newAccessNumber, normalizeNumber, openSecret, sealSecret } from './security.js';
 
 const DAY = 86_400_000;
 
@@ -52,7 +52,38 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
     keys: db.prepare('SELECT COUNT(*) AS n FROM api_keys WHERE account_id = ?').get(a.id).n,
     lastRequestAt: db.prepare('SELECT MAX(created_at) AS t FROM usage WHERE account_id = ?').get(a.id).t,
     cli: cli.cached(a.id),
+    providerId: a.provider_id_masked ?? null,
+    discord: a.discord ?? null,
+    note: a.note ?? null,
   });
+
+  const providerHash = (v) => hashSecret(cfg.pepper, 'provider:' + String(v).trim().toLowerCase());
+
+  /** Sets the admin-only profile fields that are present in `body`; returns an error code or null. */
+  function setProfile(id, body) {
+    if (body.providerUserId !== undefined) {
+      const v = body.providerUserId === null ? '' : String(body.providerUserId).trim();
+      if (v.length > 80) return 'invalid_provider_id';
+      if (v) {
+        const other = db.prepare('SELECT id FROM accounts WHERE provider_id_hash = ? AND id != ?').get(providerHash(v), id);
+        if (other) return 'provider_id_in_use';
+        db.prepare('UPDATE accounts SET provider_id_sealed = ?, provider_id_hash = ?, provider_id_masked = ? WHERE id = ?').run(
+          sealSecret(cfg.pepper, v),
+          providerHash(v),
+          maskSecret(v),
+          id,
+        );
+      } else {
+        db.prepare('UPDATE accounts SET provider_id_sealed = NULL, provider_id_hash = NULL, provider_id_masked = NULL WHERE id = ?').run(id);
+      }
+    }
+    for (const field of ['discord', 'note']) {
+      if (body[field] === undefined) continue;
+      const v = body[field] === null ? '' : String(body[field]).trim().slice(0, field === 'note' ? 200 : 80);
+      db.prepare(`UPDATE accounts SET ${field} = ? WHERE id = ?`).run(v || null, id);
+    }
+    return null;
+  }
 
   admin.get('/stats', (c) => {
     const t = clock();
@@ -99,12 +130,18 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
   });
 
   admin.post('/accounts', async (c) => {
-    const { cliKey } = await c.req.json().catch(() => ({}));
+    const body = await c.req.json().catch(() => ({}));
+    const { cliKey } = body;
     const number = newAccessNumber();
     const id = Number(
       db.prepare('INSERT INTO accounts (number_hash, created_at) VALUES (?, ?)').run(hashSecret(cfg.pepper, number), clock())
         .lastInsertRowid,
     );
+    const profileError = setProfile(id, body);
+    if (profileError) {
+      db.prepare('DELETE FROM accounts WHERE id = ?').run(id);
+      return c.json({ error: profileError }, profileError === 'provider_id_in_use' ? 409 : 400);
+    }
     if (cliKey) {
       const out = await cli.link(id, cliKey);
       if (out.error) {
@@ -113,6 +150,30 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
       }
     }
     return c.json({ number, account: summary(account(id)) }, 201);
+  });
+
+  // Admin notes about an account: provider user id, Discord, free note.
+  admin.post('/accounts/:id/profile', async (c) => {
+    const a = account(Number(c.req.param('id')));
+    if (!a) return c.json({ error: 'not_found' }, 404);
+    const err = setProfile(a.id, await c.req.json().catch(() => ({})));
+    if (err) return c.json({ error: err }, err === 'provider_id_in_use' ? 409 : 400);
+    return c.json(summary(account(a.id)));
+  });
+
+  // One search box: edgey ID, provider user id, Discord, note or #account.
+  admin.get('/search', (c) => {
+    const q = String(c.req.query('q') ?? '').trim();
+    if (!q) return c.json({ accounts: [] });
+    const found = new Map();
+    const add = (rows) => rows.forEach((r) => found.set(r.id, r));
+    const digits = normalizeNumber(q);
+    if (isAccessNumber(digits)) add(db.prepare('SELECT * FROM accounts WHERE number_hash = ?').all(hashSecret(cfg.pepper, digits)));
+    add(db.prepare('SELECT * FROM accounts WHERE provider_id_hash = ?').all(providerHash(q)));
+    if (/^#?\d{1,9}$/.test(q)) add(db.prepare('SELECT * FROM accounts WHERE id = ?').all(Number(q.replace('#', ''))));
+    const like = `%${q.replace(/[%_]/g, '')}%`;
+    add(db.prepare('SELECT * FROM accounts WHERE discord LIKE ? OR note LIKE ? ORDER BY id DESC LIMIT 20').all(like, like));
+    return c.json({ accounts: [...found.values()].slice(0, 20).map(summary) });
   });
 
   // Link (or replace) the CLI key an account uses; { key: null } removes it.
@@ -134,6 +195,8 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
     if (!a) return c.json({ error: 'not_found' }, 404);
     return c.json({
       ...summary(a),
+      // Full provider user id, only here, for logging into the provider's site.
+      providerIdFull: a.provider_id_sealed ? openSecret(cfg.pepper, a.provider_id_sealed) : null,
       cli: await cli.status(a.id),
       apiKeys: db
         .prepare('SELECT id, name, masked, enabled, created_at, last_used_at FROM api_keys WHERE account_id = ? ORDER BY id')

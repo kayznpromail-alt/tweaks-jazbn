@@ -427,3 +427,41 @@ describe('CLI keys (usage read from the provider)', () => {
     assert.ok(a.token);
   });
 });
+
+describe('admin profile: provider user id and Discord', () => {
+  const ADMIN = 'admin-secret-token';
+  const asAdmin = (ctx, path, opts = {}) => ctx.call(path, { ...opts, token: ADMIN });
+
+  test('stored encrypted, searchable, never shown to the customer', async () => {
+    const ctx = setup({ adminToken: ADMIN });
+    const created = await (
+      await asAdmin(ctx, '/admin/accounts', {
+        method: 'POST',
+        body: { providerUserId: '4108 2903 0745 8542', discord: 'rakiuss', note: 'pack 65' },
+      })
+    ).json();
+    assert.equal(created.account.discord, 'rakiuss');
+    assert.equal(created.account.providerId, '4108 2…8542');
+    assert.ok(!JSON.stringify(ctx.db.prepare('SELECT * FROM accounts').all()).includes('4108 2903 0745 8542'), 'encrypted at rest');
+
+    const detail = await (await asAdmin(ctx, `/admin/accounts/${created.account.id}`)).json();
+    assert.equal(detail.providerIdFull, '4108 2903 0745 8542');
+
+    for (const q of ['rakiuss', '4108 2903 0745 8542', created.number, `#${created.account.id}`, 'pack 65']) {
+      const r = await (await asAdmin(ctx, '/admin/search?q=' + encodeURIComponent(q))).json();
+      assert.equal(r.accounts.length, 1, q);
+      assert.equal(r.accounts[0].id, created.account.id);
+    }
+
+    const dup = await asAdmin(ctx, '/admin/accounts', { method: 'POST', body: { providerUserId: '4108 2903 0745 8542' } });
+    assert.equal(dup.status, 409);
+
+    await asAdmin(ctx, `/admin/accounts/${created.account.id}/profile`, { method: 'POST', body: { discord: '123456789012345678' } });
+    const edited = await (await asAdmin(ctx, '/admin/search?q=1234567890123')).json();
+    assert.equal(edited.accounts[0].discord, '123456789012345678');
+
+    const { token } = await (await ctx.call('/auth/login', { method: 'POST', body: { number: created.number } })).json();
+    const me = JSON.stringify(await (await ctx.call('/me', { token })).json());
+    assert.ok(!me.includes('4108') && !me.includes('discord') && !me.includes('rakiuss'), me);
+  });
+});

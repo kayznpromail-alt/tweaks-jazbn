@@ -83,6 +83,17 @@ export function openDb(path) {
   // Added after the first release: whether a paid top-up was also loaded at the provider.
   if (!db.prepare('PRAGMA table_info(payments)').all().some((c) => c.name === 'fulfilled'))
     db.exec('ALTER TABLE payments ADD COLUMN fulfilled INTEGER NOT NULL DEFAULT 0');
+  // Admin-only profile: the provider account behind this customer, and who the customer is.
+  const accountCols = db.prepare('PRAGMA table_info(accounts)').all().map((c) => c.name);
+  for (const [col, type] of [
+    ['provider_id_sealed', 'TEXT'], // encrypted, see security.sealSecret
+    ['provider_id_hash', 'TEXT'], // for lookups
+    ['provider_id_masked', 'TEXT'],
+    ['discord', 'TEXT'],
+    ['note', 'TEXT'],
+  ])
+    if (!accountCols.includes(col)) db.exec(`ALTER TABLE accounts ADD COLUMN ${col} ${type}`);
+  db.exec('CREATE INDEX IF NOT EXISTS accounts_provider_id ON accounts(provider_id_hash)');
   return db;
 }
 
