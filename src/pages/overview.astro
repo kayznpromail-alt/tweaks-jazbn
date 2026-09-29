@@ -1,0 +1,145 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import Usage from '../components/Usage.astro';
+import ModelRates from '../components/ModelRates.astro';
+import RecentRequests from '../components/RecentRequests.astro';
+import { wallet, keys, DISCORD_URL } from '../data/site';
+---
+<Base crumb="OVERVIEW" heading="Welcome, Member." sub="Your models, keys, and balance in one place.">
+  <div class="top-grid">
+    <section class="card pad wallet">
+      <div class="card-head">
+        <p class="card-title">Your wallet</p>
+        <button class="icon-btn" aria-label="Deposit"><Icon name="arrowDownLeft" /></button>
+      </div>
+      <p class="figure">{wallet.tokens}<span class="tag">tokens</span></p>
+      <button class="btn primary wide">Top up wallet <Icon name="plus" size={14} /></button>
+    </section>
+
+    <section class="card pad">
+      <div class="card-head">
+        <p class="card-title">Requests in the last 24 hours</p>
+        <a href="/activity" class="icon-btn" aria-label="Activity"><Icon name="activity" /></a>
+      </div>
+      <div class="req">
+        <p class="figure">0</p>
+        <div class="succ"><p class="dash">–</p><p class="tag">successful</p></div>
+      </div>
+      <p class="card-sub small">0 requests · last 90 days</p>
+    </section>
+
+    <section class="card pad">
+      <div class="card-head">
+        <p class="card-title">Your API keys</p>
+        <a href="/api" class="icon-btn" aria-label="API keys"><Icon name="key" /></a>
+      </div>
+      <a href="/api" class="keys-count">
+        <span class="n">{keys.length}</span>
+        <span class="k">active keys</span>
+        <Icon name="arrowUpRight" size={14} class="go" />
+      </a>
+      {keys.length > 0 ? (
+        <a href="/api" class="key-row">
+          <code>{keys[0].masked}</code>
+          <Icon name="chevronRight" size={14} />
+        </a>
+      ) : (
+        <a href="/api" class="key-row empty">
+          <span>Create your first key</span>
+          <Icon name="plus" size={14} />
+        </a>
+      )}
+    </section>
+  </div>
+
+  <a href={DISCORD_URL} class="card pad discord">
+    <span class="icon-btn big"><Icon name="discord" size={20} /></span>
+    <span class="grow">
+      <span class="card-title">Discord community</span>
+      <span class="card-sub">Service news, model updates, and promo codes.</span>
+    </span>
+    <span class="btn">Open <Icon name="arrowUpRight" size={13} /></span>
+  </a>
+
+  <div class="bottom-grid">
+    <Usage />
+    <ModelRates />
+  </div>
+
+  <div class="gap"><RecentRequests /></div>
+</Base>
+
+<style>
+  .pad { padding: 24px; }
+  .top-grid {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr 1.1fr;
+    gap: 20px;
+  }
+  .figure {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-size: 44px;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    margin: 28px 0 22px;
+    line-height: 1;
+  }
+  .wallet .figure { background: linear-gradient(90deg, var(--fg), var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .wallet .figure .tag { -webkit-text-fill-color: var(--muted); letter-spacing: 0.12em; }
+  .wide { width: 100%; height: 44px; }
+  .req { display: flex; justify-content: space-between; align-items: flex-end; }
+  .succ { text-align: right; margin-bottom: 22px; }
+  .dash { font-size: 18px; font-weight: 600; }
+  .small { font-size: 10.5px; }
+  .keys-count {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 26px 0 18px;
+  }
+  .keys-count .n { font-size: 36px; font-weight: 600; line-height: 1; color: var(--accent); }
+  .keys-count .k { font-size: 11px; font-weight: 600; }
+  .keys-count :global(.go) { margin-left: auto; color: var(--muted); }
+  .keys-count:hover :global(.go) { color: var(--accent); }
+  .key-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    font-size: 11px;
+    transition: border-color 0.15s;
+  }
+  .key-row:hover { border-color: var(--accent-line); }
+  .key-row.empty { border-style: dashed; color: var(--muted); }
+  .key-row.empty:hover { color: var(--accent); }
+  .discord {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 20px;
+    transition: border-color 0.15s;
+  }
+  .discord:hover { border-color: var(--accent-line); }
+  .discord .grow { flex: 1; display: flex; flex-direction: column; }
+  .icon-btn.big { width: 44px; height: 44px; color: var(--accent); }
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+    align-items: start;
+  }
+  .gap { margin-top: 20px; }
+  @media (max-width: 1000px) {
+    .top-grid, .bottom-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .discord { flex-wrap: wrap; }
+  }
+</style>

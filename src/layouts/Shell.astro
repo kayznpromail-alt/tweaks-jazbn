@@ -19,12 +19,15 @@ const { title } = Astro.props;
         if (!sessionStorage.getItem('edgey-intro') && !matchMedia('(prefers-reduced-motion: reduce)').matches)
           document.documentElement.classList.add('intro-on');
       } catch (e) {}
+      // Browsers without cross-page view transitions get a simple fade-in instead.
+      if (!('PageRevealEvent' in window)) document.documentElement.classList.add('no-vt');
     </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title ? `${title} · edgeycli.com` : 'edgeycli.com'}</title>
   </head>
   <body>
     <Intro />
+    <div class="vt-line" aria-hidden="true"></div>
     <slot />
     <script>
       document.addEventListener('click', (e) => {
@@ -158,4 +161,45 @@ const { title } = Astro.props;
   }
   .btn.copied { color: var(--accent); border-color: var(--accent-line); }
   ::selection { background: rgb(34 211 238 / 0.3); }
+
+  /* Page changes: native cross-page view transitions, no JS needed. */
+  @media (prefers-reduced-motion: no-preference) {
+    @view-transition { navigation: auto; }
+    .no-vt .page,
+    .no-vt .auth { animation: page-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  }
+  ::view-transition-old(root) { animation: page-out 0.22s cubic-bezier(0.4, 0, 1, 1) both; }
+  ::view-transition-new(root) { animation: page-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  ::view-transition-group(nav-active),
+  ::view-transition-group(brand-logo) {
+    animation-duration: 0.4s;
+    animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  /* A cyan scan line sweeps the top edge on every page change. */
+  .vt-line {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    opacity: 0;
+    pointer-events: none;
+    view-transition-name: scan;
+  }
+  ::view-transition-group(scan) {
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    box-shadow: 0 0 12px var(--accent);
+    animation: scan 0.55s ease-out both;
+  }
+  @keyframes page-out {
+    to { opacity: 0; transform: translateY(-6px); filter: blur(4px); }
+  }
+  @keyframes page-in {
+    from { opacity: 0; transform: translateY(14px); filter: blur(6px); }
+  }
+  @keyframes scan {
+    from { transform: translateX(-100%); opacity: 1; }
+    70% { opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+  }
 </style>

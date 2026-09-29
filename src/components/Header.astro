@@ -1,9 +1,10 @@
 ---
 import Icon from './Icon.astro';
 
-const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+// Works for /api, /api/ and /api.html alike.
+const path = Astro.url.pathname.replace(/(\.html|\/)$/, '') || '/';
 const nav = [
-  { href: '/', icon: 'grid', label: 'Overview' },
+  { href: '/overview', icon: 'grid', label: 'Overview' },
   { href: '/api', icon: 'key', label: 'API' },
   { href: '/setup', icon: 'terminal', label: 'Setup', pill: true },
   { href: '/models', icon: 'cpu', label: 'Models' },
@@ -12,7 +13,7 @@ const nav = [
 ---
 <header class="top">
   <div class="inner">
-    <a href="/" class="brand">
+    <a href="/overview" class="brand">
       <span class="logo"><Icon name="terminal" size={14} /></span>
       <span>edgey<span class="accent">cli</span>.com</span>
     </a>
@@ -41,7 +42,7 @@ const nav = [
       <span class="sep"></span>
       <span class="avatar">M</span>
       <span class="name">Member</span>
-      <a href="/login" class="ghost" aria-label="Log out" title="Log out"><Icon name="logout" size={15} /></a>
+      <a href="/" class="ghost" aria-label="Log out" title="Log out"><Icon name="logout" size={15} /></a>
     </div>
   </div>
 </header>
@@ -125,6 +126,10 @@ const nav = [
     font-size: 10px;
   }
   .sep { width: 1px; height: 20px; background: var(--border-2); }
+  /* Kept still during page changes; the active tab highlight slides to the new tab. */
+  .top { view-transition-name: site-header; }
+  .logo { view-transition-name: brand-logo; }
+  .nav-btn.active { view-transition-name: nav-active; }
   .ghost { display: grid; place-items: center; transition: color 0.15s; }
   .ghost:hover { color: var(--accent); }
   @media (max-width: 760px) {

@@ -1,3 +1,6 @@
 import { defineConfig } from 'astro/config';
 
-export default defineConfig({});
+export default defineConfig({
+  // /api is served as api.html: no trailing-slash redirect between pages.
+  build: { format: 'file' },
+});
