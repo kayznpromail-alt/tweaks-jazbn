@@ -1,0 +1,97 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import Connect from '../components/Connect.astro';
+import { keys, MAX_KEYS } from '../data/site';
+---
+<Base title="API keys" crumb="KEYS" heading="Your API keys." sub="Your AI tools, in one place.">
+  <section class="card">
+    <div class="card-head pad">
+      <div>
+        <h2>Your API keys</h2>
+        <p class="card-sub">Use these keys with edgeyCLI or api.edgeycli.com. One shared balance.</p>
+      </div>
+      <div class="count">
+        <p class="mono">{keys.length} / {MAX_KEYS} keys</p>
+        <p class="card-sub">{MAX_KEYS - keys.length} slots available</p>
+      </div>
+    </div>
+    <form class="create" onsubmit="return false">
+      <input placeholder="Key name, e.g. My laptop" aria-label="Key name" />
+      <button class="btn primary"><Icon name="plus" size={14} /> Create API key</button>
+    </form>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Name / key</th><th>Budget / models</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {keys.map((k) => (
+            <tr>
+              <td><p class="strong">{k.name}</p><code class="muted">{k.masked}</code></td>
+              <td><p class="strong">{k.budget}</p><p class="muted">{k.models}</p></td>
+              <td><span class="pill">{k.enabled ? 'Enabled' : 'Disabled'}</span></td>
+              <td>
+                <div class="actions">
+                  <button class="icon-btn" aria-label="Rename"><Icon name="pencil" size={14} /></button>
+                  <button class="icon-btn" aria-label="Rotate key"><Icon name="key" size={14} /></button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="gap"><Connect /></div>
+</Base>
+
+<style>
+  .pad { padding: 24px; }
+  h2 { font-size: 20px; letter-spacing: -0.02em; }
+  .count { text-align: right; }
+  .count .mono { font-size: 14px; font-weight: 600; }
+  .create {
+    display: flex;
+    gap: 12px;
+    padding: 0 24px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .create input {
+    flex: 0 1 400px;
+    min-width: 0;
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-2);
+    background: var(--bg);
+    outline: none;
+  }
+  .create input:focus { border-color: var(--accent-line); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .create .btn { height: 40px; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 560px; }
+  th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  td { padding: 18px 24px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .strong { font-size: 12px; font-weight: 600; }
+  .muted { font-size: 10.5px; color: var(--muted); }
+  .actions { display: flex; gap: 8px; }
+  .gap { margin-top: 32px; }
+  @media (max-width: 640px) {
+    .card-head { flex-direction: column; }
+    .count { text-align: left; }
+    .create { flex-direction: column; }
+    .create input { flex: none; }
+  }
+</style>

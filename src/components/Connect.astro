@@ -1,0 +1,112 @@
+---
+import Icon from './Icon.astro';
+import { API_BASE } from '../data/site';
+
+const endpoints = [
+  { method: 'GET', title: 'List models', path: '/models', desc: 'See the models available to your key.' },
+  { method: 'POST', title: 'OpenAI-compatible chat', path: '/chat/completions', desc: 'For Codex and OpenAI-compatible clients.' },
+  { method: 'POST', title: 'Anthropic messages', path: '/messages', desc: 'For Claude Code and Anthropic clients.' },
+];
+const curl = `curl ${API_BASE}/chat/completions \\
+  -H "Authorization: Bearer $EDGEY_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"model":"gpt-5-mini","messages":[{"role":"user","content":"hello"}]}'`;
+---
+<section class="card connect">
+  <div class="card-head pad">
+    <div>
+      <p class="card-title row"><Icon name="terminal" /> Connect your API key</p>
+      <p class="card-sub">Use your personal key with the standard OpenAI and Anthropic routes.</p>
+    </div>
+    <span class="secret"><Icon name="shield" size={11} /> Private key · keep it secret</span>
+  </div>
+  <div class="body">
+    <div class="box base">
+      <div>
+        <p class="tag">API base URL</p>
+        <code class="url">{API_BASE}</code>
+      </div>
+      <button class="btn" data-copy={API_BASE}><Icon name="copy" size={14} /><span class="label">Copy</span></button>
+    </div>
+    <div class="eps">
+      {endpoints.map((e) => (
+        <div class="box ep">
+          <span class:list={['method', e.method.toLowerCase()]}>{e.method}</span>
+          <p class="card-title">{e.title}</p>
+          <code class="path">{API_BASE}{e.path}</code>
+          <p class="card-sub">{e.desc}</p>
+        </div>
+      ))}
+    </div>
+    <div class="box example">
+      <div class="ex-head">
+        <div>
+          <p class="tag">Safe example</p>
+          <p class="card-sub">Replace <code class="hl">$EDGEY_API_KEY</code> locally. The website never displays your full key here.</p>
+        </div>
+        <button class="btn" data-copy={curl}><Icon name="copy" size={14} /><span class="label">Copy curl</span></button>
+      </div>
+      <pre><code>{curl}</code></pre>
+    </div>
+  </div>
+</section>
+
+<style>
+  .pad { padding: 24px; border-bottom: 1px solid var(--border); }
+  .row { display: flex; align-items: center; gap: 10px; }
+  .secret {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    color: var(--muted);
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border-2);
+    white-space: nowrap;
+  }
+  .body { padding: 20px 24px 24px; display: flex; flex-direction: column; gap: 12px; }
+  .box {
+    border: 1px solid var(--border);
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 16px;
+    min-width: 0;
+  }
+  .base { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .url { display: block; margin-top: 6px; font-size: 14px; color: var(--accent); overflow-wrap: anywhere; }
+  .eps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .ep { display: flex; flex-direction: column; gap: 6px; }
+  .method {
+    align-self: flex-start;
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 6px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-2);
+    color: var(--muted);
+  }
+  .method.post { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
+  .path { font-size: 10.5px; color: var(--muted); overflow-wrap: anywhere; }
+  .ex-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .hl { color: var(--accent); }
+  pre {
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-size: 11.5px;
+    line-height: 1.7;
+    color: #b9c7cf;
+    overflow-x: auto;
+  }
+  @media (max-width: 860px) {
+    .eps { grid-template-columns: 1fr; }
+    .card-head, .ex-head { flex-direction: column; }
+  }
+</style>
