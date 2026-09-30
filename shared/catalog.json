@@ -247,6 +247,6 @@
   "maxKeysPerAccount": 6,
   "specials": [
     { "name": "Special version (115M)", "eur": 35, "costUsd": 20.75 },
-    { "name": "Special 40 €", "eur": 40, "costUsd": null }
+    { "name": "Opus 5 lifetime", "eur": 100, "costUsd": 46 }
   ]
 }
