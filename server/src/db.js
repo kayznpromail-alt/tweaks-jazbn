@@ -61,6 +61,16 @@ CREATE TABLE IF NOT EXISTS cli_keys (
   created_at INTEGER NOT NULL
 );
 
+-- Sales paid outside the site and not tied to a token pack (tickets): price paid and retail cost.
+CREATE TABLE IF NOT EXISTS sales (
+  id INTEGER PRIMARY KEY,
+  product TEXT NOT NULL,
+  amount_eur REAL NOT NULL,
+  cost_usd REAL NOT NULL,
+  note TEXT,
+  created_at INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS payments (
   id INTEGER PRIMARY KEY,
   account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,

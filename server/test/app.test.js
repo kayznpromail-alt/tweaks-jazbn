@@ -565,4 +565,29 @@ describe('earnings', () => {
     assert.equal((await ctx.call('/v1/models', { key: second.key })).status, 401);
     assert.ok(!JSON.stringify(ctx.db.prepare('SELECT * FROM api_keys').all()).includes(created.apiKey), 'encrypted at rest');
   });
+
+  test('manual sales: price paid - retail cost, grouped apart from site refills and account sales', async () => {
+    const ADMIN = 'admin-secret-token';
+    const ctx = setup({ adminToken: ADMIN });
+    const asAdmin = (path, opts = {}) => ctx.call(path, { ...opts, token: ADMIN });
+    // Special version: 35 € paid, 20.75 $ retail (15 $ + 115M tokens) = 18.05 € -> profit 16.95
+    const sale = await (await asAdmin('/admin/sales', { method: 'POST', body: { product: 'Special version', eur: 35, costUsd: 20.75, note: 'ticket 12' } })).json();
+    assert.equal(sale.earnings.costEur, 18.05);
+    assert.equal(sale.earnings.profitEur, 16.95);
+    assert.deepEqual(sale.earnings.split.map((s) => s.eur), [10.17, 6.78]);
+    assert.equal((await asAdmin('/admin/sales', { method: 'POST', body: { product: 'x', eur: 0, costUsd: 1 } })).status, 400);
+
+    const created = await (await asAdmin('/admin/accounts', { method: 'POST', body: {} })).json();
+    await asAdmin(`/admin/accounts/${created.account.id}/credit`, { method: 'POST', body: { packEur: 24.99 } });
+    const e = await (await asAdmin('/admin/earnings')).json();
+    assert.equal(e.allTime.payments, 2);
+    assert.equal(e.allTime.groups.manual.profitEur, 16.95);
+    assert.equal(e.allTime.groups.accounts.profitEur, 16.29);
+    assert.equal(e.allTime.groups.site.payments, 0);
+    assert.equal(e.allTime.profitEur, 33.24);
+    assert.ok(e.specials.some((x) => x.eur === 35));
+
+    assert.equal((await asAdmin(`/admin/sales/${sale.id}`, { method: 'DELETE' })).status, 200);
+    assert.equal((await (await asAdmin('/admin/earnings')).json()).allTime.payments, 1);
+  });
 });

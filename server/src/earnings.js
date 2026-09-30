@@ -12,8 +12,10 @@ export function parseSplit(input) {
     .map(([name, pct]) => ({ name, percent: Number(pct) }));
 }
 
-export function earningsFor({ eur, tokens }, e) {
-  const costEur = upCents(((tokens / 1e6) * e.costUsdPerMillion) / e.usdPerEur);
+/** Retail cost is the tokens at the provider's price, or a fixed USD cost (manual sales). */
+export function earningsFor({ eur, tokens = 0, costUsd = null }, e) {
+  const usd = costUsd != null ? costUsd : (tokens / 1e6) * e.costUsdPerMillion;
+  const costEur = upCents(usd / e.usdPerEur);
   const profitEur = Math.round((eur - costEur) * 100) / 100;
   return {
     costEur,

@@ -332,15 +332,55 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
   admin.get('/earnings', (c) => {
     const d = new Date(clock());
     const monthStart = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
-    const rows = db
-      .prepare('SELECT amount_eur AS eur, tokens, updated_at FROM payments WHERE credited = 1 AND amount_eur > 0 AND tokens > 0')
+    const paid = db
+      .prepare('SELECT provider, amount_eur AS eur, tokens, updated_at AS at FROM payments WHERE credited = 1 AND amount_eur > 0 AND tokens > 0')
       .all();
+    const sales = db.prepare('SELECT amount_eur AS eur, cost_usd AS costUsd, created_at AS at FROM sales').all();
+    // Site refills (crypto, automatic), token sales recorded on an account, and other manual sales.
+    const groups = {
+      site: paid.filter((r) => r.provider !== 'manual'),
+      accounts: paid.filter((r) => r.provider === 'manual'),
+      manual: sales,
+    };
+    const period = (from) => {
+      const pick = (rows) => rows.filter((r) => r.at >= from);
+      const byGroup = Object.fromEntries(Object.entries(groups).map(([k, rows]) => [k, sumEarnings(pick(rows), cfg.earnings)]));
+      return { ...sumEarnings([...pick(groups.site), ...pick(groups.accounts), ...pick(groups.manual)], cfg.earnings), groups: byGroup };
+    };
     return c.json({
       costUsdPerMillion: cfg.earnings.costUsdPerMillion,
       usdPerEur: cfg.earnings.usdPerEur,
-      month: sumEarnings(rows.filter((r) => r.updated_at >= monthStart), cfg.earnings),
-      allTime: sumEarnings(rows, cfg.earnings),
+      specials: catalog.specials ?? [],
+      month: period(monthStart),
+      allTime: period(0),
     });
+  });
+
+  // Manual sales (tickets): price paid and retail cost, counted in the earnings.
+  admin.get('/sales', (c) => {
+    const rows = db.prepare('SELECT id, product, amount_eur, cost_usd, note, created_at FROM sales ORDER BY id DESC LIMIT 100').all();
+    return c.json({ sales: rows.map((r) => ({ ...r, earnings: earningsFor({ eur: r.amount_eur, costUsd: r.cost_usd }, cfg.earnings) })) });
+  });
+
+  admin.post('/sales', async (c) => {
+    const body = await c.req.json().catch(() => ({}));
+    const product = String(body.product ?? '').trim().slice(0, 80);
+    const eur = Number(body.eur);
+    const costUsd = Number(body.costUsd);
+    if (!product || !(eur > 0) || eur > 100000 || !(costUsd >= 0) || costUsd > 100000) return c.json({ error: 'invalid_amount' }, 400);
+    const id = Number(
+      db
+        .prepare('INSERT INTO sales (product, amount_eur, cost_usd, note, created_at) VALUES (?, ?, ?, ?, ?)')
+        .run(product, Math.round(eur * 100) / 100, Math.round(costUsd * 100) / 100, String(body.note ?? '').slice(0, 120) || null, clock())
+        .lastInsertRowid,
+    );
+    const r = db.prepare('SELECT id, product, amount_eur, cost_usd, note, created_at FROM sales WHERE id = ?').get(id);
+    return c.json({ ...r, earnings: earningsFor({ eur: r.amount_eur, costUsd: r.cost_usd }, cfg.earnings) }, 201);
+  });
+
+  admin.delete('/sales/:id', (c) => {
+    const r = db.prepare('DELETE FROM sales WHERE id = ?').run(Number(c.req.param('id')));
+    return r.changes ? c.json({ ok: true }) : c.json({ error: 'not_found' }, 404);
   });
 
   // Paid top-up loaded at the provider (tokens added to the customer's CLI key).
