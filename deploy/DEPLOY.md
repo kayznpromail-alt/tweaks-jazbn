@@ -30,7 +30,7 @@ Les commandes du quotidien ci-dessous se lancent alors depuis `/opt/edgey/deploy
 curl -fsSL https://get.docker.com | sh
 
 # Le code
-git clone https://github.com/kayznpromail-alt/tweaks-jazbn.git edgey
+git clone -b main https://github.com/kayznpromail-alt/tweaks-jazbn.git edgey
 cd edgey/deploy
 
 # La config

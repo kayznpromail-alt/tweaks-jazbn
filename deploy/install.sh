@@ -4,6 +4,7 @@
 set -euo pipefail
 
 REPO_URL="${REPO_URL:-https://github.com/kayznpromail-alt/tweaks-jazbn.git}"
+BRANCH="${BRANCH:-main}"
 DIR="${DIR:-/opt/edgey}"
 
 [ "$(id -u)" = 0 ] || { echo "Lance ce script en root (sudo -i)."; exit 1; }
@@ -18,7 +19,10 @@ if ! command -v docker >/dev/null; then
 fi
 
 echo "==> Code"
-if [ -d "$DIR/.git" ]; then git -C "$DIR" pull --ff-only; else git clone -q "$REPO_URL" "$DIR"; fi
+if [ ! -d "$DIR/.git" ]; then git clone -q --branch "$BRANCH" "$REPO_URL" "$DIR"; fi
+# Always follow $BRANCH, whatever the repo's default branch is (.env and data/ are untracked and kept).
+git -C "$DIR" fetch -q origin "$BRANCH"
+git -C "$DIR" checkout -q -B "$BRANCH" "origin/$BRANCH"
 cd "$DIR/deploy"
 
 if [ ! -f .env ]; then
