@@ -18,7 +18,8 @@ tous les droits. Sans `ADMIN_TOKEN` dans `.env`, toutes ces routes répondent 40
 | POST | `/accounts/:id/credit` | `{ "packEur": 65, "note": "paypal" }` ou `{ "tokens": 200000000, "eur": 25, "note": "…" }` | compte mis à jour. `tokens` négatif = correction (jamais sous 0) |
 | POST | `/accounts/:id/number` | – | `{ number, account }` : génère un nouvel edgey ID (l'ancien ne marche plus, le client est déconnecté) |
 | POST | `/accounts/:id/status` | `{ "disabled": true }` | compte mis à jour (bloquer déconnecte aussi le client) |
-| GET | `/payments?limit=50` | – | `{ payments: [...] }` (tous comptes) |
+| GET | `/payments?limit=50` | – | `{ payments: [...] }` (tous comptes), chaque paiement payé avec `earnings` : coût retail, bénéfice, parts |
+| GET | `/earnings` | – | ce mois et depuis le début : `revenueEur`, `costEur`, `profitEur`, `split` (parts par associé, arrondies au centime supérieur) |
 
 Un **compte** ressemble à :
 

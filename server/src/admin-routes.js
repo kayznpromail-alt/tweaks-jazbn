@@ -6,6 +6,7 @@ import { cors } from 'hono/cors';
 import { catalog } from './billing.js';
 import { creditPayment, now } from './db.js';
 import { createLimiter } from './ratelimit.js';
+import { earningsFor, sumEarnings } from './earnings.js';
 import { hashSecret, isAccessNumber, maskSecret, newAccessNumber, normalizeNumber, openSecret, sealSecret } from './security.js';
 
 const DAY = 86_400_000;
@@ -255,14 +256,29 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
     return c.json(summary(account(a.id)));
   });
 
+  // Paid customer payments count for earnings (free credits and corrections do not).
+  const earned = (p) => (p.credited && p.amount_eur > 0 && p.tokens > 0 ? earningsFor({ eur: p.amount_eur, tokens: p.tokens }, cfg.earnings) : null);
+
   admin.get('/payments', (c) => {
     const limit = Math.min(200, Number(c.req.query('limit') ?? 50) || 50);
+    const rows = db
+      .prepare('SELECT id, account_id, provider, amount_eur, tokens, status, note, credited, fulfilled, created_at FROM payments ORDER BY id DESC LIMIT ?')
+      .all(limit);
+    return c.json({ payments: rows.map((p) => ({ ...p, earnings: earned(p) })) });
+  });
+
+  // Revenue, retail cost, profit and each partner's share: this month and all time.
+  admin.get('/earnings', (c) => {
+    const d = new Date(clock());
+    const monthStart = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
+    const rows = db
+      .prepare('SELECT amount_eur AS eur, tokens, updated_at FROM payments WHERE credited = 1 AND amount_eur > 0 AND tokens > 0')
+      .all();
     return c.json({
-      payments: db
-        .prepare(
-          'SELECT id, account_id, provider, amount_eur, tokens, status, note, credited, fulfilled, created_at FROM payments ORDER BY id DESC LIMIT ?',
-        )
-        .all(limit),
+      costUsdPerMillion: cfg.earnings.costUsdPerMillion,
+      usdPerEur: cfg.earnings.usdPerEur,
+      month: sumEarnings(rows.filter((r) => r.updated_at >= monthStart), cfg.earnings),
+      allTime: sumEarnings(rows, cfg.earnings),
     });
   });
 

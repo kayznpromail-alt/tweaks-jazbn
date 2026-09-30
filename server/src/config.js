@@ -1,3 +1,4 @@
+import { parseSplit } from './earnings.js';
 const hostLabel = (url) => {
   try {
     const parts = new URL(url).hostname.split('.');
@@ -37,6 +38,12 @@ export function loadConfig(env = process.env) {
     publicApiUrl: (env.PUBLIC_API_URL ?? 'https://api.edgey.shop').replace(/\/+$/, ''),
     siteUrl: (env.SITE_URL ?? 'https://cli.edgey.shop').replace(/\/+$/, ''),
     sessionDays: Number(env.SESSION_DAYS ?? 30),
+    // Profit split for the admin panel: retail cost at the provider and each partner's share.
+    earnings: {
+      costUsdPerMillion: Number(env.COST_USD_PER_MILLION ?? 0.05),
+      usdPerEur: Number(env.USD_PER_EUR ?? 1.15),
+      split: parseSplit(env.PROFIT_SPLIT ?? 'edgey:60,kayzn:40'),
+    },
     nowpayments: {
       apiKey: env.NOWPAYMENTS_API_KEY || null,
       ipnSecret: env.NOWPAYMENTS_IPN_SECRET || null,

@@ -5,6 +5,7 @@ import { after, before, describe, test } from 'node:test';
 import { createApp } from '../src/app.js';
 import { createUsageTracker } from '../src/billing.js';
 import { creditPayment, openDb } from '../src/db.js';
+import { earningsFor, parseSplit } from '../src/earnings.js';
 import { signIpn } from '../src/nowpayments.js';
 import { isAccessNumber, isApiKey, newAccessNumber, newApiKey } from '../src/security.js';
 
@@ -98,6 +99,7 @@ function setup(overrides = {}) {
     siteUrl: 'https://cli.edgey.shop',
     sessionDays: 30,
     nowpayments: { apiKey: null, ipnSecret: 'ipn-secret', base: 'http://127.0.0.1:1' },
+    earnings: { costUsdPerMillion: 0.05, usdPerEur: 1.15, split: [{ name: 'edgey', percent: 60 }, { name: 'kayzn', percent: 40 }] },
     ...overrides,
   };
   const app = createApp({ cfg, db });
@@ -475,5 +477,34 @@ describe('admin profile: provider user id and Discord', () => {
     assert.equal((await ctx.call('/auth/login', { method: 'POST', body: { number: created.number } })).status, 401);
     assert.equal((await ctx.call('/auth/login', { method: 'POST', body: { number: renewed.number } })).status, 200);
     assert.equal((await ctx.call('/me', { token })).status, 401, 'old session signed out');
+  });
+});
+
+describe('earnings', () => {
+  const e = { costUsdPerMillion: 0.05, usdPerEur: 1.15, split: parseSplit('edgey:60,kayzn:40') };
+
+  test('price paid - retail cost, split 60/40 rounded up to the cent', () => {
+    // 200M tokens = 10 $ = 8.6956… € -> 8.70 €; profit 24.99 - 8.70 = 16.29
+    const one = earningsFor({ eur: 24.99, tokens: 200_000_000 }, e);
+    assert.equal(one.costEur, 8.7);
+    assert.equal(one.profitEur, 16.29);
+    assert.deepEqual(one.split.map((s) => [s.name, s.eur]), [['edgey', 9.78], ['kayzn', 6.52]]);
+  });
+
+  test('admin earnings count paid payments only', async () => {
+    const ADMIN = 'admin-secret-token';
+    const ctx = setup({ adminToken: ADMIN });
+    const created = await (await ctx.call('/admin/accounts', { method: 'POST', token: ADMIN, body: {} })).json();
+    const credit = (body) => ctx.call(`/admin/accounts/${created.account.id}/credit`, { method: 'POST', token: ADMIN, body });
+    await credit({ packEur: 24.99, note: 'paypal' });
+    await credit({ tokens: 50_000_000, eur: 0, note: 'gift' });
+    const out = await (await ctx.call('/admin/earnings', { token: ADMIN })).json();
+    assert.equal(out.allTime.payments, 1);
+    assert.equal(out.allTime.revenueEur, 24.99);
+    assert.equal(out.allTime.profitEur, 16.29);
+    assert.equal(out.month.split[1].eur, 6.52);
+    const { payments } = await (await ctx.call('/admin/payments', { token: ADMIN })).json();
+    assert.equal(payments.find((p) => p.note === 'gift').earnings, null);
+    assert.equal(payments.find((p) => p.note === 'paypal').earnings.split[0].eur, 9.78);
   });
 });
