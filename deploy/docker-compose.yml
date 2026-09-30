@@ -7,10 +7,15 @@ services:
     env_file: .env
     volumes:
       - ./data:/data
+    # Only reachable from the VPS itself (used when nginx is the front server).
+    ports:
+      - "127.0.0.1:8787:8787"
     restart: unless-stopped
 
+  # Started only with COMPOSE_PROFILES=caddy (set by install.sh when nginx is not installed).
   caddy:
     image: caddy:2
+    profiles: ["caddy"]
     ports:
       - "80:80"
       - "443:443"
