@@ -507,4 +507,17 @@ describe('earnings', () => {
     assert.equal(payments.find((p) => p.note === 'gift').earnings, null);
     assert.equal(payments.find((p) => p.note === 'paypal').earnings.split[0].eur, 9.78);
   });
+
+  test('CLI-key accounts: a paid sale is recorded, no gateway balance is added', async () => {
+    const ADMIN = 'admin-secret-token';
+    const ctx = setup({ adminToken: ADMIN });
+    const created = await (await ctx.call('/admin/accounts', { method: 'POST', token: ADMIN, body: { cliKey: 'cli-good-key-123456' } })).json();
+    const out = await (
+      await ctx.call(`/admin/accounts/${created.account.id}/credit`, { method: 'POST', token: ADMIN, body: { packEur: 24.99 } })
+    ).json();
+    assert.equal(out.balance, 0);
+    assert.equal(out.paidEur, 24.99);
+    const earned = await (await ctx.call('/admin/earnings', { token: ADMIN })).json();
+    assert.equal(earned.allTime.payments, 1);
+  });
 });

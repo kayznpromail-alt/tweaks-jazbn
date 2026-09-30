@@ -112,14 +112,18 @@ export function tx(db, fn) {
 
 export const now = () => Date.now();
 
-/** Adds tokens to an account and records the payment, once per payment id. */
+/**
+ * Records a payment as paid, once per payment id. Accounts that use a CLI key get their tokens at
+ * the provider (loaded by us, then marked as loaded), so only API-key accounts get a gateway balance.
+ */
 export function creditPayment(db, paymentId) {
   return tx(db, () => {
     const p = db.prepare('SELECT * FROM payments WHERE id = ?').get(paymentId);
     if (!p || p.credited) return false;
+    const usesCliKey = Boolean(db.prepare('SELECT 1 FROM cli_keys WHERE account_id = ?').get(p.account_id));
     db.prepare('UPDATE payments SET credited = 1, status = ?, updated_at = ? WHERE id = ?').run('finished', now(), p.id);
     db.prepare('UPDATE accounts SET balance = balance + ?, paid_eur = paid_eur + ? WHERE id = ?').run(
-      p.tokens,
+      usesCliKey ? 0 : p.tokens,
       p.amount_eur,
       p.account_id,
     );
