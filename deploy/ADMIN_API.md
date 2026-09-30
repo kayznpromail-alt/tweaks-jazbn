@@ -11,7 +11,9 @@ tous les droits. Sans `ADMIN_TOKEN` dans `.env`, toutes ces routes répondent 40
 | GET | `/stats` | – | `accounts`, `activeAccounts24h`, `tokensOwed`, `revenueEur`, `revenue30dEur`, `payments30d`, `requests24h`, `tokens24h`, `charged24h` |
 | GET | `/accounts?limit=50` | – | `{ accounts: [compte…] }` (les plus récents) |
 | POST | `/lookup` | `{ "number": "1234 5678 9012 3456" }` | compte, ou 404 |
-| POST | `/accounts` | `{ "providerUserId": "…", "discord": "…", "note": "…", "cliKey": "…" }` (tout optionnel) | `{ number, account }` : crée un compte et génère un nouvel edgey ID (donné seulement ici) |
+| POST | `/accounts` | `{ "providerUserId": "…", "discord": "…", "note": "…", "cliKey": "…" }` (tout optionnel), `"apiKey": true` pour générer une clé API | `{ number, apiKey, account }` : crée un compte et génère un nouvel edgey ID (donné seulement ici) |
+| POST | `/accounts/:id/keys` | `{ "name": "…" }` | `{ id, name, key, masked }` : génère une clé API edgey pour le client |
+| DELETE | `/accounts/:id/keys/:keyId` | – | supprime une clé API du client |
 | GET | `/search?q=…` | – | `{ accounts: [...] }` : cherche par edgey ID, user id fournisseur (exact), `#id`, Discord ou note (20 max) |
 | POST | `/accounts/:id/profile` | `{ "providerUserId": "…", "discord": "…", "note": "…" }` | compte mis à jour. `null` efface un champ, champ absent = inchangé |
 | DELETE | `/accounts/:id` | – | supprime le compte : plus de connexion, clés retirées, user id fournisseur libéré ; les paiements restent pour le partage |

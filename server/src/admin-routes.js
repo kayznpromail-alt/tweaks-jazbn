@@ -7,7 +7,17 @@ import { catalog } from './billing.js';
 import { creditPayment, now, tx } from './db.js';
 import { createLimiter } from './ratelimit.js';
 import { earningsFor, sumEarnings } from './earnings.js';
-import { hashSecret, isAccessNumber, maskSecret, newAccessNumber, normalizeNumber, openSecret, sealSecret } from './security.js';
+import {
+  hashSecret,
+  isAccessNumber,
+  maskKey,
+  maskSecret,
+  newAccessNumber,
+  newApiKey,
+  normalizeNumber,
+  openSecret,
+  sealSecret,
+} from './security.js';
 
 const DAY = 86_400_000;
 
@@ -44,6 +54,18 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
   });
 
   const account = (id) => db.prepare('SELECT * FROM accounts WHERE id = ? AND deleted_at IS NULL').get(id);
+  // Creates an edgey API key for the customer; the full key is also kept encrypted for admins.
+  const issueKey = (accountId, name) => {
+    const n = db.prepare('SELECT COUNT(*) AS n FROM api_keys WHERE account_id = ?').get(accountId).n;
+    if (n >= catalog.maxKeysPerAccount) return null;
+    const key = newApiKey();
+    const id = Number(
+      db
+        .prepare('INSERT INTO api_keys (account_id, name, key_hash, masked, created_at, key_sealed) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(accountId, name, hashSecret(cfg.pepper, key), maskKey(key), clock(), sealSecret(cfg.pepper, key)).lastInsertRowid,
+    );
+    return { id, name, key, masked: maskKey(key) };
+  };
   const saveNumber = (id, number) =>
     db.prepare('UPDATE accounts SET number_hash = ?, number_sealed = ? WHERE id = ?').run(hashSecret(cfg.pepper, number), sealSecret(cfg.pepper, number), id);
   const summary = (a) => ({
@@ -153,7 +175,8 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
         return c.json({ error: out.error }, out.error === 'provider_unavailable' ? 502 : 400);
       }
     }
-    return c.json({ number, account: summary(account(id)) }, 201);
+    const apiKey = body.apiKey ? issueKey(id, 'Main key') : null;
+    return c.json({ number, apiKey: apiKey?.key ?? null, account: summary(account(id)) }, 201);
   });
 
   // Replaces a lost edgey ID: the old one stops working and the customer is signed out.
@@ -179,6 +202,22 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
       for (const table of ['sessions', 'api_keys', 'cli_keys']) db.prepare(`DELETE FROM ${table} WHERE account_id = ?`).run(a.id);
     });
     return c.json({ ok: true });
+  });
+
+  // edgey API keys created by us for the customer.
+  admin.post('/accounts/:id/keys', async (c) => {
+    const a = account(Number(c.req.param('id')));
+    if (!a) return c.json({ error: 'not_found' }, 404);
+    const body = await c.req.json().catch(() => ({}));
+    const out = issueKey(a.id, String(body.name ?? '').trim().slice(0, 40) || 'API key');
+    return out ? c.json(out, 201) : c.json({ error: 'key_limit' }, 409);
+  });
+
+  admin.delete('/accounts/:id/keys/:keyId', (c) => {
+    const a = account(Number(c.req.param('id')));
+    if (!a) return c.json({ error: 'not_found' }, 404);
+    const r = db.prepare('DELETE FROM api_keys WHERE id = ? AND account_id = ?').run(Number(c.req.param('keyId')), a.id);
+    return r.changes ? c.json({ ok: true }) : c.json({ error: 'not_found' }, 404);
   });
 
   // Admin notes about an account: provider user id, Discord, free note.
@@ -231,8 +270,9 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
       numberFull: a.number_sealed ? openSecret(cfg.pepper, a.number_sealed) : null,
       cli: await cli.status(a.id),
       apiKeys: db
-        .prepare('SELECT id, name, masked, enabled, created_at, last_used_at FROM api_keys WHERE account_id = ? ORDER BY id')
-        .all(a.id),
+        .prepare('SELECT id, name, masked, enabled, created_at, last_used_at, key_sealed FROM api_keys WHERE account_id = ? ORDER BY id')
+        .all(a.id)
+        .map(({ key_sealed, ...k }) => ({ ...k, full: key_sealed ? openSecret(cfg.pepper, key_sealed) : null })),
       payments: db
         .prepare('SELECT id, provider, amount_eur, tokens, status, note, credited, fulfilled, created_at FROM payments WHERE account_id = ? ORDER BY id DESC LIMIT 50')
         .all(a.id),

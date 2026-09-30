@@ -17,6 +17,7 @@ import {
   newApiKey,
   newSessionToken,
   normalizeNumber,
+  sealSecret,
 } from './security.js';
 
 const DAY = 86_400_000;
@@ -52,7 +53,7 @@ export function createApp({ cfg, db, clock = now }) {
        FROM api_keys k JOIN accounts a ON a.id = k.account_id WHERE k.key_hash = ?`,
     ),
     insertKey: db.prepare(
-      'INSERT INTO api_keys (account_id, name, key_hash, masked, created_at) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO api_keys (account_id, name, key_hash, masked, created_at, key_sealed) VALUES (?, ?, ?, ?, ?, ?)',
     ),
     touchKey: db.prepare('UPDATE api_keys SET last_used_at = ? WHERE id = ?'),
     insertUsage: db.prepare(
@@ -186,7 +187,7 @@ export function createApp({ cfg, db, clock = now }) {
     const name = String(body.name ?? '').trim().slice(0, 40) || 'API key';
     if (q.keyCount.get(a.id).n >= catalog.maxKeysPerAccount) return c.json({ error: 'key_limit' }, 409);
     const key = newApiKey();
-    const id = Number(q.insertKey.run(a.id, name, hash(key), maskKey(key), clock()).lastInsertRowid);
+    const id = Number(q.insertKey.run(a.id, name, hash(key), maskKey(key), clock(), sealSecret(cfg.pepper, key)).lastInsertRowid);
     // The full key is only ever returned here.
     return c.json({ key, ...publicKey(q.keyById.get(id, a.id)) }, 201);
   });

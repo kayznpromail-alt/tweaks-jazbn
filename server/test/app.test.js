@@ -543,4 +543,26 @@ describe('earnings', () => {
     const again = await asAdmin('/admin/accounts', { method: 'POST', body: { providerUserId: 'prov-1' } });
     assert.equal(again.status, 201, 'provider user id can be reused');
   });
+
+  test('admins generate the customer API key; it works once the sale is recorded', async () => {
+    const ADMIN = 'admin-secret-token';
+    const ctx = setup({ adminToken: ADMIN });
+    const asAdmin = (path, opts = {}) => ctx.call(path, { ...opts, token: ADMIN });
+    const created = await (await asAdmin('/admin/accounts', { method: 'POST', body: { discord: 'buyer', apiKey: true } })).json();
+    assert.ok(isApiKey(created.apiKey));
+    const id = created.account.id;
+    // No balance yet: requests are refused.
+    assert.equal((await ctx.call('/v1/chat/completions', { method: 'POST', key: created.apiKey, body: { model: 'gpt-5.5', messages: [] } })).status, 402);
+    const credited = await (await asAdmin(`/admin/accounts/${id}/credit`, { method: 'POST', body: { packEur: 24.99, note: 'ticket' } })).json();
+    assert.equal(credited.balance, 200_000_000);
+    assert.equal((await ctx.call('/v1/chat/completions', { method: 'POST', key: created.apiKey, body: { model: 'gpt-5.5', messages: [] } })).status, 200);
+
+    const detail = await (await asAdmin(`/admin/accounts/${id}`)).json();
+    assert.equal(detail.apiKeys[0].full, created.apiKey, 'admins can show the key again');
+    const second = await (await asAdmin(`/admin/accounts/${id}/keys`, { method: 'POST', body: { name: 'Laptop' } })).json();
+    assert.ok(isApiKey(second.key));
+    assert.equal((await asAdmin(`/admin/accounts/${id}/keys/${second.id}`, { method: 'DELETE' })).status, 200);
+    assert.equal((await ctx.call('/v1/models', { key: second.key })).status, 401);
+    assert.ok(!JSON.stringify(ctx.db.prepare('SELECT * FROM api_keys').all()).includes(created.apiKey), 'encrypted at rest');
+  });
 });
