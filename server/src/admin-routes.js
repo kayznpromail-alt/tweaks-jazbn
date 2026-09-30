@@ -152,6 +152,16 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
     return c.json({ number, account: summary(account(id)) }, 201);
   });
 
+  // Replaces a lost edgey ID: the old one stops working and the customer is signed out.
+  admin.post('/accounts/:id/number', (c) => {
+    const a = account(Number(c.req.param('id')));
+    if (!a) return c.json({ error: 'not_found' }, 404);
+    const number = newAccessNumber();
+    db.prepare('UPDATE accounts SET number_hash = ? WHERE id = ?').run(hashSecret(cfg.pepper, number), a.id);
+    db.prepare('DELETE FROM sessions WHERE account_id = ?').run(a.id);
+    return c.json({ number, account: summary(account(a.id)) });
+  });
+
   // Admin notes about an account: provider user id, Discord, free note.
   admin.post('/accounts/:id/profile', async (c) => {
     const a = account(Number(c.req.param('id')));

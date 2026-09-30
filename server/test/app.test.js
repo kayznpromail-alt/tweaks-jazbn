@@ -464,4 +464,16 @@ describe('admin profile: provider user id and Discord', () => {
     const me = JSON.stringify(await (await ctx.call('/me', { token })).json());
     assert.ok(!me.includes('4108') && !me.includes('discord') && !me.includes('rakiuss'), me);
   });
+
+  test('a lost edgey ID can be replaced', async () => {
+    const ctx = setup({ adminToken: ADMIN });
+    const created = await (await asAdmin(ctx, '/admin/accounts', { method: 'POST', body: {} })).json();
+    const { token } = await (await ctx.call('/auth/login', { method: 'POST', body: { number: created.number } })).json();
+    const renewed = await (await asAdmin(ctx, `/admin/accounts/${created.account.id}/number`, { method: 'POST' })).json();
+    assert.notEqual(renewed.number, created.number);
+    assert.equal(renewed.account.id, created.account.id);
+    assert.equal((await ctx.call('/auth/login', { method: 'POST', body: { number: created.number } })).status, 401);
+    assert.equal((await ctx.call('/auth/login', { method: 'POST', body: { number: renewed.number } })).status, 200);
+    assert.equal((await ctx.call('/me', { token })).status, 401, 'old session signed out');
+  });
 });

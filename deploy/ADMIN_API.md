@@ -16,6 +16,7 @@ tous les droits. Sans `ADMIN_TOKEN` dans `.env`, toutes ces routes répondent 40
 | POST | `/accounts/:id/profile` | `{ "providerUserId": "…", "discord": "…", "note": "…" }` | compte mis à jour. `null` efface un champ, champ absent = inchangé |
 | GET | `/accounts/:id` | – | compte + `providerIdFull` (user id fournisseur en clair), `cli`, `apiKeys`, `payments`, `usage` (50 derniers) |
 | POST | `/accounts/:id/credit` | `{ "packEur": 65, "note": "paypal" }` ou `{ "tokens": 200000000, "eur": 25, "note": "…" }` | compte mis à jour. `tokens` négatif = correction (jamais sous 0) |
+| POST | `/accounts/:id/number` | – | `{ number, account }` : génère un nouvel edgey ID (l'ancien ne marche plus, le client est déconnecté) |
 | POST | `/accounts/:id/status` | `{ "disabled": true }` | compte mis à jour (bloquer déconnecte aussi le client) |
 | GET | `/payments?limit=50` | – | `{ payments: [...] }` (tous comptes) |
 
