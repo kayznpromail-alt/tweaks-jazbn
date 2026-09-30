@@ -91,6 +91,8 @@ export function openDb(path) {
     ['provider_id_masked', 'TEXT'],
     ['discord', 'TEXT'],
     ['note', 'TEXT'],
+    ['number_sealed', 'TEXT'], // the edgey ID, encrypted, so admins can show it again
+    ['deleted_at', 'INTEGER'], // deleted from the panel; payments are kept for the earnings
   ])
     if (!accountCols.includes(col)) db.exec(`ALTER TABLE accounts ADD COLUMN ${col} ${type}`);
   db.exec('CREATE INDEX IF NOT EXISTS accounts_provider_id ON accounts(provider_id_hash)');

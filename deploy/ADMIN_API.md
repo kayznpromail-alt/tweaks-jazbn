@@ -14,7 +14,8 @@ tous les droits. Sans `ADMIN_TOKEN` dans `.env`, toutes ces routes répondent 40
 | POST | `/accounts` | `{ "providerUserId": "…", "discord": "…", "note": "…", "cliKey": "…" }` (tout optionnel) | `{ number, account }` : crée un compte et génère un nouvel edgey ID (donné seulement ici) |
 | GET | `/search?q=…` | – | `{ accounts: [...] }` : cherche par edgey ID, user id fournisseur (exact), `#id`, Discord ou note (20 max) |
 | POST | `/accounts/:id/profile` | `{ "providerUserId": "…", "discord": "…", "note": "…" }` | compte mis à jour. `null` efface un champ, champ absent = inchangé |
-| GET | `/accounts/:id` | – | compte + `providerIdFull` (user id fournisseur en clair), `cli`, `apiKeys`, `payments`, `usage` (50 derniers) |
+| DELETE | `/accounts/:id` | – | supprime le compte : plus de connexion, clés retirées, user id fournisseur libéré ; les paiements restent pour le partage |
+| GET | `/accounts/:id` | – | compte + `numberFull` (edgey ID, `null` pour les comptes créés avant), `providerIdFull` (user id fournisseur en clair), `cli`, `apiKeys`, `payments`, `usage` (50 derniers) |
 | POST | `/accounts/:id/credit` | `{ "packEur": 65, "note": "paypal" }` ou `{ "tokens": 200000000, "eur": 25, "note": "…" }` | compte mis à jour. `tokens` négatif = correction (jamais sous 0) |
 | POST | `/accounts/:id/number` | – | `{ number, account }` : génère un nouvel edgey ID (l'ancien ne marche plus, le client est déconnecté) |
 | POST | `/accounts/:id/status` | `{ "disabled": true }` | compte mis à jour (bloquer déconnecte aussi le client) |

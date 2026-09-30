@@ -520,4 +520,27 @@ describe('earnings', () => {
     const earned = await (await ctx.call('/admin/earnings', { token: ADMIN })).json();
     assert.equal(earned.allTime.payments, 1);
   });
+
+  test('edgey ID shown again to admins; deleted accounts are gone but their payments stay', async () => {
+    const ADMIN = 'admin-secret-token';
+    const ctx = setup({ adminToken: ADMIN });
+    const asAdmin = (path, opts = {}) => ctx.call(path, { ...opts, token: ADMIN });
+    const created = await (await asAdmin('/admin/accounts', { method: 'POST', body: { providerUserId: 'prov-1', cliKey: 'cli-good-key-123456' } })).json();
+    const id = created.account.id;
+    assert.equal((await (await asAdmin(`/admin/accounts/${id}`)).json()).numberFull, created.number);
+    assert.ok(!JSON.stringify(ctx.db.prepare('SELECT * FROM accounts').all()).includes(created.number), 'encrypted at rest');
+    const renewed = await (await asAdmin(`/admin/accounts/${id}/number`, { method: 'POST' })).json();
+    assert.equal((await (await asAdmin(`/admin/accounts/${id}`)).json()).numberFull, renewed.number);
+
+    await asAdmin(`/admin/accounts/${id}/credit`, { method: 'POST', body: { packEur: 24.99 } });
+    assert.equal((await asAdmin(`/admin/accounts/${id}`, { method: 'DELETE' })).status, 200);
+    assert.equal((await asAdmin(`/admin/accounts/${id}`)).status, 404);
+    assert.equal((await ctx.call('/auth/login', { method: 'POST', body: { number: renewed.number } })).status, 401);
+    assert.equal((await (await asAdmin('/admin/accounts')).json()).accounts.length, 0);
+    assert.equal((await (await asAdmin('/admin/search?q=prov-1')).json()).accounts.length, 0);
+    assert.equal((await (await asAdmin('/admin/stats')).json()).accounts, 0);
+    assert.equal((await (await asAdmin('/admin/earnings')).json()).allTime.payments, 1, 'payments kept');
+    const again = await asAdmin('/admin/accounts', { method: 'POST', body: { providerUserId: 'prov-1' } });
+    assert.equal(again.status, 201, 'provider user id can be reused');
+  });
 });

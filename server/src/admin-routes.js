@@ -4,7 +4,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 
 import { catalog } from './billing.js';
-import { creditPayment, now } from './db.js';
+import { creditPayment, now, tx } from './db.js';
 import { createLimiter } from './ratelimit.js';
 import { earningsFor, sumEarnings } from './earnings.js';
 import { hashSecret, isAccessNumber, maskSecret, newAccessNumber, normalizeNumber, openSecret, sealSecret } from './security.js';
@@ -43,7 +43,9 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
     await next();
   });
 
-  const account = (id) => db.prepare('SELECT * FROM accounts WHERE id = ?').get(id);
+  const account = (id) => db.prepare('SELECT * FROM accounts WHERE id = ? AND deleted_at IS NULL').get(id);
+  const saveNumber = (id, number) =>
+    db.prepare('UPDATE accounts SET number_hash = ?, number_sealed = ? WHERE id = ?').run(hashSecret(cfg.pepper, number), sealSecret(cfg.pepper, number), id);
   const summary = (a) => ({
     id: a.id,
     balance: a.balance,
@@ -89,7 +91,7 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
   admin.get('/stats', (c) => {
     const t = clock();
     const a = db
-      .prepare('SELECT COUNT(*) AS n, IFNULL(SUM(balance), 0) AS owed, IFNULL(SUM(paid_eur), 0) AS paid FROM accounts')
+      .prepare('SELECT COUNT(*) FILTER (WHERE deleted_at IS NULL) AS n, IFNULL(SUM(balance), 0) AS owed, IFNULL(SUM(paid_eur), 0) AS paid FROM accounts')
       .get();
     const u = db
       .prepare('SELECT COUNT(*) AS n, IFNULL(SUM(total_tokens), 0) AS tokens, IFNULL(SUM(charged), 0) AS charged FROM usage WHERE created_at >= ?')
@@ -117,7 +119,7 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
 
   admin.get('/accounts', (c) => {
     const limit = Math.min(200, Number(c.req.query('limit') ?? 50) || 50);
-    const rows = db.prepare('SELECT * FROM accounts ORDER BY id DESC LIMIT ?').all(limit);
+    const rows = db.prepare('SELECT * FROM accounts WHERE deleted_at IS NULL ORDER BY id DESC LIMIT ?').all(limit);
     return c.json({ accounts: rows.map(summary) });
   });
 
@@ -126,7 +128,7 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
     const { number } = await c.req.json().catch(() => ({}));
     const digits = normalizeNumber(number);
     if (!isAccessNumber(digits)) return c.json({ error: 'invalid_number' }, 400);
-    const a = db.prepare('SELECT * FROM accounts WHERE number_hash = ?').get(hashSecret(cfg.pepper, digits));
+    const a = db.prepare('SELECT * FROM accounts WHERE number_hash = ? AND deleted_at IS NULL').get(hashSecret(cfg.pepper, digits));
     return a ? c.json(summary(a)) : c.json({ error: 'not_found' }, 404);
   });
 
@@ -138,6 +140,7 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
       db.prepare('INSERT INTO accounts (number_hash, created_at) VALUES (?, ?)').run(hashSecret(cfg.pepper, number), clock())
         .lastInsertRowid,
     );
+    saveNumber(id, number);
     const profileError = setProfile(id, body);
     if (profileError) {
       db.prepare('DELETE FROM accounts WHERE id = ?').run(id);
@@ -158,9 +161,24 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
     const a = account(Number(c.req.param('id')));
     if (!a) return c.json({ error: 'not_found' }, 404);
     const number = newAccessNumber();
-    db.prepare('UPDATE accounts SET number_hash = ? WHERE id = ?').run(hashSecret(cfg.pepper, number), a.id);
+    saveNumber(a.id, number);
     db.prepare('DELETE FROM sessions WHERE account_id = ?').run(a.id);
     return c.json({ number, account: summary(account(a.id)) });
+  });
+
+  // Deletes an account: the customer can no longer log in, their keys stop working and the
+  // provider user id can be used again. Payments stay, so the earnings history is unchanged.
+  admin.delete('/accounts/:id', (c) => {
+    const a = account(Number(c.req.param('id')));
+    if (!a) return c.json({ error: 'not_found' }, 404);
+    tx(db, () => {
+      db.prepare(
+        `UPDATE accounts SET deleted_at = ?, disabled = 1, number_hash = ?, number_sealed = NULL,
+           provider_id_sealed = NULL, provider_id_hash = NULL, provider_id_masked = NULL WHERE id = ?`,
+      ).run(clock(), `deleted:${a.id}:${clock()}`, a.id);
+      for (const table of ['sessions', 'api_keys', 'cli_keys']) db.prepare(`DELETE FROM ${table} WHERE account_id = ?`).run(a.id);
+    });
+    return c.json({ ok: true });
   });
 
   // Admin notes about an account: provider user id, Discord, free note.
@@ -184,6 +202,7 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
     if (/^#?\d{1,9}$/.test(q)) add(db.prepare('SELECT * FROM accounts WHERE id = ?').all(Number(q.replace('#', ''))));
     const like = `%${q.replace(/[%_]/g, '')}%`;
     add(db.prepare('SELECT * FROM accounts WHERE discord LIKE ? OR note LIKE ? ORDER BY id DESC LIMIT 20').all(like, like));
+    for (const [id, r] of found) if (r.deleted_at) found.delete(id);
     return c.json({ accounts: [...found.values()].slice(0, 20).map(summary) });
   });
 
@@ -208,6 +227,8 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
       ...summary(a),
       // Full provider user id, only here, for logging into the provider's site.
       providerIdFull: a.provider_id_sealed ? openSecret(cfg.pepper, a.provider_id_sealed) : null,
+      // The customer's edgey ID; null for accounts created before it was stored (use New edgey ID).
+      numberFull: a.number_sealed ? openSecret(cfg.pepper, a.number_sealed) : null,
       cli: await cli.status(a.id),
       apiKeys: db
         .prepare('SELECT id, name, masked, enabled, created_at, last_used_at FROM api_keys WHERE account_id = ? ORDER BY id')
