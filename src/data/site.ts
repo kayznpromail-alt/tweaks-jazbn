@@ -7,7 +7,7 @@ export const DISCORD_URL = 'https://discord.gg/edgey';
 
 // Flip to true once the API server (server/) is online at API_ROOT.
 // While false, the site runs as a preview: any 16-digit number opens the dashboard, which shows zeros.
-export const API_ENABLED = false;
+export const API_ENABLED = true;
 
 export type ApiKey = { name: string; masked: string; budget: string; models: string; enabled: boolean };
 export type Provider = { name: string; badge: string; models: { id: string; rate: number }[] };
