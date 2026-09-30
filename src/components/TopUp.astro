@@ -2,6 +2,8 @@
 import Icon from './Icon.astro';
 import { PACKS, COINS, wallet, DISCORD_URL } from '../data/site';
 
+// Pre-selected pack: the second one (the first, smallest pack is only a trial).
+const start = Math.min(1, PACKS.length - 1);
 const best = PACKS.reduce((a, b) => (b.tokens / b.eur > a.tokens / a.eur ? b : a));
 const fmt = (n: number) => n.toLocaleString('en-US');
 const short = (n: number) => (n >= 1e9 ? `${n / 1e9}B` : `${n / 1e6}M`);
@@ -67,11 +69,11 @@ const short = (n: number) => (n >= 1e9 ? `${n / 1e9}B` : `${n / 1e6}M`);
           <div class="packs" role="radiogroup" aria-label="Pack">
             {PACKS.map((p, i) => (
               <label class="pack">
-                <input type="radio" name="pack" value={i} checked={i === 0} data-eur={p.eur} data-tokens={p.tokens} />
+                <input type="radio" name="pack" value={i} checked={i === start} data-eur={p.eur} data-tokens={p.tokens} />
                 {p === best && <span class="flag">Best value</span>}
                 <span class="tok">{short(p.tokens)}</span>
                 <span class="unit">tokens</span>
-                <span class="eur">€{p.eur}</span>
+                <span class="eur">€{p.eur.toFixed(2)}</span>
                 <span class="per">{fmt(Math.round(p.tokens / p.eur / 1e4) / 100)}M / €</span>
               </label>
             ))}
@@ -83,12 +85,12 @@ const short = (n: number) => (n >= 1e9 ? `${n / 1e9}B` : `${n / 1e6}M`);
       <div class="right">
         <section class="box pay">
           <p class="lbl">YOU PAY</p>
-          <p class="amount"><span data-eur-out>€29.00</span><small>EUR</small></p>
+          <p class="amount"><span data-eur-out>€{PACKS[start].eur.toFixed(2)}</span><small>EUR</small></p>
           <p class="hint">Network and processing fees are shown at checkout.</p>
           <dl class="lines">
             <div><dt>Available now</dt><dd data-cur={wallet.balance}>{fmt(wallet.balance)} tokens</dd></div>
-            <div><dt>You receive</dt><dd class="plus" data-recv>+{fmt(PACKS[0].tokens)} tokens</dd></div>
-            <div class="total"><dt>Available after top-up</dt><dd data-after>{fmt(wallet.balance + PACKS[0].tokens)} tokens</dd></div>
+            <div><dt>You receive</dt><dd class="plus" data-recv>+{fmt(PACKS[start].tokens)} tokens</dd></div>
+            <div class="total"><dt>Available after top-up</dt><dd data-after>{fmt(wallet.balance + PACKS[start].tokens)} tokens</dd></div>
           </dl>
           <button type="button" class="btn primary go" data-proceed>
             <span data-proceed-label>Proceed to payment</span> <Icon name="arrowUpRight" size={14} />
@@ -307,6 +309,7 @@ const short = (n: number) => (n >= 1e9 ? `${n / 1e9}B` : `${n / 1e6}M`);
   .coin :global(.chev) { position: absolute; right: 12px; color: var(--muted); pointer-events: none; }
 
   .packs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .pack:last-child:nth-child(odd) { grid-column: span 2; }
   .pack { position: relative; display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 2px 8px; padding: 14px; border-radius: 12px; border: 1px solid var(--border-2); background: var(--bg); cursor: pointer; transition: border-color 0.15s, background 0.15s, transform 0.15s; }
   .pack:hover { border-color: var(--accent-line); transform: translateY(-1px); }
   .pack:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 3px rgb(34 211 238 / 0.08); }

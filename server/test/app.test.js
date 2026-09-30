@@ -343,15 +343,15 @@ describe('admin panel API', () => {
     assert.equal(found.id, created.account.id);
 
     const credited = await (
-      await asAdmin(ctx, `/admin/accounts/${found.id}/credit`, { method: 'POST', body: { packEur: 75, note: 'paypal' } })
+      await asAdmin(ctx, `/admin/accounts/${found.id}/credit`, { method: 'POST', body: { packEur: 64.99, note: 'paypal' } })
     ).json();
     assert.equal(credited.balance, 500_000_000);
-    assert.equal(credited.paidEur, 75);
+    assert.equal(credited.paidEur, 64.99);
     assert.equal((await asAdmin(ctx, `/admin/accounts/${found.id}/credit`, { method: 'POST', body: { tokens: -600_000_000 } })).status, 400);
 
     const stats = await (await asAdmin(ctx, '/admin/stats')).json();
     assert.equal(stats.tokensOwed, 500_000_000);
-    assert.equal(stats.revenueEur, 75);
+    assert.equal(stats.revenueEur, 64.99);
 
     const login = await (await ctx.call('/auth/login', { method: 'POST', body: { number: created.number } })).json();
     await asAdmin(ctx, `/admin/accounts/${found.id}/status`, { method: 'POST', body: { disabled: true } });
