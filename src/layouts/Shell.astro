@@ -169,6 +169,8 @@ const { title, noindex = false } = Astro.props;
   }
   .btn.copied { color: var(--accent); border-color: var(--accent-line); }
   ::selection { background: rgb(34 211 238 / 0.3); }
+  /* Native dropdown lists follow the site theme (otherwise white with faint text). */
+  select option { background-color: var(--surface); color: var(--fg); }
 
   /* Page changes: native cross-page view transitions, no JS needed. */
   @media (prefers-reduced-motion: no-preference) {
