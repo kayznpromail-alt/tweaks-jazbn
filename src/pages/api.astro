@@ -7,29 +7,23 @@ import { DISCORD_URL, keys, MAX_KEYS } from '../data/site';
 
 const install = String.raw`curl.exe -fL https://cli.edgey.shop/install.cmd -o "%TEMP%\edgey-install.cmd" && call "%TEMP%\edgey-install.cmd"`;
 ---
-<Base title="API" crumb="API" heading="Your API keys." sub="Create keys, connect your tools, track your balance.">
+<Base title="API" crumb="API" heading="Your API keys." sub="Your keys, how to connect them, and your balance.">
   <section class="card">
     <div class="card-head pad">
       <div>
         <h2>Your API keys</h2>
-        <p class="card-sub">Create keys for your apps. They all use your edgey balance.</p>
+        <p class="card-sub">Use them in your apps. They all use your edgey balance.</p>
       </div>
       <div class="count">
         <p class="mono"><span data-count>{keys.length}</span> / {MAX_KEYS} keys</p>
       </div>
     </div>
-    <form class="create" data-create>
-      <input placeholder="Key name, e.g. My laptop" aria-label="Key name" maxlength="40" data-key-name />
-      <button class="btn primary"><Icon name="plus" size={14} /> Create API key</button>
-    </form>
+    <a href={DISCORD_URL} class="notice" target="_blank" rel="noopener">
+      <Icon name="key" size={14} />
+      <span>Your keys are issued by edgey with your access. Need another key? Ask us on Discord.</span>
+      <Icon name="arrowUpRight" size={13} />
+    </a>
     <p class="msg" data-key-msg role="status" hidden></p>
-    <div class="newkey" data-newkey hidden>
-      <p class="strong">Your new key. Copy it now, it will not be shown again.</p>
-      <div class="newkey-row">
-        <code data-newkey-value></code>
-        <button type="button" class="btn" data-newkey-copy><Icon name="copy" size={14} /> <span class="label">Copy</span></button>
-      </div>
-    </div>
     <div class="table-wrap">
       <table>
         <thead>
@@ -50,7 +44,7 @@ const install = String.raw`curl.exe -fL https://cli.edgey.shop/install.cmd -o "%
             </tr>
           ))}
           {keys.length === 0 && (
-            <tr><td colspan="4" class="empty">No API keys yet. Create your first key above.</td></tr>
+            <tr><td colspan="4" class="empty">No API key yet. Ask us on Discord to get one.</td></tr>
           )}
         </tbody>
       </table>
@@ -102,7 +96,7 @@ const install = String.raw`curl.exe -fL https://cli.edgey.shop/install.cmd -o "%
   import { fillCli, type Cli } from '../lib/cli';
 
   import { paths } from '../components/icons';
-  import { API_ENABLED, ApiError, api } from '../lib/api';
+  import { API_ENABLED, api } from '../lib/api';
 
   type Key = { id: number; name: string; masked: string; enabled: boolean };
   const tbody = document.querySelector<HTMLElement>('[data-keys]')!;
@@ -123,7 +117,6 @@ const install = String.raw`curl.exe -fL https://cli.edgey.shop/install.cmd -o "%
       <td><div class="actions">
         <button class="icon-btn" data-act="rename" aria-label="Rename">${icon('pencil')}</button>
         <button class="icon-btn" data-act="toggle" aria-label="${k.enabled ? 'Disable' : 'Enable'}">${icon(k.enabled ? 'eyeOff' : 'eye')}</button>
-        <button class="icon-btn" data-act="delete" aria-label="Delete">${icon('x')}</button>
       </div></td>`;
     tr.querySelector('p.strong')!.textContent = k.name;
     tr.querySelector('code')!.textContent = k.masked;
@@ -135,8 +128,6 @@ const install = String.raw`curl.exe -fL https://cli.edgey.shop/install.cmd -o "%
             if (name) await api(`/keys/${k.id}`, { method: 'PATCH', body: { name } });
           } else if (b.dataset.act === 'toggle') {
             await api(`/keys/${k.id}`, { method: 'PATCH', body: { enabled: !k.enabled } });
-          } else if (confirm(`Delete "${k.name}"? Apps using it will stop working.`)) {
-            await api(`/keys/${k.id}`, { method: 'DELETE' });
           }
           await load();
         } catch {
@@ -150,27 +141,9 @@ const install = String.raw`curl.exe -fL https://cli.edgey.shop/install.cmd -o "%
   async function load() {
     const { keys } = await api<{ keys: Key[] }>('/keys');
     tbody.replaceChildren(...keys.map(row));
-    if (!keys.length) tbody.innerHTML = '<tr><td colspan="4" class="empty">No API keys yet. Create your first key above.</td></tr>';
+    if (!keys.length) tbody.innerHTML = '<tr><td colspan="4" class="empty">No API key yet. Ask us on Discord to get one.</td></tr>';
     document.querySelector('[data-count]')!.textContent = String(keys.length);
   }
-
-  const form = document.querySelector<HTMLFormElement>('[data-create]')!;
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!API_ENABLED) return say('Keys can be created once your account is live.');
-    const input = form.querySelector<HTMLInputElement>('[data-key-name]')!;
-    try {
-      const created = await api<Key & { key: string }>('/keys', { method: 'POST', body: { name: input.value } });
-      input.value = '';
-      say('');
-      document.querySelector('[data-newkey-value]')!.textContent = created.key;
-      document.querySelector<HTMLElement>('[data-newkey-copy]')!.dataset.copy = created.key;
-      document.querySelector<HTMLElement>('[data-newkey]')!.hidden = false;
-      await load();
-    } catch (err) {
-      say(err instanceof ApiError && err.code === 'key_limit' ? 'You already have the maximum number of keys.' : 'Could not create the key. Try again.');
-    }
-  });
 
   if (API_ENABLED) load();
 
@@ -223,6 +196,9 @@ const install = String.raw`curl.exe -fL https://cli.edgey.shop/install.cmd -o "%
   .table-wrap :global(.strong) { font-size: 12px; font-weight: 600; }
   .table-wrap :global(.muted) { font-size: 10.5px; color: var(--muted); }
   .table-wrap :global(.actions) { display: flex; gap: 8px; }
+  .notice { display: flex; align-items: center; gap: 10px; margin: 0 24px 20px; padding: 12px 14px; border-radius: 10px; border: 1px dashed var(--border-2); font-size: 12px; color: var(--muted); transition: color 0.15s, border-color 0.15s; }
+  .notice:hover { color: var(--accent); border-color: var(--accent-line); }
+  .notice span { flex: 1; }
   .msg { padding: 0 24px 16px; font-size: 12px; color: var(--accent); }
   .newkey { margin: 0 24px 20px; padding: 14px; border-radius: 10px; border: 1px solid var(--accent-line); background: var(--accent-soft); }
   .newkey .strong { font-size: 12px; font-weight: 600; }

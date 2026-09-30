@@ -94,6 +94,7 @@ function setup(overrides = {}) {
     pepper: 'test-pepper',
     upstreamNames: ['acmeprov'],
     openRegistration: true,
+    customerKeys: true,
     allowedOrigins: ['https://cli.edgey.shop'],
     publicApiUrl: 'https://api.edgey.shop',
     siteUrl: 'https://cli.edgey.shop',
@@ -589,5 +590,13 @@ describe('earnings', () => {
 
     assert.equal((await asAdmin(`/admin/sales/${sale.id}`, { method: 'DELETE' })).status, 200);
     assert.equal((await (await asAdmin('/admin/earnings')).json()).allTime.payments, 1);
+  });
+
+  test('customers cannot create keys unless CUSTOMER_KEYS is on', async () => {
+    const ctx = setup({ customerKeys: false });
+    const { token } = await (await ctx.call('/auth/register', { method: 'POST' })).json();
+    const res = await ctx.call('/keys', { method: 'POST', token, body: { name: 'mine' } });
+    assert.equal(res.status, 403);
+    assert.equal((await res.json()).error, 'key_creation_disabled');
   });
 });

@@ -80,7 +80,7 @@ import TopUp from '../components/TopUp.astro';
         set('[data-cli="status"]', `${me.keyCount} / ${me.maxKeys} keys`);
         document.querySelectorAll<HTMLElement>('[data-cli-state]').forEach((el) => (el.dataset.cliState = me.keyCount ? 'active' : 'none'));
         set('[data-cli="masked"]', me.firstKey ?? 'No API key yet');
-        set('[data-key-sub]', 'Create and manage keys on the API page.');
+        set('[data-key-sub]', 'Your keys and how to connect them are on the API page.');
       }
       // Top-up dialog: tokens currently available.
       const cur = document.querySelector<HTMLElement>('[data-cur]');

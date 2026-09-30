@@ -182,6 +182,7 @@ export function createApp({ cfg, db, clock = now }) {
   site.get('/keys', (c) => c.json({ keys: q.keys.all(c.get('account').id).map(publicKey) }));
 
   site.post('/keys', async (c) => {
+    if (!cfg.customerKeys) return c.json({ error: 'key_creation_disabled' }, 403);
     const a = c.get('account');
     const body = await c.req.json().catch(() => ({}));
     const name = String(body.name ?? '').trim().slice(0, 40) || 'API key';
