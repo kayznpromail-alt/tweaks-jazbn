@@ -599,4 +599,16 @@ describe('earnings', () => {
     assert.equal(res.status, 403);
     assert.equal((await res.json()).error, 'key_creation_disabled');
   });
+
+  test('manual sales can be entered with the cost in euros', async () => {
+    const ADMIN = 'admin-secret-token';
+    const ctx = setup({ adminToken: ADMIN });
+    const sale = await (await ctx.call('/admin/sales', { method: 'POST', token: ADMIN, body: { eur: 100, costEur: 40 } })).json();
+    assert.equal(sale.product, 'Sale');
+    assert.equal(sale.earnings.costEur, 40);
+    assert.equal(sale.earnings.profitEur, 60);
+    assert.deepEqual(sale.earnings.split.map((x) => x.eur), [36, 24]);
+    const e = await (await ctx.call('/admin/earnings', { token: ADMIN })).json();
+    assert.equal(e.allTime.groups.manual.profitEur, 60);
+  });
 });

@@ -335,7 +335,7 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
     const paid = db
       .prepare('SELECT provider, amount_eur AS eur, tokens, updated_at AS at FROM payments WHERE credited = 1 AND amount_eur > 0 AND tokens > 0')
       .all();
-    const sales = db.prepare('SELECT amount_eur AS eur, cost_usd AS costUsd, created_at AS at FROM sales').all();
+    const sales = db.prepare('SELECT amount_eur AS eur, cost_usd AS costUsd, cost_eur AS costEur, created_at AS at FROM sales').all();
     // Site refills (crypto, automatic), token sales recorded on an account, and other manual sales.
     const groups = {
       site: paid.filter((r) => r.provider !== 'manual'),
@@ -357,25 +357,29 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
   });
 
   // Manual sales (tickets): price paid and retail cost, counted in the earnings.
+  const saleEarnings = (r) => earningsFor({ eur: r.amount_eur, costUsd: r.cost_usd, costEur: r.cost_eur }, cfg.earnings);
   admin.get('/sales', (c) => {
-    const rows = db.prepare('SELECT id, product, amount_eur, cost_usd, note, created_at FROM sales ORDER BY id DESC LIMIT 100').all();
-    return c.json({ sales: rows.map((r) => ({ ...r, earnings: earningsFor({ eur: r.amount_eur, costUsd: r.cost_usd }, cfg.earnings) })) });
+    const rows = db.prepare('SELECT id, product, amount_eur, cost_usd, cost_eur, note, created_at FROM sales ORDER BY id DESC LIMIT 100').all();
+    return c.json({ sales: rows.map((r) => ({ ...r, earnings: saleEarnings(r) })) });
   });
 
   admin.post('/sales', async (c) => {
     const body = await c.req.json().catch(() => ({}));
-    const product = String(body.product ?? '').trim().slice(0, 80);
+    const product = String(body.product ?? '').trim().slice(0, 80) || 'Sale';
     const eur = Number(body.eur);
-    const costUsd = Number(body.costUsd);
-    if (!product || !(eur > 0) || eur > 100000 || !(costUsd >= 0) || costUsd > 100000) return c.json({ error: 'invalid_amount' }, 400);
+    // Cost in euros (panel) or in dollars.
+    const inEur = body.costEur != null;
+    const cost = Number(inEur ? body.costEur : body.costUsd);
+    if (!(eur > 0) || eur > 100000 || !(cost >= 0) || cost > 100000) return c.json({ error: 'invalid_amount' }, 400);
+    const round = (n) => Math.round(n * 100) / 100;
     const id = Number(
       db
-        .prepare('INSERT INTO sales (product, amount_eur, cost_usd, note, created_at) VALUES (?, ?, ?, ?, ?)')
-        .run(product, Math.round(eur * 100) / 100, Math.round(costUsd * 100) / 100, String(body.note ?? '').slice(0, 120) || null, clock())
+        .prepare('INSERT INTO sales (product, amount_eur, cost_usd, cost_eur, note, created_at) VALUES (?, ?, ?, ?, ?, ?)')
+        .run(product, round(eur), inEur ? 0 : round(cost), inEur ? round(cost) : null, String(body.note ?? '').slice(0, 120) || null, clock())
         .lastInsertRowid,
     );
-    const r = db.prepare('SELECT id, product, amount_eur, cost_usd, note, created_at FROM sales WHERE id = ?').get(id);
-    return c.json({ ...r, earnings: earningsFor({ eur: r.amount_eur, costUsd: r.cost_usd }, cfg.earnings) }, 201);
+    const r = db.prepare('SELECT id, product, amount_eur, cost_usd, cost_eur, note, created_at FROM sales WHERE id = ?').get(id);
+    return c.json({ ...r, earnings: saleEarnings(r) }, 201);
   });
 
   admin.delete('/sales/:id', (c) => {

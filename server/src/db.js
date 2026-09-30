@@ -106,6 +106,8 @@ export function openDb(path) {
   ])
     if (!accountCols.includes(col)) db.exec(`ALTER TABLE accounts ADD COLUMN ${col} ${type}`);
   db.exec('CREATE INDEX IF NOT EXISTS accounts_provider_id ON accounts(provider_id_hash)');
+  // Manual sales entered with their cost in euros.
+  if (!db.prepare('PRAGMA table_info(sales)').all().some((c) => c.name === 'cost_eur')) db.exec('ALTER TABLE sales ADD COLUMN cost_eur REAL');
   // API keys are also kept encrypted, so admins can show a key again to the customer.
   if (!db.prepare('PRAGMA table_info(api_keys)').all().some((c) => c.name === 'key_sealed'))
     db.exec('ALTER TABLE api_keys ADD COLUMN key_sealed TEXT');
