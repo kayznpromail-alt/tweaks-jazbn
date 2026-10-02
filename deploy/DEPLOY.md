@@ -88,7 +88,7 @@ Toute la base est dans `deploy/data/edgey.db`. Copie-la régulièrement ailleurs
 
 1. Crée le compte NOWPayments, ajoute ton wallet de réception.
 2. Dans *Settings → Payments*, génère une **API key** et un **IPN secret**.
-3. Mets-les dans `.env` (`NOWPAYMENTS_API_KEY`, `NOWPAYMENTS_IPN_SECRET`), puis `docker compose up -d`.
+3. Mets-les dans `.env` (`NOWPAYMENTS_API_KEY`, `NOWPAYMENTS_IPN_SECRET`), puis `docker compose up -d --force-recreate api` (sans `--force-recreate`, le serveur garde les anciennes valeurs).
 4. L'URL de callback est déjà envoyée avec chaque paiement : `https://api.edgey.shop/webhooks/nowpayments`.
 
 Un paiement n'est crédité qu'une fois, seulement quand NOWPayments le marque `finished` avec une signature valide.
