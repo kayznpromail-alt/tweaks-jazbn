@@ -611,4 +611,19 @@ describe('earnings', () => {
     const e = await (await ctx.call('/admin/earnings', { token: ADMIN })).json();
     assert.equal(e.allTime.groups.manual.profitEur, 60);
   });
+
+  test('GET /v1/account shows the edgey balance in the provider format', async () => {
+    const ADMIN = 'admin-secret-token';
+    const ctx = setup({ adminToken: ADMIN });
+    const created = await (await ctx.call('/admin/accounts', { method: 'POST', token: ADMIN, body: { apiKey: true } })).json();
+    let acc = await (await ctx.call('/v1/account', { key: created.apiKey })).json();
+    assert.equal(acc.version, 1);
+    assert.equal(acc.unit, 'weighted_provider_units');
+    assert.equal(acc.status, 'exhausted');
+    await ctx.call(`/admin/accounts/${created.account.id}/credit`, { method: 'POST', token: ADMIN, body: { packEur: 24.99 } });
+    acc = await (await ctx.call('/v1/account', { key: created.apiKey })).json();
+    assert.equal(acc.status, 'active');
+    assert.equal(acc.available, 200_000_000);
+    assert.equal((await ctx.call('/v1/account', { key: 'sk_edgey_nope' })).status, 401);
+  });
 });

@@ -325,6 +325,27 @@ export function createApp({ cfg, db, clock = now }) {
     }),
   );
 
+  // Balance of the key's account, in the same shape as the upstream provider's /v1/account,
+  // so CLIs that read it show the edgey balance.
+  app.get('/v1/account', apiAuth('openai'), (c) => {
+    const row = c.get('key');
+    const used = db.prepare('SELECT IFNULL(SUM(charged), 0) AS n FROM usage WHERE account_id = ?').get(row.account_id).n;
+    const available = Math.max(0, row.balance);
+    return c.json({
+      version: 1,
+      unit: 'weighted_provider_units',
+      updatedAt: new Date(clock()).toISOString(),
+      status: available > 0 ? 'active' : 'exhausted',
+      plan: 'edgey',
+      expiresAt: null,
+      limit: available + used,
+      used,
+      reserved: 0,
+      available,
+      estimatedRequests: null,
+    });
+  });
+
   const proxied = (kind, path, { billed = true } = {}) => [
     apiAuth(kind),
     async (c) => {
