@@ -1,398 +1,409 @@
-import { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
-import {
-  Package, ArrowRight, Store, Link2, BarChart3, Bell, Shield, Zap,
-  Globe, Target, TrendingUp, ChevronDown, ChevronUp, CheckCircle2,
-  Smartphone, Layers, RefreshCw, Eye, ShoppingCart, CreditCard,
-  MonitorSmartphone, Palette, Bot, Send
-} from 'lucide-react'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowRight, Eye, EyeOff, ChevronDown, Check } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import Mascot from '../components/Mascot'
 
-function useInView(threshold = 0.15) {
-  const ref = useRef()
-  const [visible, setVisible] = useState(false)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect() } }, { threshold })
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [threshold])
-  return [ref, visible]
-}
+function CommissionCalc() {
+  const [period, setPeriod] = useState('month')
+  const [revenue, setRevenue] = useState(30000)
+  const [commission, setCommission] = useState(20)
 
-function AnimatedCounter({ end, duration = 2000, suffix = '' }) {
-  const [count, setCount] = useState(0)
-  const [ref, visible] = useInView()
-  useEffect(() => {
-    if (!visible) return
-    let start = 0
-    const step = end / (duration / 16)
-    const timer = setInterval(() => {
-      start += step
-      if (start >= end) { setCount(end); clearInterval(timer) }
-      else setCount(Math.floor(start))
-    }, 16)
-    return () => clearInterval(timer)
-  }, [visible, end, duration])
-  return <span ref={ref}>{count}{suffix}</span>
-}
+  const multiplier = period === 'day' ? 1 : period === 'month' ? 30 : 365
+  const dailyRevenue = period === 'day' ? revenue : period === 'month' ? revenue / 30 : revenue / 365
+  const monthlyRevenue = period === 'month' ? revenue : period === 'day' ? revenue * 30 : revenue / 12
+  const yearlyRevenue = period === 'year' ? revenue : period === 'day' ? revenue * 365 : revenue * 12
 
-function Section({ children, id, className = '' }) {
-  const [ref, visible] = useInView()
+  const lossPerDay = Math.round(dailyRevenue * commission / 100)
+  const lossPerMonth = Math.round(monthlyRevenue * commission / 100)
+  const lossPerYear = Math.round(yearlyRevenue * commission / 100)
+
+  const displayRevenue = revenue.toLocaleString('en-US')
+  const periodLabel = period === 'day' ? 'day' : period === 'month' ? 'month' : 'year'
+
+  const maxRevenue = period === 'day' ? 50000 : period === 'month' ? 1500000 : 18000000
+  const minRevenue = period === 'day' ? 100 : period === 'month' ? 1500 : 18000
+
+  const pctFilled = ((revenue - minRevenue) / (maxRevenue - minRevenue)) * 100
+  const commPctFilled = ((commission - 1) / 29) * 100
+
   return (
-    <section id={id} ref={ref} className={`${className} transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-      {children}
-    </section>
-  )
-}
-
-const features = [
-  { icon: Link2, title: 'Bridge multi-boutiques', desc: 'Connectez vos vitrines à vos boutiques backend. Le bridge redirige automatiquement les commandes vers le bon fournisseur.' },
-  { icon: Target, title: 'Tracking publicitaire', desc: 'Pixels Meta, TikTok, Google Ads et Snapchat installés en un clic. Conversions serveur-side via le Measurement Protocol.' },
-  { icon: BarChart3, title: 'Statistiques en temps réel', desc: 'Chiffre d\'affaires, commandes payées, panier moyen et taux de conversion sur un tableau de bord centralisé.' },
-  { icon: RefreshCw, title: 'Synchronisation catalogues', desc: 'Produits, variantes et stocks synchronisés entre vitrine et backend. Association automatique par titre.' },
-  { icon: Bell, title: 'Alertes Telegram', desc: 'Recevez chaque commande, alerte de stock et récapitulatif quotidien directement sur Telegram.' },
-  { icon: CreditCard, title: 'Versements Shopify', desc: 'Suivez les versements Shopify Payments de tous vos backends, synchronisés automatiquement.' },
-  { icon: Palette, title: 'Thème auto-patché', desc: 'Le script de redirection et les pixels s\'installent tout seuls sur votre thème Shopify. Analyse et diagnostic intégrés.' },
-  { icon: Shield, title: 'Sécurité renforcée', desc: 'Passkeys (Touch ID, Face ID, Windows Hello), tokens chiffrés au repos, données supprimées sous 7 jours.' },
-  { icon: Bot, title: 'Assistant IA', desc: 'Bernie, notre pigeon mascotte, répond à vos questions et analyse vos performances directement dans la console.' },
-]
-
-const steps = [
-  { num: '01', title: 'Ajoutez votre vitrine', desc: 'Connectez la boutique Shopify que voient vos clients. L\'assistant vous guide pour l\'app et les autorisations.' },
-  { num: '02', title: 'Reliez un backend', desc: 'Ajoutez la boutique qui encaisse. URLs et autorisations à copier, le script et les webhooks s\'installent tout seuls.' },
-  { num: '03', title: 'Associez les produits', desc: 'Chaque produit vitrine est relié à un produit d\'offre. Association automatique par titre ou manuelle.' },
-  { num: '04', title: 'Pilotez vos ventes', desc: 'Statistiques, alertes Telegram et tableau de bord centralisé. Tout est synchronisé en temps réel.' },
-]
-
-const faqs = [
-  { q: 'Comment fonctionne le bridge entre les boutiques ?', a: 'Le bridge redirige les sessions visiteur de votre vitrine vers la boutique backend qui encaisse. Les pixels de conversion sont installés sur la page de remerciement du backend. Le visiteur ne voit qu\'une seule boutique.' },
-  { q: 'Quelles plateformes publicitaires sont supportées ?', a: 'Meta (Facebook/Instagram), TikTok, Google Ads (via GA4 et Measurement Protocol), Snapchat et Pinterest. Les conversions sont envoyées côté serveur pour une meilleure précision.' },
-  { q: 'Mes données sont-elles en sécurité ?', a: 'Les tokens Shopify sont chiffrés au repos. Les emails et téléphones clients ne servent qu\'à envoyer les conversions aux régies publicitaires et sont effacés sous 7 jours. Aucune revente de données.' },
-  { q: 'Puis-je connecter plusieurs backends ?', a: 'Oui. Le système bascule automatiquement vers un autre backend disponible si le premier est indisponible ou a atteint son plafond du jour.' },
-  { q: 'Comment fonctionnent les alertes Telegram ?', a: 'Un lien privé unique connecte votre compte Telegram à votre espace Noship It. Vous recevez chaque commande, alerte de stock et un récapitulatif quotidien.' },
-  { q: 'Quel est le modèle de tarification ?', a: 'Zéro pourcentage sur votre chiffre d\'affaires. Un paiement unique, un accès à vie. Pas d\'abonnement mensuel, pas de commission cachée.' },
-]
-
-function FAQItem({ q, a }) {
-  const [open, setOpen] = useState(false)
-  return (
-    <div className="border border-surface-800/50 rounded-xl overflow-hidden card-hover">
-      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between p-5 text-left bg-transparent border-none cursor-pointer text-white">
-        <span className="font-medium text-sm sm:text-base pr-4">{q}</span>
-        {open ? <ChevronUp className="w-5 h-5 text-brand-400 shrink-0" /> : <ChevronDown className="w-5 h-5 text-surface-500 shrink-0" />}
-      </button>
-      {open && (
-        <div className="px-5 pb-5 text-sm text-surface-400 leading-relaxed animate-fade-in-up" style={{ animationDuration: '0.3s' }}>
-          {a}
+    <div className="terminal-window">
+      <div className="terminal-titlebar">
+        <div className="terminal-dot bg-[#ff5f57]" />
+        <div className="terminal-dot bg-[#febc2e]" />
+        <div className="terminal-dot bg-[#28c840]" />
+        <span className="flex-1 text-center font-mono text-xs text-[#5a7a5c]">commission.calc</span>
+        <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 text-[#5a7a5c]" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/></svg>
+      </div>
+      <div className="p-6 space-y-6">
+        {/* Revenue */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <span className="label">YOUR REVENUE</span>
+            <div className="flex gap-1">
+              {['day', 'month', 'year'].map(p => (
+                <button key={p} onClick={() => { setPeriod(p); setRevenue(p === 'day' ? 1000 : p === 'month' ? 30000 : 360000) }}
+                  className={`text-xs px-3 py-1 rounded-md cursor-pointer border transition-colors ${period === p ? 'bg-[#1a2a1c] border-[#2a3d2c] text-white' : 'bg-transparent border-[#1a2a1c] text-[#5a7a5c] hover:text-[#c8d6ca]'}`}>
+                  Per {p}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-baseline gap-2 mb-4">
+            <span className="text-3xl font-bold text-white">{displayRevenue}</span>
+            <span className="text-lg text-[#5a7a5c]">€</span>
+            <span className="text-sm text-[#5a7a5c]">/ {periodLabel}</span>
+          </div>
+          <div className="relative">
+            <input type="range" min={minRevenue} max={maxRevenue} value={revenue} onChange={e => setRevenue(Number(e.target.value))}
+              className="green-slider w-full" style={{ background: `linear-gradient(to right, #a3e635 0%, #a3e635 ${pctFilled}%, #1a2a1c ${pctFilled}%, #1a2a1c 100%)` }} />
+            <div className="flex justify-between mt-1">
+              <span className="font-mono text-[10px] text-[#3a4d3c]">€{minRevenue.toLocaleString('en-US')}</span>
+              <span className="font-mono text-[10px] text-[#3a4d3c]">€{maxRevenue.toLocaleString('en-US')}</span>
+            </div>
+          </div>
         </div>
-      )}
+
+        {/* Commission */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <span className="label">TYPICAL PLATFORM COMMISSION</span>
+            <span className="text-lg font-bold text-white">{commission} <span className="text-[#5a7a5c]">%</span></span>
+          </div>
+          <div className="relative">
+            <input type="range" min={1} max={30} value={commission} onChange={e => setCommission(Number(e.target.value))}
+              className="red-slider w-full" style={{ background: `linear-gradient(to right, #ef4444 0%, #ef4444 ${commPctFilled}%, #1a2a1c ${commPctFilled}%, #1a2a1c 100%)` }} />
+            <div className="flex justify-between mt-1">
+              <span className="font-mono text-[10px] text-[#3a4d3c]">1 %</span>
+              <span className="font-mono text-[10px] text-[#3a4d3c]">30 %</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Loss calculation */}
+        <div className="bg-[#0a0e0b] border border-[#1a2a1c] rounded-lg p-5">
+          <span className="label block mb-2">WHAT YOU WOULD LOSE ELSEWHERE</span>
+          <div className="text-4xl font-bold text-[#ef4444] mb-1">-€{lossPerMonth.toLocaleString('en-US')}</div>
+          <p className="text-xs text-[#5a7a5c]">per month · with Noship It: <span className="text-[#a3e635] font-semibold">€0 commission</span></p>
+        </div>
+
+        {/* Comparison bars */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-[10px] text-[#5a7a5c] w-24 text-right shrink-0">Platform at {commission}%</span>
+            <div className="flex-1 h-3 rounded-full overflow-hidden bg-[#1a2a1c]">
+              <div className="h-full rounded-full" style={{ width: '60%', background: 'repeating-linear-gradient(90deg, #a3e635, #a3e635 4px, #ef4444 4px, #ef4444 8px)' }} />
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-[10px] text-[#5a7a5c] w-24 text-right shrink-0">Noship It</span>
+            <div className="flex-1 h-3 rounded-full overflow-hidden bg-[#1a2a1c]">
+              <div className="h-full rounded-full bg-[#a3e635]" style={{ width: '100%' }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Infinity note */}
+        <div className="flex items-center gap-3 bg-[#111a13] border border-[#1a2a1c] rounded-lg px-4 py-3">
+          <span className="text-lg text-[#a3e635]">&#8734;</span>
+          <span className="text-xs text-[#c8d6ca]">Noship It: €800 once, paid back in <strong className="text-white">less than a day</strong>.</span>
+        </div>
+
+        {/* Per day/month/year */}
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { label: 'PER DAY', value: `-€${lossPerDay.toLocaleString('en-US')}` },
+            { label: 'PER MONTH', value: `-€${lossPerMonth.toLocaleString('en-US')}` },
+            { label: 'PER YEAR', value: `-€${lossPerYear.toLocaleString('en-US')}` },
+          ].map((item, i) => (
+            <div key={i} className="bg-[#0a0e0b] border border-[#1a2a1c] rounded-lg p-3">
+              <span className="label block mb-1">{item.label}</span>
+              <span className="text-sm font-bold text-white">{item.value}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between text-[10px] font-mono text-[#3a4d3c] pt-2 border-t border-[#1a2a1c]">
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#a3e635]" />
+            <span>0% · €800 ONCE · FOR LIFE</span>
+          </div>
+          <span>1 YEAR = 12 MONTHS = 365 D</span>
+        </div>
+      </div>
     </div>
   )
 }
 
 export default function Landing() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPw, setShowPw] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+
+  const handleLogin = (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setTimeout(() => navigate('/dashboard'), 1200)
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0e0b]">
       <Navbar />
 
-      {/* Hero */}
-      <div className="hero-glow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 sm:pt-36 pb-20 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20 mb-8">
-            <span className="w-2 h-2 rounded-full bg-brand-400 animate-pulse" />
-            <span className="text-xs text-brand-400 font-medium">Votre réseau de boutiques</span>
-          </div>
+      {/* Hero Section — split layout */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start pt-8">
+          {/* Left: Hero content */}
+          <div className="pt-4">
+            <div className="font-mono text-[10px] tracking-[2px] uppercase text-[#5a7a5c] mb-6">
+              SHOPIFY / NOBAN · REBILL · TRACKING
+            </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white tracking-tight leading-tight mb-6">
-            <span className="gradient-text">Connecter.</span>{' '}
-            <span className="text-white">Mesurer.</span>{' '}
-            <span className="gradient-text">Piloter.</span>
-          </h1>
-
-          <p className="text-lg sm:text-xl text-surface-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Centralisez vos boutiques Shopify, synchronisez vos catalogues, suivez vos conversions publicitaires et pilotez votre chiffre d'affaires depuis une seule console.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-            <Link to="/signup" className="group flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white px-8 py-3.5 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-brand-500/25 no-underline">
-              Demander l'accès
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-            <Link to="/login" className="flex items-center gap-2 text-surface-400 hover:text-white px-6 py-3.5 rounded-xl text-sm font-medium border border-surface-800 hover:border-surface-600 transition-all no-underline">
-              Se connecter
-            </Link>
-          </div>
-
-          {/* Mascot */}
-          <div className="animate-float mx-auto w-fit">
-            <Mascot size={180} />
-          </div>
-          <p className="text-xs text-surface-600 mt-4">Bernie se repose sur son colis, casque sur les oreilles et pantoufles aux pieds.</p>
-
-          {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mt-16 max-w-3xl mx-auto">
-            {[
-              { value: <AnimatedCounter end={0} suffix=" %" />, label: 'Commission' },
-              { value: <AnimatedCounter end={99} suffix=",9 %" />, label: 'Disponibilité' },
-              { value: <AnimatedCounter end={5} suffix=" min" />, label: 'Installation' },
-              { value: <AnimatedCounter end={24} suffix="/7" />, label: 'Synchronisation' },
-            ].map((s, i) => (
-              <div key={i} className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-white">{s.value}</div>
-                <div className="text-xs text-surface-500 mt-1">{s.label}</div>
+            <div className="flex items-start gap-6 mb-6">
+              <div className="flex-1">
+                <h1 className="text-5xl sm:text-6xl font-black text-white leading-[1.1] mb-1">
+                  Noban.
+                </h1>
+                <h1 className="text-5xl sm:text-6xl font-black text-white leading-[1.1] mb-1">
+                  Anti-link.
+                </h1>
+                <h1 className="text-5xl sm:text-6xl font-black text-[#a3e635] leading-[1.1]">
+                  Rebill.
+                </h1>
               </div>
-            ))}
+              <div className="hidden sm:block shrink-0 animate-float">
+                <Mascot size={140} />
+              </div>
+            </div>
+
+            <p className="text-sm text-[#8a9a8c] leading-relaxed mb-6 max-w-md">
+              Your stores stay online, your links hold and your subscriptions rebill. And on the ad side, no conversion gets lost: ad tracking runs non-stop.
+            </p>
+
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#111a13] border border-[#1a2a1c] mb-10">
+              <span className="flex items-center gap-1">
+                <span className="w-5 h-5 rounded-full bg-[#a3e635] flex items-center justify-center text-[#0a0e0b] text-[10px] font-bold">0</span>
+                <span className="text-[10px] font-bold text-[#a3e635]">%</span>
+              </span>
+              <span className="text-xs text-[#c8d6ca]">commission · €800 once, lifetime service</span>
+              <ChevronDown className="w-3.5 h-3.5 text-[#a3e635]" />
+            </div>
+
+            {/* Feature cards 2x2 */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <div className="card">
+                <div className="w-8 h-8 rounded-lg bg-[#0a0e0b] border border-[#1a2a1c] flex items-center justify-center mb-3">
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#5a7a5c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>
+                </div>
+                <h3 className="text-sm font-semibold text-white mb-1">Noban</h3>
+                <p className="text-xs text-[#5a7a5c] leading-relaxed">Stores protected against bans, no surprise suspensions.</p>
+              </div>
+              <div className="card">
+                <div className="w-8 h-8 rounded-lg bg-[#0a0e0b] border border-[#1a2a1c] flex items-center justify-center mb-3">
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#5a7a5c]" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                </div>
+                <h3 className="text-sm font-semibold text-white mb-1">Anti-link</h3>
+                <p className="text-xs text-[#5a7a5c] leading-relaxed">Your redirect links hold, without being cut or flagged.</p>
+              </div>
+              <div className="card">
+                <div className="w-8 h-8 rounded-lg bg-[#0a0e0b] border border-[#1a2a1c] flex items-center justify-center mb-3">
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#5a7a5c]" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                </div>
+                <h3 className="text-sm font-semibold text-white mb-1">Rebill</h3>
+                <p className="text-xs text-[#5a7a5c] leading-relaxed">Every subscription renewal is tied to its original sale.</p>
+              </div>
+              <div className="card">
+                <div className="w-8 h-8 rounded-lg bg-[#0a0e0b] border border-[#1a2a1c] flex items-center justify-center mb-3">
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#a3e635]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <h3 className="text-sm font-semibold text-white mb-1">Ads tracking</h3>
+                <p className="text-xs text-[#5a7a5c] leading-relaxed">Conversions tracked server-side and sent to your ad networks, one network at a time.</p>
+                <div className="flex items-center gap-2 mt-3">
+                  <span className="text-lg">&#8734;</span>
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#5a7a5c]" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                  <svg viewBox="0 0 448 512" className="w-4 h-4 text-[#5a7a5c]" fill="currentColor"><path d="M448 209.91a210.06 210.06 0 01-122.77-39.25V349.38A162.55 162.55 0 11185 188.31V278.2a74.62 74.62 0 1052.23 71.18V0l88 0a121.18 121.18 0 0034.29 79.57A115.79 115.79 0 00448 116.89z"/></svg>
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#5a7a5c]" fill="currentColor"><path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 01-1.93.07 4.28 4.28 0 004 2.98 8.521 8.521 0 01-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/></svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Works with */}
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-[10px] tracking-[2px] uppercase text-[#3a4d3c]">WORKS WITH</span>
+              <div className="flex items-center gap-2">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 text-[#65a30d]" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                <svg viewBox="0 0 24 24" className="w-5 h-5 text-[#65a30d]" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                <svg viewBox="0 0 24 24" className="w-5 h-5 text-[#28a8ea]" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Terminal login */}
+          <div>
+            <div className="terminal-window">
+              <div className="terminal-titlebar">
+                <div className="terminal-dot bg-[#ff5f57]" />
+                <div className="terminal-dot bg-[#febc2e]" />
+                <div className="terminal-dot bg-[#28c840]" />
+                <span className="flex-1 text-center font-mono text-xs text-[#5a7a5c]">noship.it — access</span>
+                <svg viewBox="0 0 24 24" className="w-4 h-4 text-[#5a7a5c]" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              </div>
+              <div className="p-6">
+                <div className="font-mono text-sm text-[#a3e635] mb-4">
+                  <span className="font-bold text-white">visitor@noship</span>:<span className="text-[#a3e635]">~$</span> open a session
+                </div>
+                <div className="font-mono text-xs text-[#5a7a5c] mb-6">
+                  ↳ Private space · authentication required
+                </div>
+
+                <h2 className="text-2xl font-bold text-white mb-1">Enter the system.</h2>
+                <p className="text-sm text-[#5a7a5c] mb-6">Your stores are waiting on the other side.</p>
+
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div>
+                    <label className="block text-xs text-[#5a7a5c] mb-1.5 font-medium">Email address</label>
+                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="you@company.com"
+                      className="input-field" />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-[#5a7a5c] mb-1.5 font-medium">Password</label>
+                    <div className="relative">
+                      <input type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required placeholder="Your password"
+                        className="input-field pr-10" />
+                      <button type="button" onClick={() => setShowPw(!showPw)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#5a7a5c] hover:text-[#c8d6ca] bg-transparent border-none cursor-pointer">
+                        {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <button type="submit" disabled={loading}
+                    className="w-full flex items-center justify-between bg-[#a3e635] hover:bg-[#bef264] disabled:bg-[#a3e635]/50 text-[#0a0e0b] py-3 px-5 rounded-lg text-sm font-semibold transition-all cursor-pointer border-none">
+                    {loading ? (
+                      <>
+                        <span>Opening session...</span>
+                        <div className="w-4 h-4 border-2 border-[#0a0e0b]/30 border-t-[#0a0e0b] rounded-full animate-spin" />
+                      </>
+                    ) : (
+                      <>
+                        <span>Log in</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                <div className="flex items-center gap-2 mt-5 font-mono text-xs text-[#3a4d3c]">
+                  <span className="animate-blink">›</span>
+                  <span>waiting for credentials</span>
+                  <span className="animate-blink">█</span>
+                </div>
+
+                <div className="mt-6 pt-5 border-t border-[#1a2a1c]">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#a3e635]" />
+                      <span className="label">ACCESS ON REQUEST</span>
+                    </div>
+                    <span className="font-mono text-[10px] text-[#3a4d3c]">NS / 01</span>
+                  </div>
+                  <div className="bg-[#0a0e0b] border border-[#1a2a1c] rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <svg viewBox="0 0 24 24" className="w-8 h-8 text-[#28a8ea] shrink-0" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+                      <div>
+                        <p className="text-sm text-white font-medium">A question before requesting access?</p>
+                        <p className="text-xs text-[#5a7a5c]">Write to us on Telegram · @noshipit_bot</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-center text-xs text-[#5a7a5c] mt-5">
+                  No account yet?{' '}
+                  <Link to="/signup" className="text-[#a3e635] hover:text-[#bef264] no-underline font-medium">Open an account</Link>
+                  {' · '}
+                  <Link to="/signup" className="text-[#a3e635] hover:text-[#bef264] no-underline font-medium">Track my request</Link>
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Features */}
-      <Section id="features" className="py-20 sm:py-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-              Un œil sur vos boutiques.{' '}
-              <span className="gradient-text">Un pas d'avance.</span>
+      {/* Divider */}
+      <div className="border-t border-[#1a2a1c]" />
+
+      {/* Pricing / Commission section — split layout */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+          {/* Left: Zero commission */}
+          <div className="pt-4">
+            <div className="label mb-6">PRICING / COMMISSION</div>
+
+            <div className="mb-6">
+              <span className="text-[120px] sm:text-[160px] font-black text-[#a3e635] leading-none">0</span>
+              <span className="text-4xl sm:text-5xl font-bold text-[#a3e635] relative -top-16 ml-1">%</span>
+            </div>
+
+            <h2 className="text-3xl sm:text-4xl font-bold text-white leading-tight mb-4">
+              Zero commission. <span className="text-[#5a7a5c]">On every sale.</span>
             </h2>
-            <p className="text-surface-400 max-w-xl mx-auto">
-              Toutes les fonctionnalités pour gérer votre réseau de boutiques Shopify depuis un seul endroit.
+
+            <p className="text-sm text-[#5a7a5c] leading-relaxed mb-6 max-w-md">
+              Most platforms take a cut of your revenue, and the bill grows as you do.
+              At Noship It, your sales stay entirely yours.
             </p>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map((f, i) => (
-              <div key={i} className="p-6 rounded-2xl border border-surface-800/50 bg-surface-950/50 card-hover group">
-                <div className="w-11 h-11 rounded-xl bg-brand-500/10 flex items-center justify-center mb-4 group-hover:bg-brand-500/20 transition-colors">
-                  <f.icon className="w-5 h-5 text-brand-400" />
-                </div>
-                <h3 className="text-white font-semibold mb-2">{f.title}</h3>
-                <p className="text-sm text-surface-400 leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Section>
-
-      {/* Dashboard Preview */}
-      <Section className="py-20 sm:py-28 bg-surface-950/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-              Votre tableau de bord, <span className="gradient-text">en un coup d'œil</span>
-            </h2>
-          </div>
-          <div className="rounded-2xl border border-surface-800/50 bg-surface-900/50 p-4 sm:p-8 max-w-5xl mx-auto">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+            <div className="space-y-3 mb-8">
               {[
-                { label: 'CA du jour', value: '4 832 €', change: '+18%', icon: TrendingUp },
-                { label: 'Commandes payées', value: '47', change: '+12%', icon: ShoppingCart },
-                { label: 'Panier moyen', value: '102 €', change: '+5%', icon: CreditCard },
-                { label: 'Taux conversion', value: '3,2%', change: '+0,4%', icon: Target },
-              ].map((kpi, i) => (
-                <div key={i} className="p-4 rounded-xl bg-surface-800/50 border border-surface-700/30">
-                  <div className="flex items-center gap-2 mb-2">
-                    <kpi.icon className="w-4 h-4 text-brand-400" />
-                    <span className="text-xs text-surface-500">{kpi.label}</span>
-                  </div>
-                  <div className="text-xl font-bold text-white">{kpi.value}</div>
-                  <span className="text-xs text-brand-400">{kpi.change}</span>
+                'No percentage taken from your revenue',
+                'No hidden per-order fees',
+                'The more you sell, the wider the gap in your favour',
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <Check className="w-4 h-4 text-[#a3e635] shrink-0" />
+                  <span className="text-sm text-[#c8d6ca]">{item}</span>
                 </div>
               ))}
             </div>
-            <div className="h-48 rounded-xl bg-surface-800/30 border border-surface-700/20 flex items-center justify-center">
-              <div className="flex items-end gap-1.5 h-32">
-                {[35, 52, 45, 68, 55, 72, 48, 85, 62, 78, 90, 75, 95, 82, 70, 88, 65, 92, 58, 80].map((h, i) => (
-                  <div key={i} className="w-3 sm:w-4 rounded-t bg-brand-500/60 hover:bg-brand-400 transition-colors" style={{ height: `${h}%` }} />
-                ))}
-              </div>
-            </div>
-            <div className="flex items-center justify-between mt-4 text-xs text-surface-600">
-              <span>Dernière mise à jour : il y a 2 min</span>
-              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-brand-400" /> Synchronisé</span>
-            </div>
-          </div>
-        </div>
-      </Section>
 
-      {/* How it works */}
-      <Section id="how-it-works" className="py-20 sm:py-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-              <span className="gradient-text">4 étapes</span> pour démarrer
-            </h2>
-            <p className="text-surface-400 max-w-xl mx-auto">
-              De la connexion à la première vente, tout est guidé.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {steps.map((s, i) => (
-              <div key={i} className="relative p-6 rounded-2xl border border-surface-800/50 bg-surface-950/50 card-hover">
-                <div className="text-5xl font-black text-brand-500/15 absolute top-4 right-4">{s.num}</div>
-                <div className="w-10 h-10 rounded-full bg-brand-500/20 flex items-center justify-center mb-4">
-                  <span className="text-sm font-bold text-brand-400">{s.num}</span>
+            {/* €800 card */}
+            <div className="bg-[#111a13] border border-[#1a2a1c] rounded-xl p-5 max-w-sm">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-[#a3e635]/10 flex items-center justify-center shrink-0">
+                  <span className="text-xl text-[#a3e635]">&#8734;</span>
                 </div>
-                <h3 className="text-white font-semibold mb-2">{s.title}</h3>
-                <p className="text-sm text-surface-400 leading-relaxed">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Section>
-
-      {/* Integrations */}
-      <Section className="py-20 sm:py-28 bg-surface-950/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Intégrations <span className="gradient-text">disponibles</span>
-          </h2>
-          <p className="text-surface-400 max-w-xl mx-auto mb-12">
-            Connectez vos régies publicitaires et vos outils préférés.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4 max-w-3xl mx-auto">
-            {['Shopify', 'Meta Ads', 'TikTok Ads', 'Google Ads', 'GA4', 'Snapchat', 'Pinterest', 'Telegram'].map((name, i) => (
-              <div key={i} className="flex items-center gap-2 px-5 py-3 rounded-xl border border-surface-800/50 bg-surface-900/50 card-hover">
-                <Globe className="w-4 h-4 text-brand-400" />
-                <span className="text-sm text-white font-medium">{name}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Section>
-
-      {/* Pricing */}
-      <Section id="pricing" className="py-20 sm:py-28">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-              <span className="gradient-text">0 %</span> de commission
-            </h2>
-            <p className="text-surface-400 max-w-xl mx-auto">
-              Aucun pourcentage sur votre chiffre d'affaires. Un paiement unique, un accès à vie.
-            </p>
-          </div>
-
-          <div className="max-w-lg mx-auto">
-            <div className="relative p-8 rounded-2xl border-2 border-brand-500/30 bg-surface-950/80 animate-pulse-glow">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-brand-500 text-xs font-bold text-white">
-                À VIE
-              </div>
-              <div className="text-center mb-8">
-                <div className="text-5xl font-black text-white mb-2">0 %</div>
-                <div className="text-surface-400">de commission sur vos ventes</div>
-                <div className="mt-4 text-sm text-surface-500">Un paiement unique · Accès à vie</div>
-              </div>
-              <div className="space-y-3 mb-8">
-                {[
-                  'Boutiques illimitées (vitrine + backend)',
-                  'Bridge multi-boutiques avec failover',
-                  'Pixels Meta, TikTok, Google, Snapchat',
-                  'Conversions server-side (CAPI)',
-                  'Statistiques et tableau de bord',
-                  'Alertes et récap Telegram',
-                  'Synchronisation catalogues',
-                  'Versements Shopify Payments',
-                  'Assistant IA (Bernie)',
-                  'Passkeys et sécurité renforcée',
-                ].map((f, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <CheckCircle2 className="w-4 h-4 text-brand-400 shrink-0" />
-                    <span className="text-sm text-surface-300">{f}</span>
+                <div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-bold text-white">€800</span>
+                    <span className="label">ONE TIME</span>
                   </div>
-                ))}
+                  <p className="text-xs text-[#5a7a5c] mt-1">Lifetime service. No subscription, no commission: you pay once, that's it.</p>
+                </div>
               </div>
-              <Link to="/signup" className="block w-full text-center bg-brand-500 hover:bg-brand-600 text-white py-3.5 rounded-xl text-sm font-semibold transition-colors no-underline">
-                Demander l'accès
-              </Link>
             </div>
           </div>
-        </div>
-      </Section>
 
-      {/* FAQ */}
-      <Section id="faq" className="py-20 sm:py-28 bg-surface-950/50">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-              Questions <span className="gradient-text">fréquentes</span>
-            </h2>
-          </div>
-          <div className="space-y-3">
-            {faqs.map((faq, i) => <FAQItem key={i} {...faq} />)}
+          {/* Right: Commission calculator */}
+          <div>
+            <CommissionCalc />
           </div>
         </div>
-      </Section>
-
-      {/* CTA */}
-      <Section className="py-20 sm:py-28">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="p-10 sm:p-16 rounded-3xl bg-gradient-to-br from-brand-950/80 to-surface-950/80 border border-brand-800/30">
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-              Prêt à piloter votre réseau ?
-            </h2>
-            <p className="text-surface-400 max-w-lg mx-auto mb-8">
-              Demandez l'accès et commencez à connecter vos boutiques en quelques minutes.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/signup" className="group flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white px-8 py-3.5 rounded-xl text-sm font-semibold transition-all shadow-lg shadow-brand-500/25 no-underline">
-                Commencer maintenant
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <a href="#features" className="text-sm text-surface-400 hover:text-white transition-colors no-underline">
-                En savoir plus
-              </a>
-            </div>
-          </div>
-        </div>
-      </Section>
+      </div>
 
       {/* Footer */}
-      <footer className="border-t border-surface-800/50 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-8 mb-10">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-brand-500/20 flex items-center justify-center">
-                  <Package className="w-4 h-4 text-brand-400" />
-                </div>
-                <span className="font-bold text-white">Noship It</span>
-              </div>
-              <p className="text-xs text-surface-500 leading-relaxed">
-                Votre réseau de boutiques Shopify, centralisé et piloté depuis une seule console.
-              </p>
-            </div>
-            <div>
-              <h4 className="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-3">Produit</h4>
-              <div className="space-y-2">
-                <a href="#features" className="block text-sm text-surface-500 hover:text-brand-400 no-underline transition-colors">Fonctionnalités</a>
-                <a href="#pricing" className="block text-sm text-surface-500 hover:text-brand-400 no-underline transition-colors">Tarifs</a>
-                <a href="#faq" className="block text-sm text-surface-500 hover:text-brand-400 no-underline transition-colors">FAQ</a>
-              </div>
-            </div>
-            <div>
-              <h4 className="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-3">Ressources</h4>
-              <div className="space-y-2">
-                <a href="#" className="block text-sm text-surface-500 hover:text-brand-400 no-underline transition-colors">Documentation</a>
-                <a href="#" className="block text-sm text-surface-500 hover:text-brand-400 no-underline transition-colors">Support</a>
-                <a href="#" className="block text-sm text-surface-500 hover:text-brand-400 no-underline transition-colors">Telegram</a>
-              </div>
-            </div>
-            <div>
-              <h4 className="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-3">Légal</h4>
-              <div className="space-y-2">
-                <a href="#" className="block text-sm text-surface-500 hover:text-brand-400 no-underline transition-colors">Conditions d'utilisation</a>
-                <a href="#" className="block text-sm text-surface-500 hover:text-brand-400 no-underline transition-colors">Politique de confidentialité</a>
-                <a href="#" className="block text-sm text-surface-500 hover:text-brand-400 no-underline transition-colors">Mentions légales</a>
-              </div>
-            </div>
+      <footer className="border-t border-[#1a2a1c] py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="font-mono text-[10px] tracking-[1px] uppercase text-[#3a4d3c]">
+            NOSHIP IT / NOBAN · ANTI-LINK · REBILL · AD TRACKING
           </div>
-          <div className="border-t border-surface-800/50 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <span className="text-xs text-surface-600">© {new Date().getFullYear()} Noship It. Tous droits réservés.</span>
-            <span className="text-xs text-surface-600">Connecter. Mesurer. Piloter.</span>
+          <div className="flex items-center gap-4">
+            <a href="#" className="text-xs text-[#5a7a5c] hover:text-[#c8d6ca] no-underline transition-colors">Privacy</a>
+            <a href="#" className="text-xs text-[#5a7a5c] hover:text-[#c8d6ca] no-underline transition-colors">Terms</a>
           </div>
         </div>
       </footer>
