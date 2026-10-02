@@ -2,21 +2,76 @@
 import Base from '../layouts/Base.astro';
 import Icon from '../components/Icon.astro';
 import CodeBox from '../components/CodeBox.astro';
+import CodeRow from '../components/CodeRow.astro';
 import GuidePanel from '../components/GuidePanel.astro';
-import { DISCORD_URL } from '../data/site';
+import ShellSnippet from '../components/ShellSnippet.astro';
+import { API_BASE, API_ROOT, DISCORD_URL } from '../data/site';
+
+const KEY = 'YOUR_EDGEY_API_KEY';
+const apiHost = new URL(API_ROOT).host;
 
 // Served from public/install.cmd on the site.
 const install = String.raw`curl.exe -fL https://cli.edgey.shop/install.cmd -o "%TEMP%\edgey-install.cmd" && call "%TEMP%\edgey-install.cmd"`;
 
 const guides = [
   { id: 'cli', icon: 'terminal', title: 'edgeyCLI', desc: 'Terminal workspace for all supported models.', tag: 'Recommended' },
+  { id: 'claude', icon: 'bot', title: 'Claude Code', desc: 'Use Claude through the standard Anthropic Messages API.' },
+  { id: 'codex', icon: 'code', title: 'Codex & OpenAI', desc: 'Use the standard Chat Completions route.' },
 ] as const;
+const extras = [
+  { id: 'script', icon: 'code', title: 'Full API setup script', desc: 'Configure both standard clients with one script.' },
+  { id: 'routes', icon: 'sliders', title: 'Models and API routes', desc: 'Discover models and API endpoints.' },
+] as const;
+
+const claudeCode = [
+  { id: 'ps', label: 'PowerShell', code: `$env:ANTHROPIC_BASE_URL = "${API_ROOT}"\n$env:ANTHROPIC_API_KEY = "${KEY}"` },
+  { id: 'sh', label: 'macOS / Linux', code: `export ANTHROPIC_BASE_URL="${API_ROOT}"\nexport ANTHROPIC_API_KEY="${KEY}"` },
+];
+const codex = [
+  { id: 'ps', label: 'PowerShell', code: `$env:OPENAI_BASE_URL = "${API_BASE}"\n$env:OPENAI_API_KEY = "${KEY}"` },
+  { id: 'sh', label: 'macOS / Linux', code: `export OPENAI_BASE_URL="${API_BASE}"\nexport OPENAI_API_KEY="${KEY}"` },
+];
+const fullScript = [
+  {
+    id: 'ps',
+    label: 'PowerShell',
+    code: [
+      `$env:EDGEY_API_KEY = "${KEY}"`,
+      `$env:ANTHROPIC_BASE_URL = "${API_ROOT}"`,
+      `$env:ANTHROPIC_API_KEY = $env:EDGEY_API_KEY`,
+      `$env:OPENAI_BASE_URL = "${API_BASE}"`,
+      `$env:OPENAI_API_KEY = $env:EDGEY_API_KEY`,
+    ].join('\n'),
+  },
+  {
+    id: 'sh',
+    label: 'macOS / Linux',
+    code: [
+      `export EDGEY_API_KEY="${KEY}"`,
+      `export ANTHROPIC_BASE_URL="${API_ROOT}"`,
+      `export ANTHROPIC_API_KEY="$EDGEY_API_KEY"`,
+      `export OPENAI_BASE_URL="${API_BASE}"`,
+      `export OPENAI_API_KEY="$EDGEY_API_KEY"`,
+    ].join('\n'),
+  },
+];
+const routes = [
+  { label: 'List models', code: `curl ${API_BASE}/models -H "Authorization: Bearer $EDGEY_API_KEY"` },
+  {
+    label: 'OpenAI-compatible request',
+    code: `curl ${API_BASE}/chat/completions -H "Authorization: Bearer $EDGEY_API_KEY" -H "Content-Type: application/json" -d '{"model":"MODEL_ID","messages":[{"role":"user","content":"Hello"}]}'`,
+  },
+  {
+    label: 'Anthropic request',
+    code: `curl ${API_BASE}/messages -H "x-api-key: $EDGEY_API_KEY" -H "anthropic-version: 2023-06-01" -H "Content-Type: application/json" -d '{"model":"MODEL_ID","max_tokens":128,"messages":[{"role":"user","content":"Hello"}]}'`,
+  },
+];
 ---
 <Base title="Setup" crumb="CLI" heading="Connect your tools." sub="Your AI tools, in one place.">
   <section class="card setup" data-setup>
     <div class="top">
       <p class="card-title row"><Icon name="sliders" /> Connect your tools</p>
-      <p class="card-sub">Install edgeyCLI on Windows with your CLI key, then start coding.</p>
+      <p class="card-sub">Choose a guide to connect your edgey key to a supported client.</p>
     </div>
 
     <div class="inner">
@@ -28,6 +83,18 @@ const guides = [
             <span class="t">{g.title}</span>
             <span class="d">{g.desc}</span>
             {'tag' in g && <span class="tag">{g.tag}</span>}
+          </button>
+        ))}
+      </div>
+      <div class="guides two">
+        {extras.map((g) => (
+          <button class="guide wide" data-guide={g.id} aria-pressed="false">
+            <span class="g-icon"><Icon name={g.icon} /></span>
+            <span class="txt">
+              <span class="t">{g.title}</span>
+              <span class="d">{g.desc}</span>
+            </span>
+            <Icon name="arrowUpRight" size={13} class="g-arrow" />
           </button>
         ))}
       </div>
@@ -65,10 +132,37 @@ const guides = [
         </ol>
       </GuidePanel>
 
+      <GuidePanel id="claude" icon="bot" title="Claude Code">
+        <ShellSnippet shells={claudeCode}>
+          <p slot="desc">Set these variables in the shell where Claude Code runs. The CLI adds <code>/v1/messages</code> to this base URL.</p>
+          <p slot="note">Use your edgey API key from the API page. The key stays on your machine. Never paste it into a public repository, browser URL, or support message.</p>
+        </ShellSnippet>
+      </GuidePanel>
+
+      <GuidePanel id="codex" icon="code" title="Codex and OpenAI-compatible clients">
+        <ShellSnippet shells={codex}>
+          <p slot="desc">Set the base URL to <code>{API_BASE}</code>. Use the model ID returned by <code>GET {API_BASE}/models</code>.</p>
+          <p slot="note">For clients that ask for a custom endpoint, use <code>{API_BASE}/chat/completions</code> and send <code>Authorization: Bearer {KEY}</code>.</p>
+        </ShellSnippet>
+      </GuidePanel>
+
+      <GuidePanel id="script" icon="code" title="Full API setup script">
+        <ShellSnippet shells={fullScript}>
+          <p slot="desc">The script sets both standard clients to {apiHost}. It does not contain a secret. Replace <code>{KEY}</code> with your edgey API key, then run it in the terminal where your client starts.</p>
+          <p slot="note">To keep these settings, add the same lines to your PowerShell profile or shell startup file.</p>
+        </ShellSnippet>
+      </GuidePanel>
+
+      <GuidePanel id="routes" icon="sliders" title="Models and API routes">
+        <p class="platform">Models, limits, pricing multipliers and routing are applied by the gateway for your key.</p>
+        <div class="route-rows">
+          {routes.map((r) => <CodeRow label={r.label} code={r.code} wrap />)}
+        </div>
+      </GuidePanel>
     </div>
 
     <div class="foot">
-      <span>Need help? Our team answers on Discord.</span>
+      <span>All guides use the standard API routes and the same edgey balance.</span>
       <span class="row"><Icon name="lock" size={12} /> Keep your key private</span>
     </div>
   </section>
@@ -103,7 +197,7 @@ const guides = [
   .row { display: flex; align-items: center; gap: 10px; }
   .inner { display: flex; flex-direction: column; gap: 14px; padding: 22px; }
 
-  .guides { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .guides { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
   .guides.two { grid-template-columns: 1fr 1fr; }
   .guide {
     position: relative;
