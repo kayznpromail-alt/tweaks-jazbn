@@ -626,4 +626,18 @@ describe('earnings', () => {
     assert.equal(acc.available, 200_000_000);
     assert.equal((await ctx.call('/v1/account', { key: 'sk_edgey_nope' })).status, 401);
   });
+
+  test('a sale can be recorded when the account is created', async () => {
+    const ADMIN = 'admin-secret-token';
+    const ctx = setup({ adminToken: ADMIN });
+    const asAdmin = (path, opts = {}) => ctx.call(path, { ...opts, token: ADMIN });
+    const a = await (await asAdmin('/admin/accounts', { method: 'POST', body: { apiKey: true, sale: { packEur: 24.99, note: 'paypal' } } })).json();
+    assert.equal(a.account.balance, 200_000_000);
+    assert.equal(a.account.paidEur, 24.99);
+    const b = await (await asAdmin('/admin/accounts', { method: 'POST', body: { sale: { tokens: '300M', eur: 35 } } })).json();
+    assert.equal(b.account.balance, 300_000_000);
+    assert.equal((await asAdmin('/admin/accounts', { method: 'POST', body: { sale: { packEur: 3 } } })).status, 400);
+    assert.equal((await (await asAdmin('/admin/stats')).json()).accounts, 2, 'no account created on a bad sale');
+    assert.equal((await (await asAdmin('/admin/earnings')).json()).allTime.payments, 2);
+  });
 });

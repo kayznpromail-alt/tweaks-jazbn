@@ -28,6 +28,12 @@ const sameSecret = (a, b) => {
 };
 
 /** /admin/*: stats, accounts, manual credits. Protected by ADMIN_TOKEN (Bearer). */
+// "200M", "1.5B", "500k" or a plain number of tokens.
+const parseTokens = (input) => {
+  const m = /^([\d.]+)\s*([kmb]?)$/i.exec(String(input).trim());
+  return m ? Math.round(Number(m[1]) * { '': 1, k: 1e3, m: 1e6, b: 1e9 }[m[2].toLowerCase()]) : NaN;
+};
+
 export function adminRoutes({ cfg, db, clock = now, cli }) {
   const admin = new Hono();
   const failures = createLimiter({ windowMs: 15 * 60_000, max: 20, clock });
@@ -157,6 +163,10 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
   admin.post('/accounts', async (c) => {
     const body = await c.req.json().catch(() => ({}));
     const { cliKey } = body;
+    // Optional first sale, recorded with the account (its tokens become the customer's limit).
+    const sale = body.sale ? parseSale(body.sale) : null;
+    if (sale?.error) return c.json({ error: sale.error }, 400);
+    if (sale && sale.tokens < 0) return c.json({ error: 'invalid_amount' }, 400);
     const number = newAccessNumber();
     const id = Number(
       db.prepare('INSERT INTO accounts (number_hash, created_at) VALUES (?, ?)').run(hashSecret(cfg.pepper, number), clock())
@@ -176,6 +186,7 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
       }
     }
     const apiKey = body.apiKey ? issueKey(id, 'Main key') : null;
+    if (sale) recordSale(id, sale);
     return c.json({ number, apiKey: apiKey?.key ?? null, account: summary(account(id)) }, 201);
   });
 
@@ -282,28 +293,36 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
     });
   });
 
-  admin.post('/accounts/:id/credit', async (c) => {
-    const a = account(Number(c.req.param('id')));
-    if (!a) return c.json({ error: 'not_found' }, 404);
-    const body = await c.req.json().catch(() => ({}));
+  // A sale: a catalog pack ({ packEur }) or any amount ({ tokens, eur }), with an optional note.
+  const parseSale = (body) => {
     const pack = body.packEur != null ? catalog.packs.find((p) => p.eur === Number(body.packEur)) : null;
-    if (body.packEur != null && !pack) return c.json({ error: 'unknown_pack' }, 400);
-    const tokens = pack ? pack.tokens : Math.round(Number(body.tokens));
+    if (body.packEur != null && !pack) return { error: 'unknown_pack' };
+    const tokens = pack ? pack.tokens : typeof body.tokens === 'string' ? parseTokens(body.tokens) : Math.round(Number(body.tokens));
     const eur = pack ? pack.eur : Number(body.eur ?? 0);
-    // Negative amounts are allowed as corrections, but never below zero balance.
-    if (!Number.isFinite(tokens) || tokens === 0 || !Number.isFinite(eur)) return c.json({ error: 'invalid_amount' }, 400);
-    if (a.balance + tokens < 0) return c.json({ error: 'balance_would_go_negative' }, 400);
+    if (!Number.isFinite(tokens) || tokens === 0 || !Number.isFinite(eur)) return { error: 'invalid_amount' };
+    return { tokens, eur, note: String(body.note ?? (pack ? 'pack' : 'manual credit')).slice(0, 120) };
+  };
+  const recordSale = (accountId, sale) => {
     const t = clock();
-    const note = String(body.note ?? (pack ? 'pack' : 'manual credit')).slice(0, 120);
     const id = Number(
       db
         .prepare(
           `INSERT INTO payments (account_id, provider, amount_eur, tokens, status, note, created_at, updated_at)
            VALUES (?, 'manual', ?, ?, 'pending', ?, ?, ?)`,
         )
-        .run(a.id, eur, tokens, note, t, t).lastInsertRowid,
+        .run(accountId, sale.eur, sale.tokens, sale.note, t, t).lastInsertRowid,
     );
     creditPayment(db, id);
+  };
+
+  admin.post('/accounts/:id/credit', async (c) => {
+    const a = account(Number(c.req.param('id')));
+    if (!a) return c.json({ error: 'not_found' }, 404);
+    const sale = parseSale(await c.req.json().catch(() => ({})));
+    if (sale.error) return c.json({ error: sale.error }, 400);
+    // Negative amounts are allowed as corrections, but never below zero balance.
+    if (a.balance + sale.tokens < 0) return c.json({ error: 'balance_would_go_negative' }, 400);
+    recordSale(a.id, sale);
     return c.json(summary(account(a.id)));
   });
 
