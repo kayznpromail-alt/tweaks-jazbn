@@ -7,6 +7,7 @@ import { createInvoice, verifyIpn } from './nowpayments.js';
 import { createLimiter } from './ratelimit.js';
 import { adminRoutes } from './admin-routes.js';
 import { cliAccounts } from './cli-account.js';
+import { cliReleaseRoutes } from './cli-release.js';
 import { errorBody, relay } from './relay.js';
 import {
   hashSecret,
@@ -283,6 +284,7 @@ export function createApp({ cfg, db, clock = now }) {
 
   app.route('/', site);
   app.route('/admin', adminRoutes({ cfg, db, clock, cli }));
+  app.route('/', cliReleaseRoutes(cfg.releasesDir));
 
   // ---------------------------------------------------------------- NOWPayments callbacks
   app.post('/webhooks/nowpayments', async (c) => {

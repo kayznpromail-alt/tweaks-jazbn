@@ -7,6 +7,7 @@ services:
     env_file: .env
     volumes:
       - ./data:/data
+      - ./releases:/releases:ro
     # Only reachable from the VPS itself (used when nginx is the front server).
     ports:
       - "127.0.0.1:8787:8787"

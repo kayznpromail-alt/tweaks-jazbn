@@ -46,6 +46,7 @@ export function loadConfig(env = process.env) {
       usdPerEur: Number(env.USD_PER_EUR ?? 1.15),
       split: parseSplit(env.PROFIT_SPLIT ?? 'edgey:60,kayzn:40'),
     },
+    releasesDir: env.RELEASES_DIR ?? './releases',
     nowpayments: {
       apiKey: env.NOWPAYMENTS_API_KEY || null,
       ipnSecret: env.NOWPAYMENTS_IPN_SECRET || null,

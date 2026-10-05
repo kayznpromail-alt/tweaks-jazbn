@@ -51,7 +51,7 @@ fi
 DOMAIN="$(grep '^API_DOMAIN=' .env | cut -d= -f2)"
 
 # The API container runs as the unprivileged "node" user (uid 1000).
-mkdir -p data caddy
+mkdir -p data caddy releases
 chown 1000:1000 data
 
 # Front server: reuse nginx if it already runs on this VPS (it owns ports 80/443),
@@ -84,7 +84,7 @@ server {
         # Stream model answers to the client as they arrive.
         proxy_buffering off;
         proxy_read_timeout 600s;
-        client_max_body_size 20m;
+        client_max_body_size 200m;
     }
 }
 NGINX
