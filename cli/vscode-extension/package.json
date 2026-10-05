@@ -1,0 +1,64 @@
+{
+  "name": "edgey-mcp-bridge",
+  "displayName": "edgey MCP Bridge",
+  "description": "Local MCP tools for edgeyCLI: editor context, diagnostics and reviewed edits.",
+  "version": "0.1.0",
+  "publisher": "edgey",
+  "license": "UNLICENSED",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.cjs",
+  "extensionKind": [
+    "workspace"
+  ],
+  "activationEvents": [
+    "onCommand:edgeyMcp.start",
+    "onCommand:edgeyMcp.pair"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false
+    },
+    "virtualWorkspaces": false
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "edgeyMcp.start",
+        "title": "edgey MCP: Start"
+      },
+      {
+        "command": "edgeyMcp.stop",
+        "title": "edgey MCP: Stop"
+      },
+      {
+        "command": "edgeyMcp.pair",
+        "title": "edgey MCP: Pair with CLI"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "esbuild src/extension.ts --bundle --platform=node --format=cjs --external:vscode --outfile=dist/extension.cjs",
+    "typecheck": "tsc --noEmit",
+    "package": "npm run build && node scripts/notices.cjs && vsce package --no-dependencies --allow-missing-repository"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.95.0",
+    "@vscode/test-electron": "^2.5.0",
+    "@vscode/vsce": "^3.0.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.0"
+  },
+  "files": [
+    "dist/extension.cjs",
+    "THIRD_PARTY_NOTICES.txt"
+  ]
+}
