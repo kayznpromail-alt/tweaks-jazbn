@@ -65,6 +65,8 @@ CREATE TABLE IF NOT EXISTS cli_keys (
 CREATE TABLE IF NOT EXISTS model_access (
   account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
   model TEXT NOT NULL,
+  quota INTEGER NOT NULL DEFAULT 115000000,  -- tokens allowed per subscription
+  used INTEGER NOT NULL DEFAULT 0,           -- tokens consumed this subscription
   granted_at INTEGER NOT NULL,
   PRIMARY KEY (account_id, model)
 );
@@ -119,6 +121,10 @@ export function openDb(path) {
   // API keys are also kept encrypted, so admins can show a key again to the customer.
   if (!db.prepare('PRAGMA table_info(api_keys)').all().some((c) => c.name === 'key_sealed'))
     db.exec('ALTER TABLE api_keys ADD COLUMN key_sealed TEXT');
+  // model_access: quota and used columns added after first release.
+  const maCols = db.prepare('PRAGMA table_info(model_access)').all().map((c) => c.name);
+  if (maCols.length && !maCols.includes('quota')) db.exec('ALTER TABLE model_access ADD COLUMN quota INTEGER NOT NULL DEFAULT 115000000');
+  if (maCols.length && !maCols.includes('used')) db.exec('ALTER TABLE model_access ADD COLUMN used INTEGER NOT NULL DEFAULT 0');
   return db;
 }
 

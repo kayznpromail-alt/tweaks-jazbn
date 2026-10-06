@@ -63,7 +63,8 @@ export function createApp({ cfg, db, clock = now }) {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     ),
     charge: db.prepare('UPDATE accounts SET balance = balance - ? WHERE id = ?'),
-    hasModelAccess: db.prepare('SELECT 1 FROM model_access WHERE account_id = ? AND model = ?'),
+    modelAccess: db.prepare('SELECT quota, used FROM model_access WHERE account_id = ? AND model = ?'),
+    chargeModelUsage: db.prepare('UPDATE model_access SET used = used + ? WHERE account_id = ? AND model = ?'),
     usageSince: db.prepare('SELECT created_at, total_tokens, status FROM usage WHERE account_id = ? AND created_at >= ?'),
     countSince: db.prepare(
       `SELECT COUNT(*) AS n, SUM(CASE WHEN status BETWEEN 200 AND 299 THEN 1 ELSE 0 END) AS ok
@@ -359,8 +360,13 @@ export function createApp({ cfg, db, clock = now }) {
       const info = modelInfo(body.model);
       if (!info)
         return c.json(errorBody(kind, 404, 'not_found_error', `Model "${body.model}" is not available.`), 404);
-      if (isRestricted(body.model) && !q.hasModelAccess.get(key.account_id, body.model))
-        return c.json(errorBody(kind, 403, 'access_denied', `Model "${body.model}" requires a separate subscription. Contact us to get access.`), 403);
+      if (isRestricted(body.model)) {
+        const access = q.modelAccess.get(key.account_id, body.model);
+        if (!access)
+          return c.json(errorBody(kind, 403, 'access_denied', `Model "${body.model}" requires a separate subscription. Contact us to get access.`), 403);
+        if (access.used >= access.quota)
+          return c.json(errorBody(kind, 403, 'quota_exceeded', `Your ${body.model} subscription quota is used up (${(access.quota / 1e6).toFixed(0)}M tokens). Renew your subscription to continue.`), 403);
+      }
       if (billed && key.balance <= 0)
         return c.json(
           errorBody(kind, 402, 'insufficient_balance', 'Your wallet is empty. Top up at cli.edgey.shop.'),
@@ -399,6 +405,7 @@ export function createApp({ cfg, db, clock = now }) {
               clock(),
             );
             if (charged > 0) q.charge.run(charged, key.account_id);
+            if (total > 0 && isRestricted(body.model)) q.chargeModelUsage.run(total, key.account_id, body.model);
           });
         },
       });
