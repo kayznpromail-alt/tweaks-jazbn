@@ -82,6 +82,7 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
     createdAt: a.created_at,
     keys: db.prepare('SELECT COUNT(*) AS n FROM api_keys WHERE account_id = ?').get(a.id).n,
     lastRequestAt: db.prepare('SELECT MAX(created_at) AS t FROM usage WHERE account_id = ?').get(a.id).t,
+    modelAccess: db.prepare('SELECT model, quota, used FROM model_access WHERE account_id = ?').all(a.id),
     cli: cli.cached(a.id),
     providerId: a.provider_id_masked ?? null,
     discord: a.discord ?? null,
@@ -334,6 +335,35 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
     db.prepare('UPDATE accounts SET disabled = ? WHERE id = ?').run(disabled ? 1 : 0, a.id);
     if (disabled) db.prepare('DELETE FROM sessions WHERE account_id = ?').run(a.id);
     return c.json(summary(account(a.id)));
+  });
+
+  // Premium model access: grant or revoke per-account access to restricted models.
+  admin.get('/accounts/:id/models', (c) => {
+    const a = account(Number(c.req.param('id')));
+    if (!a) return c.json({ error: 'not_found' }, 404);
+    const rows = db.prepare('SELECT model, quota, used, granted_at FROM model_access WHERE account_id = ? ORDER BY granted_at').all(a.id);
+    return c.json({ models: rows });
+  });
+
+  admin.post('/accounts/:id/models', async (c) => {
+    const a = account(Number(c.req.param('id')));
+    if (!a) return c.json({ error: 'not_found' }, 404);
+    const { model } = await c.req.json().catch(() => ({}));
+    if (!model || typeof model !== 'string') return c.json({ error: 'invalid_model' }, 400);
+    const existing = db.prepare('SELECT 1 FROM model_access WHERE account_id = ? AND model = ?').get(a.id, model);
+    if (existing) {
+      db.prepare('UPDATE model_access SET used = 0, granted_at = ? WHERE account_id = ? AND model = ?').run(clock(), a.id, model);
+    } else {
+      db.prepare('INSERT INTO model_access (account_id, model, granted_at) VALUES (?, ?, ?)').run(a.id, model, clock());
+    }
+    return c.json({ ok: true }, 201);
+  });
+
+  admin.delete('/accounts/:id/models/:model', (c) => {
+    const a = account(Number(c.req.param('id')));
+    if (!a) return c.json({ error: 'not_found' }, 404);
+    db.prepare('DELETE FROM model_access WHERE account_id = ? AND model = ?').run(a.id, c.req.param('model'));
+    return c.json({ ok: true });
   });
 
   // Paid customer payments count for earnings (free credits and corrections do not).

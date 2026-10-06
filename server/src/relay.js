@@ -1,5 +1,13 @@
 import { createUsageTracker, usageFromJson } from './billing.js';
 
+// Models whose public name differs from the upstream provider's model id.
+const MODEL_ALIASES = new Map([
+  ['edgeybeast', 'dawvqBEAST'],
+]);
+
+/** Resolve the upstream model id (applies alias if one exists). */
+export const upstreamModel = (id) => MODEL_ALIASES.get(id) ?? id;
+
 /** Error body in the format each client family expects. */
 export function errorBody(kind, status, type, message) {
   return kind === 'anthropic'
