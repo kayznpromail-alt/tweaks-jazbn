@@ -6,8 +6,12 @@ export const catalog = JSON.parse(readFileSync(catalogUrl, 'utf8'));
 const rates = new Map();
 for (const p of catalog.providers) for (const m of p.models) rates.set(m.id, { rate: m.rate, provider: p.name });
 
+// Models that require explicit per-account access (granted by admin).
+const RESTRICTED_MODELS = new Set(['edgeybeast']);
+
 /** Multiplier for a model, or null when the model is not offered. */
 export const modelInfo = (id) => rates.get(id) ?? null;
+export const isRestricted = (id) => RESTRICTED_MODELS.has(id);
 export const allModels = () => [...rates.entries()].map(([id, v]) => ({ id, ...v }));
 
 /** Tokens taken from the wallet: every token (input, output, cached) times the model multiplier. */

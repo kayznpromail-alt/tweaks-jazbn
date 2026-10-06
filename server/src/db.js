@@ -61,6 +61,14 @@ CREATE TABLE IF NOT EXISTS cli_keys (
   created_at INTEGER NOT NULL
 );
 
+-- Per-account access to premium/restricted models (e.g. edgeybeast).
+CREATE TABLE IF NOT EXISTS model_access (
+  account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+  model TEXT NOT NULL,
+  granted_at INTEGER NOT NULL,
+  PRIMARY KEY (account_id, model)
+);
+
 -- Sales paid outside the site and not tied to a token pack (tickets): price paid and retail cost.
 CREATE TABLE IF NOT EXISTS sales (
   id INTEGER PRIMARY KEY,
