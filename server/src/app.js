@@ -8,7 +8,7 @@ import { createLimiter } from './ratelimit.js';
 import { adminRoutes } from './admin-routes.js';
 import { cliAccounts } from './cli-account.js';
 import { cliReleaseRoutes } from './cli-release.js';
-import { errorBody, relay } from './relay.js';
+import { errorBody, relay, upstreamModel } from './relay.js';
 import {
   hashSecret,
   isAccessNumber,
@@ -366,11 +366,13 @@ export function createApp({ cfg, db, clock = now }) {
 
       const started = clock();
       q.touchKey.run(started, key.key_id);
+      const upModel = upstreamModel(body.model);
+      const upBody = upModel !== body.model ? { ...body, model: upModel } : body;
       return relay({
         cfg,
         kind,
         path,
-        body,
+        body: upBody,
         incoming: c.req.raw,
         onDone: (usage, status) => {
           if (!billed) return;

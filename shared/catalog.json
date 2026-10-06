@@ -164,6 +164,16 @@
       ]
     },
     {
+      "name": "Edgey",
+      "badge": "E",
+      "models": [
+        {
+          "id": "edgeybeast",
+          "rate": 12
+        }
+      ]
+    },
+    {
       "name": "Other",
       "badge": "··",
       "models": [
