@@ -1,7 +1,10 @@
 ---
 import Shell from '../layouts/Shell.astro';
 import Icon from '../components/Icon.astro';
-import { DISCORD_URL, providers } from '../data/site';
+import { Starfield } from '../components/ui/starfield';
+import { FAQ } from '../components/ui/faq-tabs';
+import { SignIn1 } from '../components/ui/modern-stunning-sign-in';
+import { API_ROOT, DISCORD_URL, providers } from '../data/site';
 
 const year = new Date().getFullYear();
 const modelCount = providers.reduce((sum, p) => sum + p.models.length, 0);
@@ -18,6 +21,11 @@ const features = [
 ---
 <Shell title="Your AI Workspace">
   <div class="landing">
+
+    <!-- Starfield background -->
+    <div class="ln-starfield">
+      <Starfield client:load starCount={15000} starColor={{ r: 34, g: 211, b: 238 }} maxOpacity={200} rotationSpeed={0.0003} waveFrequency={15} />
+    </div>
 
     <!-- Nav -->
     <header class="ln-nav" id="lnNav">
@@ -319,39 +327,39 @@ response = client.chat.completions.create(
     <section class="ln-section" id="faq">
       <div class="ln-container ln-container--narrow">
         <div class="ln-divider"></div>
-        <p class="ln-section-eyebrow">FREQUENTLY ASKED</p>
-        <h2 class="ln-section-title ln-section-title--sm">
-          Questions?<br />
-          <span class="ln-fade">Covered.</span>
-        </h2>
-
-        <div class="ln-faq-list">
-          <details class="ln-faq">
-            <summary><span>How does pricing work?</span><Icon name="plus" size={14} /></summary>
-            <div class="ln-faq-body"><p>You buy token packs (starting at €9.99). Each model has a rate multiplier — a ×2 model costs twice as many tokens per request as a ×1 model. Your balance is shared across all your API keys.</p></div>
-          </details>
-          <details class="ln-faq">
-            <summary><span>Is it OpenAI-compatible?</span><Icon name="plus" size={14} /></summary>
-            <div class="ln-faq-body"><p>Yes. Point any OpenAI SDK or tool at <code>https://api.edgey.shop/v1</code> with your <code>sk_edgey_</code> key. Same format, same streaming, same function calling.</p></div>
-          </details>
-          <details class="ln-faq">
-            <summary><span>Which models are available?</span><Icon name="plus" size={14} /></summary>
-            <div class="ln-faq-body"><p>GPT (including GPT-6), Claude (Opus, Sonnet, Haiku, Fable), Gemini, Grok, Deepseek, Qwen, and more. {modelCount} models across {providerCount} providers. Check <a href="/models">the model list</a> for the full catalog.</p></div>
-          </details>
-          <details class="ln-faq">
-            <summary><span>What payment methods are accepted?</span><Icon name="plus" size={14} /></summary>
-            <div class="ln-faq-body"><p>Crypto (BTC, ETH, LTC, USDT, SOL) via NOWPayments with instant delivery. PayPal and card available via Discord.</p></div>
-          </details>
-          <details class="ln-faq">
-            <summary><span>How do I get started?</span><Icon name="plus" size={14} /></summary>
-            <div class="ln-faq-body"><p>Join the Discord, purchase a plan, and receive your 16-digit edgey ID and CLI key. Sign in here, grab your API key, and start building.</p></div>
-          </details>
-          <details class="ln-faq">
-            <summary><span>Is my upstream provider key exposed?</span><Icon name="plus" size={14} /></summary>
-            <div class="ln-faq-body"><p>No. Your requests are relayed through edgey's servers. The upstream key never leaves the infrastructure. Clients only see their own <code>sk_edgey_</code> key.</p></div>
-          </details>
-        </div>
-
+        <FAQ
+          client:load
+          title="Questions? Covered."
+          subtitle="FREQUENTLY ASKED"
+          categories={{
+            "pricing": "Pricing",
+            "setup": "Setup & API",
+            "models": "Models",
+            "security": "Security"
+          }}
+          faqData={{
+            "pricing": [
+              { question: "How does pricing work?", answer: "You buy token packs (starting at €9.99). Each model has a rate multiplier — a ×2 model costs twice as many tokens per request as a ×1 model. Your balance is shared across all your API keys." },
+              { question: "What payment methods are accepted?", answer: "Crypto (BTC, ETH, LTC, USDT, SOL) via NOWPayments with instant delivery. PayPal and card available via Discord." },
+              { question: "Can I track my spending?", answer: "Yes. Your workspace shows token usage per key, per model and per request. You always know where your balance goes." }
+            ],
+            "setup": [
+              { question: "How do I get started?", answer: "Join the Discord, purchase a plan, and receive your 16-digit edgey ID and CLI key. Sign in here, grab your API key, and start building." },
+              { question: "Is it OpenAI-compatible?", answer: "Yes. Point any OpenAI SDK or tool at https://api.edgey.shop/v1 with your sk_edgey_ key. Same format, same streaming, same function calling." },
+              { question: "Can I have multiple API keys?", answer: "Yes. Create as many keys as you need — one per project, one per environment. Each key shares your account balance but can be revoked individually." }
+            ],
+            "models": [
+              { question: "Which models are available?", answer: "GPT (including GPT-6), Claude (Opus, Sonnet, Haiku, Fable), Gemini, Grok, Deepseek, Qwen, and more. Check the model list for the full catalog." },
+              { question: "What are premium models?", answer: "Some models like edgeybeast are exclusive or have special pricing. They require a separate subscription and come with their own token quota." },
+              { question: "Do all models support streaming?", answer: "Yes. Every model supports streaming responses out of the box, just like the official OpenAI API." }
+            ],
+            "security": [
+              { question: "Is my upstream provider key exposed?", answer: "No. Your requests are relayed through edgey's servers. The upstream key never leaves the infrastructure. Clients only see their own sk_edgey_ key." },
+              { question: "How is my data handled?", answer: "Requests are proxied in real-time — nothing is logged or stored beyond usage metadata (model, tokens, timestamp). Your prompts and completions pass through and are never retained." }
+            ]
+          }}
+          className="!bg-transparent !px-0"
+        />
         <p class="ln-faq-more">Something else on your mind? <a href={DISCORD_URL} target="_blank" rel="noopener">Talk to support <Icon name="arrowUpRight" size={12} /></a></p>
       </div>
     </section>
@@ -410,63 +418,15 @@ response = client.chat.completions.create(
     <!-- Sign-in dialog -->
     <dialog class="ln-dialog" id="signinDialog">
       <div class="ln-dialog-backdrop" data-close-signin></div>
-      <div class="ln-dialog-panel">
+      <div class="ln-dialog-panel ln-dialog-panel--modern">
         <button class="ln-dialog-close" data-close-signin aria-label="Close"><Icon name="x" size={18} /></button>
-
-        <div class="ln-dialog-tabs" role="tablist">
-          <button class="on" role="tab" aria-selected="true" data-tab="signin">Sign in</button>
-          <button role="tab" aria-selected="false" data-tab="register">Get access</button>
-        </div>
-
-        <form class="ln-dialog-view" data-view="signin" novalidate>
-          <p class="ln-d-eyebrow">WELCOME BACK</p>
-          <h2>Make yourself at home.</h2>
-          <p class="ln-d-lead">Enter the 16-digit edgey ID you received with your purchase.</p>
-          <label for="access" class="ln-d-label">edgey ID</label>
-          <div class="ln-d-field">
-            <input
-              id="access"
-              name="access"
-              type="password"
-              inputmode="numeric"
-              autocomplete="current-password"
-              spellcheck="false"
-              maxlength="19"
-              placeholder="0000 0000 0000 0000"
-              data-access
-            />
-            <button type="button" class="ln-d-eye" aria-label="Show number" data-eye>
-              <span data-icon="show"><Icon name="eye" /></span>
-              <span data-icon="hide" hidden><Icon name="eyeOff" /></span>
-            </button>
-          </div>
-          <button type="submit" class="ln-btn ln-btn--primary ln-btn--full">Sign in <Icon name="arrowRight" size={14} /></button>
-          <p class="ln-d-msg" data-msg role="status" hidden></p>
-          <p class="ln-d-small">New here? <button type="button" class="ln-link" data-go="register">Get your access.</button></p>
-        </form>
-
-        <div class="ln-dialog-view" data-view="register" hidden>
-          <p class="ln-d-eyebrow">NEW HERE</p>
-          <h2>Get your access.</h2>
-          <p class="ln-d-lead">Your edgey ID and CLI key are delivered with your purchase. No email or password needed.</p>
-          <ol class="ln-d-steps">
-            <li><span class="ln-d-n">01</span>Buy a plan on Discord.</li>
-            <li><span class="ln-d-n">02</span>Receive your edgey ID and your CLI key.</li>
-            <li><span class="ln-d-n">03</span>Sign in here and install the CLI.</li>
-          </ol>
-          <a href={DISCORD_URL} class="ln-btn ln-btn--primary ln-btn--full" target="_blank" rel="noopener">
-            Get access on Discord <Icon name="arrowUpRight" size={14} />
-          </a>
-          <p class="ln-d-small acc">Keep your edgey ID and CLI key private. Staff will never ask for them.</p>
-        </div>
+        <SignIn1 client:load apiBase={API_ROOT} discordUrl={DISCORD_URL} openRegistration={true} />
       </div>
     </dialog>
   </div>
 </Shell>
 
 <script>
-  import { API_ENABLED, ApiError, api, session } from '../lib/api';
-
   // Sticky nav shadow
   const nav = document.getElementById('lnNav');
   if (nav) {
@@ -474,85 +434,18 @@ response = client.chat.completions.create(
     observer.observe(nav);
   }
 
-  // Dialog
+  // Dialog open/close (sign-in form is handled by the React component)
   const dialog = document.getElementById('signinDialog') as HTMLDialogElement | null;
   const openBtns = document.querySelectorAll<HTMLElement>('[data-open-signin]');
   const openRegBtns = document.querySelectorAll<HTMLElement>('[data-open-signin-register]');
   const closeBtns = document.querySelectorAll<HTMLElement>('[data-close-signin]');
 
-  const openDialog = (tab = 'signin') => {
-    if (!dialog) return;
-    dialog.showModal();
-    showTab(tab);
-  };
-  openBtns.forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); openDialog('signin'); }));
-  openRegBtns.forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); openDialog('register'); }));
+  const openDialog = () => { if (dialog) dialog.showModal(); };
+  openBtns.forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); openDialog(); }));
+  openRegBtns.forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); openDialog(); }));
   closeBtns.forEach(b => b.addEventListener('click', () => dialog?.close()));
 
-  if (location.hash === '#register') openDialog('register');
-
-  // Tabs
-  const tabs = [...document.querySelectorAll<HTMLButtonElement>('[data-tab]')];
-  const views = [...document.querySelectorAll<HTMLElement>('[data-view]')];
-  const showTab = (id: string) => {
-    tabs.forEach(t => {
-      const on = t.dataset.tab === id;
-      t.classList.toggle('on', on);
-      t.setAttribute('aria-selected', String(on));
-    });
-    views.forEach(v => (v.hidden = v.dataset.view !== id));
-  };
-  tabs.forEach(t => t.addEventListener('click', () => showTab(t.dataset.tab ?? 'signin')));
-  document.querySelectorAll<HTMLElement>('[data-go]').forEach(b => b.addEventListener('click', () => showTab(b.dataset.go ?? 'signin')));
-
-  // Access number input
-  const input = document.querySelector<HTMLInputElement>('[data-access]');
-  const digitCount = () => input?.value.replace(/\D/g, '').length ?? 0;
-  input?.addEventListener('input', () => {
-    const d = input.value.replace(/\D/g, '').slice(0, 16);
-    input.value = d.replace(/(\d{4})(?=\d)/g, '$1 ');
-  });
-
-  const eye = document.querySelector<HTMLButtonElement>('[data-eye]');
-  eye?.addEventListener('click', () => {
-    if (!input) return;
-    const reveal = input.type === 'password';
-    input.type = reveal ? 'text' : 'password';
-    eye.setAttribute('aria-label', reveal ? 'Hide number' : 'Show number');
-    eye.querySelector<HTMLElement>('[data-icon="show"]')!.hidden = reveal;
-    eye.querySelector<HTMLElement>('[data-icon="hide"]')!.hidden = !reveal;
-  });
-
-  const errorText = (err: unknown) => {
-    const code = err instanceof ApiError ? err.code : 'error';
-    if (code === 'unknown_number') return 'No account uses this edgey ID.';
-    if (code === 'too_many_requests') return 'Too many attempts. Wait a minute and try again.';
-    if (code === 'network') return "Can't reach cli.edgey.shop right now. Try again shortly.";
-    return 'Something went wrong. Try again.';
-  };
-  const enter = (form: HTMLElement) => {
-    form.classList.add('granted');
-    setTimeout(() => location.assign('/overview'), 350);
-  };
-
-  views.forEach(form =>
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const msg = form.querySelector<HTMLElement>('[data-msg]');
-      if (!msg) return;
-      const say = (text: string) => { msg.textContent = text; msg.hidden = false; };
-      msg.hidden = true;
-      if (digitCount() < 16) return say('Enter all 16 digits of your edgey ID.');
-      if (!API_ENABLED) return enter(form);
-      try {
-        const { token } = await api<{ token: string }>('/auth/login', { method: 'POST', body: { number: input!.value } });
-        session.set(token);
-        enter(form);
-      } catch (err) {
-        say(errorText(err));
-      }
-    }),
-  );
+  if (location.hash === '#register') openDialog();
 
   // Smooth scroll for anchor links
   document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach(a => {
@@ -604,6 +497,15 @@ response = client.chat.completions.create(
 <style>
   /* ─── Layout ─── */
   .landing { min-height: 100svh; position: relative; overflow-x: hidden; }
+
+  /* ─── Starfield ─── */
+  .ln-starfield {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .landing > *:not(.ln-starfield) { position: relative; z-index: 1; }
 
   .ln-container { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
   .ln-container--narrow { max-width: 800px; }
@@ -1041,70 +943,25 @@ response = client.chat.completions.create(
   .ln-dialog { border: 0; background: transparent; max-width: 100vw; max-height: 100vh; padding: 0; }
   .ln-dialog::backdrop { background: rgb(0 0 0 / 0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
   .ln-dialog-backdrop { position: fixed; inset: 0; }
-  .ln-dialog-panel {
+  .ln-dialog-panel--modern {
     position: relative; z-index: 1;
-    width: min(400px, calc(100vw - 32px));
-    padding: 32px;
-    border-radius: 18px;
-    background: linear-gradient(180deg, var(--surface-2), var(--surface));
-    border: 1px solid var(--border);
-    box-shadow: 0 30px 80px rgb(0 0 0 / 0.5);
+    width: min(420px, calc(100vw - 32px));
+    padding: 0;
+    border-radius: 24px;
+    background: transparent;
+    border: none;
     animation: dialog-in 0.25s ease;
   }
   @keyframes dialog-in {
     from { opacity: 0; transform: translateY(16px) scale(0.97); }
   }
   .ln-dialog-close {
-    position: absolute; top: 16px; right: 16px;
+    position: absolute; top: 16px; right: 16px; z-index: 10;
     display: grid; place-items: center;
     width: 32px; height: 32px; border-radius: 8px;
-    color: var(--muted); transition: color 0.15s, background 0.15s;
+    color: #9ca3af; transition: color 0.15s, background 0.15s;
   }
-  .ln-dialog-close:hover { color: var(--fg); background: var(--surface-2); }
-  .ln-dialog-tabs { display: flex; gap: 6px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
-  .ln-dialog-tabs button {
-    padding: 9px 14px; border-radius: 8px;
-    border: 1px solid transparent; font-size: 12px;
-    color: var(--muted); transition: all 0.15s;
-  }
-  .ln-dialog-tabs button:hover { color: var(--fg); }
-  .ln-dialog-tabs button.on { color: var(--fg); font-weight: 600; background: var(--surface-2); border-color: var(--accent-line); }
-  .ln-dialog-view { padding-top: 28px; }
-  .ln-d-eyebrow { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.2em; color: var(--muted); }
-  .ln-dialog-view h2 { margin-top: 10px; font-size: 24px; font-weight: 700; letter-spacing: -0.03em; }
-  .ln-d-lead { margin-top: 12px; font-size: 13px; line-height: 1.65; color: var(--muted); }
-  .ln-d-label { display: block; margin-top: 24px; font-size: 12px; font-weight: 600; }
-  .ln-d-field {
-    display: flex; align-items: center; height: 48px;
-    margin-top: 10px; padding: 0 8px 0 14px; border-radius: 10px;
-    border: 1px solid var(--border-2); background: var(--surface);
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  .ln-d-field:focus-within { border-color: var(--accent-line); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .ln-d-field input {
-    flex: 1; min-width: 0; background: none; border: 0; outline: none;
-    font-family: var(--mono); font-size: 13px; letter-spacing: 0.12em;
-  }
-  .ln-d-field input::placeholder { color: #3f4d56; }
-  .ln-d-eye {
-    display: grid; place-items: center;
-    width: 32px; height: 32px; border-radius: 7px;
-    color: var(--muted); transition: all 0.15s;
-  }
-  .ln-d-eye:hover { color: var(--fg); background: var(--surface-2); }
-  .ln-d-eye span { display: grid; }
-  .ln-dialog-view .ln-btn--full { margin-top: 18px; }
-  .ln-d-msg { margin-top: 12px; font-size: 11.5px; color: var(--accent); }
-  .granted .ln-btn--full { filter: brightness(1.15); box-shadow: 0 0 0 4px var(--accent-soft), 0 0 24px rgb(34 211 238 / 0.35); }
-  .ln-d-small { margin-top: 18px; font-size: 11px; line-height: 1.6; color: var(--muted); }
-  .ln-d-small.acc { color: var(--accent); opacity: 0.85; }
-  .ln-d-steps {
-    list-style: none; display: flex; flex-direction: column; gap: 12px;
-    margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border);
-    font-size: 13px;
-  }
-  .ln-d-steps li { display: flex; gap: 12px; }
-  .ln-d-n { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .ln-dialog-close:hover { color: #fff; background: rgb(255 255 255 / 0.1); }
 
   /* ─── Responsive ─── */
   @media (max-width: 900px) {
