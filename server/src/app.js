@@ -18,6 +18,7 @@ import {
   newApiKey,
   newSessionToken,
   normalizeNumber,
+  openSecret,
   sealSecret,
 } from './security.js';
 
@@ -63,7 +64,7 @@ export function createApp({ cfg, db, clock = now }) {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     ),
     charge: db.prepare('UPDATE accounts SET balance = balance - ? WHERE id = ?'),
-    modelAccess: db.prepare('SELECT quota, used FROM model_access WHERE account_id = ? AND model = ?'),
+    modelAccess: db.prepare('SELECT quota, used, upstream_key_sealed FROM model_access WHERE account_id = ? AND model = ?'),
     chargeModelUsage: db.prepare('UPDATE model_access SET used = used + ? WHERE account_id = ? AND model = ?'),
     usageSince: db.prepare('SELECT created_at, total_tokens, status FROM usage WHERE account_id = ? AND created_at >= ?'),
     countSince: db.prepare(
@@ -360,12 +361,15 @@ export function createApp({ cfg, db, clock = now }) {
       const info = modelInfo(body.model);
       if (!info)
         return c.json(errorBody(kind, 404, 'not_found_error', `Model "${body.model}" is not available.`), 404);
+      let customerUpstreamKey;
       if (isRestricted(body.model)) {
         const access = q.modelAccess.get(key.account_id, body.model);
         if (!access)
           return c.json(errorBody(kind, 403, 'access_denied', `Model "${body.model}" requires a separate subscription. Contact us to get access.`), 403);
         if (access.used >= access.quota)
           return c.json(errorBody(kind, 403, 'quota_exceeded', `Your ${body.model} subscription quota is used up (${(access.quota / 1e6).toFixed(0)}M tokens). Renew your subscription to continue.`), 403);
+        if (access.upstream_key_sealed)
+          customerUpstreamKey = openSecret(cfg.pepper, access.upstream_key_sealed);
       }
       if (billed && key.balance <= 0)
         return c.json(
@@ -383,6 +387,7 @@ export function createApp({ cfg, db, clock = now }) {
         path,
         body: upBody,
         incoming: c.req.raw,
+        upstreamKey: customerUpstreamKey,
         onDone: (usage, status) => {
           if (!billed) return;
           const total = usage?.total ?? 0;

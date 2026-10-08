@@ -125,6 +125,7 @@ export function openDb(path) {
   const maCols = db.prepare('PRAGMA table_info(model_access)').all().map((c) => c.name);
   if (maCols.length && !maCols.includes('quota')) db.exec('ALTER TABLE model_access ADD COLUMN quota INTEGER NOT NULL DEFAULT 115000000');
   if (maCols.length && !maCols.includes('used')) db.exec('ALTER TABLE model_access ADD COLUMN used INTEGER NOT NULL DEFAULT 0');
+  if (maCols.length && !maCols.includes('upstream_key_sealed')) db.exec('ALTER TABLE model_access ADD COLUMN upstream_key_sealed TEXT');
   return db;
 }
 

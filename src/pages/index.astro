@@ -1,58 +1,429 @@
 ---
 import Shell from '../layouts/Shell.astro';
 import Icon from '../components/Icon.astro';
-import { DISCORD_URL } from '../data/site';
+import { DISCORD_URL, providers } from '../data/site';
 
 const year = new Date().getFullYear();
-const steps = ['Buy a plan on Discord.', 'Receive your edgey ID and your CLI key.', 'Sign in here and install the CLI.'];
+const modelCount = providers.reduce((sum, p) => sum + p.models.length, 0);
+const providerCount = providers.length;
+
+const features = [
+  { icon: 'grid' as const, title: 'Your models. One place.', desc: 'Explore the model catalog and choose the right fit for your next project.', badges: ['GPT', 'Claude', 'Gemini', 'Grok'] },
+  { icon: 'key' as const, title: 'Keys that work your way.', desc: 'Keep projects separate with API keys, model access and individual limits.', lines: ['Production', 'Side project', 'Local dev'] },
+  { icon: 'activity' as const, title: 'See where your usage goes.', desc: 'Follow your requests, token usage and costs from your workspace.' },
+  { icon: 'terminal' as const, title: 'Made for your workflow.', desc: 'Find connection details and setup instructions for your clients and CLI tools.' },
+  { icon: 'code' as const, title: 'Keep building.', desc: 'From your idea to the first lines of code. Drop-in OpenAI-compatible endpoint.' },
+  { icon: 'search' as const, title: 'Follow every step.', desc: 'A small walkthrough: spot an issue, change a line, and run it again.' },
+];
 ---
-<Shell title="Sign in">
-  <div class="auth">
-    <header class="bar">
-      <a href="/" class="brand">
-        <span class="logo"><Icon name="terminal" size={14} /></span>
-        <span>edgey<span class="accent">cli</span></span>
-      </a>
-      <span class="motto">YOUR AI WORKSPACE</span>
+<Shell title="Your AI Workspace">
+  <div class="landing">
+
+    <!-- Nav -->
+    <header class="ln-nav" id="lnNav">
+      <div class="ln-container">
+        <a href="/" class="ln-brand">
+          <span class="ln-logo"><Icon name="terminal" size={14} /></span>
+          <span class="ln-brand-name">edgey<span class="acc">.shop</span></span>
+        </a>
+        <nav class="ln-links">
+          <a href="#features">Features</a>
+          <a href="#how">How it works</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+        <div class="ln-nav-right">
+          <button class="ln-btn ln-btn--ghost" data-open-signin>Sign in</button>
+        </div>
+      </div>
     </header>
 
-    <main class="split">
-      <section class="card hero">
-        <p class="kicker"><i class="dot"></i><span>SIXTEEN DIGITS. <b>ONE WORKSPACE.</b></span></p>
-        <div class="mid">
-          <p class="site">cli.edgey.shop</p>
-          <h1>Your number.<br /><span>Your space.</span></h1>
-          <p class="digits" data-digits aria-hidden="true">
-            {[0, 1, 2, 3].map(() => (
-              <span class="grp">
-                {[0, 1, 2, 3].map(() => (
-                  <span class="d">
-                    <span class="strip">{'0123456789'.split('').map((n) => <span>{n}</span>)}</span>
-                  </span>
-                ))}
-              </span>
-            ))}
-          </p>
-          <p class="note">No email. No password. Just your access number.</p>
+    <!-- Hero -->
+    <section class="ln-hero">
+      <div class="ln-orbs">
+        <div class="ln-orb ln-orb--1"></div>
+        <div class="ln-orb ln-orb--2"></div>
+        <div class="ln-orb ln-orb--3"></div>
+      </div>
+      <div class="ln-particles" id="particles"></div>
+      <div class="ln-container">
+        <div class="ln-hero-badge">
+          <span class="ln-dot"></span>
+          <span>YOUR AI WORKSPACE</span>
         </div>
-        <div class="hero-foot">
-          <span>00 / UNCLAIMED</span>
-          <span class="accent">KEEP IT YOURS.</span>
-        </div>
-      </section>
+        <h1 class="ln-hero-title">
+          More models.<br />
+          <span class="ln-hero-fade">One workspace.</span>
+        </h1>
+        <p class="ln-hero-sub">
+          Connect to AI models through one API.<br />
+          Manage keys, usage limits and token costs in one place.
+        </p>
 
-      <section class="panel">
-        <div class="tabs" role="tablist" aria-label="Account">
+        <div class="ln-provider-strip">
+          <span class="ln-provider"><span class="ln-prov-icon ln-prov-icon--gpt">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M22.28 9.37a5.49 5.49 0 0 0-.47-4.5A5.55 5.55 0 0 0 15.83 1.5a5.49 5.49 0 0 0-4.15-1.84A5.55 5.55 0 0 0 6.5 2.57a5.49 5.49 0 0 0-3.67 2.67 5.55 5.55 0 0 0 .68 6.5 5.49 5.49 0 0 0 .47 4.5A5.55 5.55 0 0 0 9.97 19.6a5.49 5.49 0 0 0 4.15 1.84 5.55 5.55 0 0 0 5.18-2.91 5.49 5.49 0 0 0 3.67-2.67 5.55 5.55 0 0 0-.68-6.5zM14.12 20.07a4.13 4.13 0 0 1-2.65-.96l.13-.07 4.4-2.54a.72.72 0 0 0 .36-.62v-6.2l1.86 1.07a.07.07 0 0 1 .04.05v5.14a4.14 4.14 0 0 1-4.14 4.13zM4.16 16.47a4.13 4.13 0 0 1-.49-2.78l.13.08 4.4 2.54a.72.72 0 0 0 .72 0l5.37-3.1v2.14a.07.07 0 0 1-.03.06l-4.45 2.57a4.14 4.14 0 0 1-5.65-1.51zM3.07 7.84A4.13 4.13 0 0 1 5.23 6l-.01.15v5.08a.72.72 0 0 0 .36.62l5.37 3.1-1.86 1.07a.07.07 0 0 1-.06 0l-4.45-2.57A4.14 4.14 0 0 1 3.07 7.84zm15.08 3.51-5.37-3.1 1.86-1.07a.07.07 0 0 1 .06 0l4.45 2.57a4.14 4.14 0 0 1-.64 7.47V12a.72.72 0 0 0-.36-.62v-.03zm1.85-2.8-.13-.08-4.4-2.54a.72.72 0 0 0-.72 0L9.38 9.03V6.89a.07.07 0 0 1 .03-.06l4.45-2.56a4.14 4.14 0 0 1 6.14 4.28zM8.38 12.71 6.52 11.64a.07.07 0 0 1-.04-.05V6.45A4.14 4.14 0 0 1 13.27 3.9l-.13.07-4.4 2.54a.72.72 0 0 0-.36.62v6.2-.62zm1.01-2.18L12 8.95l2.61 1.51v3.01L12 15.05l-2.61-1.51V10.53z"/></svg>
+          </span>OpenAI</span>
+          <span class="ln-provider"><span class="ln-prov-icon ln-prov-icon--claude">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15.5v-3l-3.5-2 1-1.73L12 13l3.5-2.23 1 1.73-3.5 2v3h-2z"/></svg>
+          </span>Claude</span>
+          <span class="ln-provider ln-prov--highlight"><span class="ln-prov-icon ln-prov-icon--edgey">
+            <Icon name="terminal" size={16} />
+          </span>edgey</span>
+          <span class="ln-provider"><span class="ln-prov-icon ln-prov-icon--grok">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 3l7.5 9L3 21h2l6.5-7.8L18 21h3l-8-9.5L20.5 3h-2L12 10.3 6 3H3z"/></svg>
+          </span>Grok</span>
+        </div>
+
+        <div class="ln-hero-actions">
+          <button class="ln-btn ln-btn--primary ln-btn--lg" data-open-signin>
+            Start building <Icon name="arrowRight" size={14} />
+          </button>
+          <a href="/overview" class="ln-btn ln-btn--ghost ln-btn--lg">
+            Open workspace <Icon name="arrowUpRight" size={14} />
+          </a>
+        </div>
+
+        <p class="ln-hero-already">
+          Already with us? <button class="ln-link" data-open-signin>Use your existing account.</button>
+        </p>
+      </div>
+    </section>
+
+    <!-- Model Activity -->
+    <section class="ln-section" id="models">
+      <div class="ln-container">
+        <h2 class="ln-section-title">
+          Find your rhythm.<br />
+          <span class="ln-fade">Build with your favorites.</span>
+        </h2>
+        <p class="ln-section-sub">A closer look at how your model usage comes together.</p>
+
+        <div class="ln-counters">
+          <div class="ln-counter">
+            <span class="ln-counter-val" data-count={modelCount}>0</span>
+            <span class="ln-counter-label">Models</span>
+          </div>
+          <div class="ln-counter-sep"></div>
+          <div class="ln-counter">
+            <span class="ln-counter-val" data-count={providerCount}>0</span>
+            <span class="ln-counter-label">Providers</span>
+          </div>
+          <div class="ln-counter-sep"></div>
+          <div class="ln-counter">
+            <span class="ln-counter-val" data-count="99.9" data-suffix="%">0%</span>
+            <span class="ln-counter-label">Uptime</span>
+          </div>
+        </div>
+
+        <div class="ln-activity-card">
+          <div class="ln-activity-head">
+            <div class="ln-activity-info">
+              <Icon name="activity" size={18} />
+              <div>
+                <p class="ln-activity-title">Model activity</p>
+                <p class="ln-activity-meta">{providerCount} model families · {modelCount} models</p>
+              </div>
+            </div>
+            <a href="/overview" class="ln-btn ln-btn--sm">Open workspace <Icon name="arrowUpRight" size={12} /></a>
+          </div>
+
+          <div class="ln-prov-cards">
+            <div class="ln-prov-card">
+              <div class="ln-radar">
+                <div class="ln-radar-ring"></div>
+                <div class="ln-radar-ring ln-radar-ring--2"></div>
+                <div class="ln-radar-ring ln-radar-ring--3"></div>
+                <div class="ln-radar-sweep"></div>
+                <div class="ln-radar-ticks">
+                  {Array.from({length: 12}).map((_, i) => <span class="ln-tick" style={`--i:${i}`}></span>)}
+                </div>
+                <div class="ln-radar-icon">
+                  <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M22.28 9.37a5.49 5.49 0 0 0-.47-4.5A5.55 5.55 0 0 0 15.83 1.5a5.49 5.49 0 0 0-4.15-1.84A5.55 5.55 0 0 0 6.5 2.57a5.49 5.49 0 0 0-3.67 2.67 5.55 5.55 0 0 0 .68 6.5 5.49 5.49 0 0 0 .47 4.5A5.55 5.55 0 0 0 9.97 19.6a5.49 5.49 0 0 0 4.15 1.84 5.55 5.55 0 0 0 5.18-2.91 5.49 5.49 0 0 0 3.67-2.67 5.55 5.55 0 0 0-.68-6.5zM14.12 20.07a4.13 4.13 0 0 1-2.65-.96l.13-.07 4.4-2.54a.72.72 0 0 0 .36-.62v-6.2l1.86 1.07a.07.07 0 0 1 .04.05v5.14a4.14 4.14 0 0 1-4.14 4.13zM4.16 16.47a4.13 4.13 0 0 1-.49-2.78l.13.08 4.4 2.54a.72.72 0 0 0 .72 0l5.37-3.1v2.14a.07.07 0 0 1-.03.06l-4.45 2.57a4.14 4.14 0 0 1-5.65-1.51zM3.07 7.84A4.13 4.13 0 0 1 5.23 6l-.01.15v5.08a.72.72 0 0 0 .36.62l5.37 3.1-1.86 1.07a.07.07 0 0 1-.06 0l-4.45-2.57A4.14 4.14 0 0 1 3.07 7.84zm15.08 3.51-5.37-3.1 1.86-1.07a.07.07 0 0 1 .06 0l4.45 2.57a4.14 4.14 0 0 1-.64 7.47V12a.72.72 0 0 0-.36-.62v-.03zm1.85-2.8-.13-.08-4.4-2.54a.72.72 0 0 0-.72 0L9.38 9.03V6.89a.07.07 0 0 1 .03-.06l4.45-2.56a4.14 4.14 0 0 1 6.14 4.28zM8.38 12.71 6.52 11.64a.07.07 0 0 1-.04-.05V6.45A4.14 4.14 0 0 1 13.27 3.9l-.13.07-4.4 2.54a.72.72 0 0 0-.36.62v6.2-.62zm1.01-2.18L12 8.95l2.61 1.51v3.01L12 15.05l-2.61-1.51V10.53z"/></svg>
+                </div>
+                <div class="ln-radar-blips">
+                  <span class="ln-blip" style="--angle:35deg;--dist:38px"></span>
+                  <span class="ln-blip" style="--angle:160deg;--dist:42px"></span>
+                  <span class="ln-blip ln-blip--fade" style="--angle:280deg;--dist:35px"></span>
+                </div>
+              </div>
+              <p class="ln-prov-card-name">OpenAI</p>
+              <p class="ln-prov-card-sub">GPT · General purpose</p>
+              <span class="ln-prov-card-stat"><Icon name="activity" size={12} /> 6 models</span>
+            </div>
+
+            <div class="ln-prov-card">
+              <div class="ln-radar ln-radar--purple">
+                <div class="ln-radar-ring ln-radar-ring--purple"></div>
+                <div class="ln-radar-ring ln-radar-ring--2 ln-radar-ring--purple"></div>
+                <div class="ln-radar-ring ln-radar-ring--3 ln-radar-ring--purple"></div>
+                <div class="ln-radar-sweep ln-radar-sweep--purple"></div>
+                <div class="ln-radar-ticks ln-radar-ticks--purple">
+                  {Array.from({length: 12}).map((_, i) => <span class="ln-tick" style={`--i:${i}`}></span>)}
+                </div>
+                <div class="ln-radar-icon ln-radar-icon--purple">
+                  <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3l1.5 5H19l-4 3.5 1.5 5.5-4.5-3-4.5 3 1.5-5.5L5 8h5.5z"/></svg>
+                </div>
+                <div class="ln-radar-blips">
+                  <span class="ln-blip ln-blip--purple" style="--angle:70deg;--dist:40px"></span>
+                  <span class="ln-blip ln-blip--purple" style="--angle:210deg;--dist:36px"></span>
+                </div>
+              </div>
+              <p class="ln-prov-card-name">Anthropic</p>
+              <p class="ln-prov-card-sub">Claude · Reasoning</p>
+              <span class="ln-prov-card-stat"><Icon name="activity" size={12} /> 8 models</span>
+            </div>
+
+            <div class="ln-prov-card">
+              <div class="ln-radar ln-radar--cyan">
+                <div class="ln-radar-ring ln-radar-ring--cyan"></div>
+                <div class="ln-radar-ring ln-radar-ring--2 ln-radar-ring--cyan"></div>
+                <div class="ln-radar-ring ln-radar-ring--3 ln-radar-ring--cyan"></div>
+                <div class="ln-radar-sweep ln-radar-sweep--cyan"></div>
+                <div class="ln-radar-ticks ln-radar-ticks--cyan">
+                  {Array.from({length: 12}).map((_, i) => <span class="ln-tick" style={`--i:${i}`}></span>)}
+                </div>
+                <div class="ln-radar-icon ln-radar-icon--cyan">
+                  <Icon name="terminal" size={26} />
+                </div>
+                <div class="ln-radar-blips">
+                  <span class="ln-blip ln-blip--cyan" style="--angle:120deg;--dist:44px"></span>
+                  <span class="ln-blip ln-blip--cyan ln-blip--fade" style="--angle:300deg;--dist:38px"></span>
+                </div>
+              </div>
+              <p class="ln-prov-card-name">edgey</p>
+              <p class="ln-prov-card-sub">Premium · Beast mode</p>
+              <span class="ln-prov-card-stat"><Icon name="shield" size={12} /> Exclusive</span>
+            </div>
+          </div>
+
+          <div class="ln-share-bar">
+            <div class="ln-share-header">
+              <span>Request share</span>
+              <span class="ln-share-total">{modelCount} models total</span>
+            </div>
+            <div class="ln-bar-track">
+              <div class="ln-bar-seg ln-bar-seg--green" style="width:16%"></div>
+              <div class="ln-bar-seg ln-bar-seg--purple" style="width:20%"></div>
+              <div class="ln-bar-seg ln-bar-seg--cyan" style="width:64%"></div>
+            </div>
+            <div class="ln-share-legend">
+              <span><i class="ln-leg-dot ln-leg-dot--green"></i> GPT 16%</span>
+              <span><i class="ln-leg-dot ln-leg-dot--purple"></i> Claude 20%</span>
+              <span><i class="ln-leg-dot ln-leg-dot--cyan"></i> All others 64%</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="ln-section-note">Animated preview with example usage. Your actual models and activity appear in the workspace.</p>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="ln-section" id="features">
+      <div class="ln-container">
+        <div class="ln-divider"></div>
+        <p class="ln-section-eyebrow">NOTHING IN YOUR WAY.</p>
+        <h2 class="ln-section-title ln-section-title--sm">
+          From your first API key to your next project.<br />
+          <span class="ln-fade">A workspace that keeps the details together.</span>
+        </h2>
+
+        <div class="ln-feat-grid">
+          {features.map((f, idx) => (
+            <article class="ln-feat">
+              <div class="ln-feat-icon"><Icon name={f.icon} size={18} /></div>
+              <h3>{f.title}</h3>
+              <p>{f.desc}</p>
+              {idx === 0 && (
+                <div class="ln-feat-preview">
+                  <div class="ln-feat-badges">
+                    {f.badges?.map(b => <span class="ln-feat-badge">{b}</span>)}
+                  </div>
+                </div>
+              )}
+              {idx === 1 && (
+                <div class="ln-feat-preview">
+                  <div class="ln-feat-keys">
+                    {f.lines?.map((l, li) => (
+                      <div class={`ln-feat-key-row${li === 0 ? ' ln-feat-key-row--active' : ''}`}>
+                        <span class="ln-feat-key-dot"></span>
+                        <span>{l}</span>
+                        <span class="ln-feat-key-badge">sk_edgey_…</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {idx === 2 && (
+                <div class="ln-feat-preview">
+                  <div class="ln-feat-bars">
+                    <div class="ln-feat-bar" style="--w:85%;--delay:0s"></div>
+                    <div class="ln-feat-bar" style="--w:60%;--delay:0.15s"></div>
+                    <div class="ln-feat-bar" style="--w:40%;--delay:0.3s"></div>
+                    <div class="ln-feat-bar" style="--w:72%;--delay:0.45s"></div>
+                  </div>
+                </div>
+              )}
+              {idx === 4 && (
+                <div class="ln-feat-preview">
+                  <div class="ln-feat-code-mini">
+                    <div class="ln-feat-code-tab">main.py</div>
+                    <code><span class="c-kw">import</span> openai</code>
+                  </div>
+                </div>
+              )}
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Code example -->
+    <section class="ln-section" id="how">
+      <div class="ln-container">
+        <div class="ln-divider"></div>
+        <p class="ln-section-eyebrow">DROP-IN COMPATIBLE.</p>
+        <h2 class="ln-section-title ln-section-title--sm">
+          One line changed.<br />
+          <span class="ln-fade">Every model unlocked.</span>
+        </h2>
+        <p class="ln-section-sub">Same OpenAI SDK. Same format. Just point the base URL to edgey and use any model in the catalog.</p>
+
+        <div class="ln-code-card">
+          <div class="ln-code-head">
+            <div class="ln-code-dots">
+              <span></span><span></span><span></span>
+            </div>
+            <span class="ln-code-lang">python</span>
+          </div>
+          <pre class="ln-code-body"><code><span class="c-kw">from</span> openai <span class="c-kw">import</span> OpenAI
+
+client = OpenAI(
+    <span class="c-key">base_url</span>=<span class="c-str">"https://api.edgey.shop/v1"</span>,
+    <span class="c-key">api_key</span>=<span class="c-str">"sk_edgey_..."</span>,
+)
+
+response = client.chat.completions.create(
+    <span class="c-key">model</span>=<span class="c-str">"claude-sonnet-5"</span>,
+    <span class="c-key">messages</span>=[{"{"}
+        <span class="c-str">"role"</span>: <span class="c-str">"user"</span>,
+        <span class="c-str">"content"</span>: <span class="c-str">"Let's build."</span>
+    {"}"}],
+)
+<span class="c-kw">print</span>(response.choices[<span class="c-num">0</span>].message.content)</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="ln-section" id="faq">
+      <div class="ln-container ln-container--narrow">
+        <div class="ln-divider"></div>
+        <p class="ln-section-eyebrow">FREQUENTLY ASKED</p>
+        <h2 class="ln-section-title ln-section-title--sm">
+          Questions?<br />
+          <span class="ln-fade">Covered.</span>
+        </h2>
+
+        <div class="ln-faq-list">
+          <details class="ln-faq">
+            <summary><span>How does pricing work?</span><Icon name="plus" size={14} /></summary>
+            <div class="ln-faq-body"><p>You buy token packs (starting at €9.99). Each model has a rate multiplier — a ×2 model costs twice as many tokens per request as a ×1 model. Your balance is shared across all your API keys.</p></div>
+          </details>
+          <details class="ln-faq">
+            <summary><span>Is it OpenAI-compatible?</span><Icon name="plus" size={14} /></summary>
+            <div class="ln-faq-body"><p>Yes. Point any OpenAI SDK or tool at <code>https://api.edgey.shop/v1</code> with your <code>sk_edgey_</code> key. Same format, same streaming, same function calling.</p></div>
+          </details>
+          <details class="ln-faq">
+            <summary><span>Which models are available?</span><Icon name="plus" size={14} /></summary>
+            <div class="ln-faq-body"><p>GPT (including GPT-6), Claude (Opus, Sonnet, Haiku, Fable), Gemini, Grok, Deepseek, Qwen, and more. {modelCount} models across {providerCount} providers. Check <a href="/models">the model list</a> for the full catalog.</p></div>
+          </details>
+          <details class="ln-faq">
+            <summary><span>What payment methods are accepted?</span><Icon name="plus" size={14} /></summary>
+            <div class="ln-faq-body"><p>Crypto (BTC, ETH, LTC, USDT, SOL) via NOWPayments with instant delivery. PayPal and card available via Discord.</p></div>
+          </details>
+          <details class="ln-faq">
+            <summary><span>How do I get started?</span><Icon name="plus" size={14} /></summary>
+            <div class="ln-faq-body"><p>Join the Discord, purchase a plan, and receive your 16-digit edgey ID and CLI key. Sign in here, grab your API key, and start building.</p></div>
+          </details>
+          <details class="ln-faq">
+            <summary><span>Is my upstream provider key exposed?</span><Icon name="plus" size={14} /></summary>
+            <div class="ln-faq-body"><p>No. Your requests are relayed through edgey's servers. The upstream key never leaves the infrastructure. Clients only see their own <code>sk_edgey_</code> key.</p></div>
+          </details>
+        </div>
+
+        <p class="ln-faq-more">Something else on your mind? <a href={DISCORD_URL} target="_blank" rel="noopener">Talk to support <Icon name="arrowUpRight" size={12} /></a></p>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="ln-section">
+      <div class="ln-container">
+        <div class="ln-divider"></div>
+        <p class="ln-section-eyebrow">LESS FRICTION. MORE BUILDING.</p>
+        <h2 class="ln-cta-title">Make room for<br />your next idea.</h2>
+        <div class="ln-cta-actions">
+          <button class="ln-btn ln-btn--primary ln-btn--lg" data-open-signin>
+            Start building <Icon name="arrowRight" size={14} />
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="ln-footer">
+      <div class="ln-container">
+        <div class="ln-divider"></div>
+        <div class="ln-footer-grid">
+          <div class="ln-footer-brand">
+            <a href="/" class="ln-brand">
+              <span class="ln-logo"><Icon name="terminal" size={14} /></span>
+              <span class="ln-brand-name">edgey<span class="acc">.shop</span></span>
+            </a>
+            <p>Your AI models, API keys<br />and usage in one place.</p>
+            <p class="ln-footer-copy">© {year} cli.edgey.shop</p>
+          </div>
+
+          <div class="ln-footer-col">
+            <h4>Workspace</h4>
+            <a href="/" data-open-signin>Sign in</a>
+            <a href="/#register" data-open-signin-register>Create account</a>
+            <a href="/models">Models</a>
+          </div>
+
+          <div class="ln-footer-col">
+            <h4>Resources</h4>
+            <a href="/setup">Setup</a>
+            <a href="/support">Support</a>
+            <a href="#faq">FAQ</a>
+          </div>
+
+          <div class="ln-footer-col">
+            <h4>Information</h4>
+            <a href="/terms">Terms &amp; payments</a>
+            <a href="/products">Products</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Sign-in dialog -->
+    <dialog class="ln-dialog" id="signinDialog">
+      <div class="ln-dialog-backdrop" data-close-signin></div>
+      <div class="ln-dialog-panel">
+        <button class="ln-dialog-close" data-close-signin aria-label="Close"><Icon name="x" size={18} /></button>
+
+        <div class="ln-dialog-tabs" role="tablist">
           <button class="on" role="tab" aria-selected="true" data-tab="signin">Sign in</button>
           <button role="tab" aria-selected="false" data-tab="register">Get access</button>
         </div>
 
-        <form class="view" data-view="signin" novalidate>
-          <p class="eyebrow">WELCOME BACK</p>
+        <form class="ln-dialog-view" data-view="signin" novalidate>
+          <p class="ln-d-eyebrow">WELCOME BACK</p>
           <h2>Make yourself at home.</h2>
-          <p class="lead">Enter the 16-digit edgey ID you received with your purchase.</p>
-          <label for="access" class="label">edgey ID</label>
-          <div class="field">
+          <p class="ln-d-lead">Enter the 16-digit edgey ID you received with your purchase.</p>
+          <label for="access" class="ln-d-label">edgey ID</label>
+          <div class="ln-d-field">
             <input
               id="access"
               name="access"
@@ -64,60 +435,77 @@ const steps = ['Buy a plan on Discord.', 'Receive your edgey ID and your CLI key
               placeholder="0000 0000 0000 0000"
               data-access
             />
-            <button type="button" class="eye" aria-label="Show number" data-eye>
+            <button type="button" class="ln-d-eye" aria-label="Show number" data-eye>
               <span data-icon="show"><Icon name="eye" /></span>
               <span data-icon="hide" hidden><Icon name="eyeOff" /></span>
             </button>
           </div>
-          <button type="submit" class="btn primary big">Sign in <Icon name="arrowRight" size={14} /></button>
-          <p class="msg" data-msg role="status" hidden></p>
-          <p class="small">New here? <button type="button" class="link" data-go="register">Get your access.</button></p>
+          <button type="submit" class="ln-btn ln-btn--primary ln-btn--full">Sign in <Icon name="arrowRight" size={14} /></button>
+          <p class="ln-d-msg" data-msg role="status" hidden></p>
+          <p class="ln-d-small">New here? <button type="button" class="ln-link" data-go="register">Get your access.</button></p>
         </form>
 
-        <div class="view register" data-view="register" hidden>
-          <p class="eyebrow">NEW HERE</p>
+        <div class="ln-dialog-view" data-view="register" hidden>
+          <p class="ln-d-eyebrow">NEW HERE</p>
           <h2>Get your access.</h2>
-          <p class="lead">Your edgey ID and CLI key are delivered with your purchase. No email or password needed.</p>
-          <ol class="steps">
-            {steps.map((s, i) => (
-              <li><span class="n">{String(i + 1).padStart(2, '0')}</span>{s}</li>
-            ))}
+          <p class="ln-d-lead">Your edgey ID and CLI key are delivered with your purchase. No email or password needed.</p>
+          <ol class="ln-d-steps">
+            <li><span class="ln-d-n">01</span>Buy a plan on Discord.</li>
+            <li><span class="ln-d-n">02</span>Receive your edgey ID and your CLI key.</li>
+            <li><span class="ln-d-n">03</span>Sign in here and install the CLI.</li>
           </ol>
-          <a href={DISCORD_URL} class="btn primary big" target="_blank" rel="noopener">Get access on Discord <Icon name="arrowUpRight" size={14} /></a>
-          <p class="small accent">Keep your edgey ID and CLI key private. Staff will never ask for them.</p>
+          <a href={DISCORD_URL} class="ln-btn ln-btn--primary ln-btn--full" target="_blank" rel="noopener">
+            Get access on Discord <Icon name="arrowUpRight" size={14} />
+          </a>
+          <p class="ln-d-small acc">Keep your edgey ID and CLI key private. Staff will never ask for them.</p>
         </div>
-      </section>
-    </main>
-
-    <footer class="foot">
-      <span>© {year} cli.edgey.shop</span>
-      <span class="links">
-        <a href="/products">Products</a> · <a href="/support">Support</a> · <a href="/terms">Terms</a> · One number. Your workspace.
-      </span>
-    </footer>
+      </div>
+    </dialog>
   </div>
 </Shell>
 
 <script>
   import { API_ENABLED, ApiError, api, session } from '../lib/api';
 
-  // Tabs: Sign in / Register (#register opens the second one).
+  // Sticky nav shadow
+  const nav = document.getElementById('lnNav');
+  if (nav) {
+    const observer = new IntersectionObserver(([e]) => nav.classList.toggle('scrolled', !e.isIntersecting), { threshold: [1], rootMargin: '-1px 0px 0px 0px' });
+    observer.observe(nav);
+  }
+
+  // Dialog
+  const dialog = document.getElementById('signinDialog') as HTMLDialogElement | null;
+  const openBtns = document.querySelectorAll<HTMLElement>('[data-open-signin]');
+  const openRegBtns = document.querySelectorAll<HTMLElement>('[data-open-signin-register]');
+  const closeBtns = document.querySelectorAll<HTMLElement>('[data-close-signin]');
+
+  const openDialog = (tab = 'signin') => {
+    if (!dialog) return;
+    dialog.showModal();
+    showTab(tab);
+  };
+  openBtns.forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); openDialog('signin'); }));
+  openRegBtns.forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); openDialog('register'); }));
+  closeBtns.forEach(b => b.addEventListener('click', () => dialog?.close()));
+
+  if (location.hash === '#register') openDialog('register');
+
+  // Tabs
   const tabs = [...document.querySelectorAll<HTMLButtonElement>('[data-tab]')];
-  const views = [...document.querySelectorAll<HTMLFormElement>('[data-view]')];
-  const show = (id: string) => {
-    tabs.forEach((t) => {
+  const views = [...document.querySelectorAll<HTMLElement>('[data-view]')];
+  const showTab = (id: string) => {
+    tabs.forEach(t => {
       const on = t.dataset.tab === id;
       t.classList.toggle('on', on);
       t.setAttribute('aria-selected', String(on));
     });
-    views.forEach((v) => (v.hidden = v.dataset.view !== id));
-    history.replaceState(null, '', id === 'register' ? '#register' : location.pathname);
+    views.forEach(v => (v.hidden = v.dataset.view !== id));
   };
-  tabs.forEach((t) => t.addEventListener('click', () => show(t.dataset.tab ?? 'signin')));
-  document.querySelectorAll<HTMLElement>('[data-go]').forEach((b) => b.addEventListener('click', () => show(b.dataset.go ?? 'signin')));
-  if (location.hash === '#register') show('register');
+  tabs.forEach(t => t.addEventListener('click', () => showTab(t.dataset.tab ?? 'signin')));
+  document.querySelectorAll<HTMLElement>('[data-go]').forEach(b => b.addEventListener('click', () => showTab(b.dataset.go ?? 'signin')));
 
-  // Access number: digits only, grouped by four.
+  // Access number input
   const input = document.querySelector<HTMLInputElement>('[data-access]');
   const digitCount = () => input?.value.replace(/\D/g, '').length ?? 0;
   input?.addEventListener('input', () => {
@@ -147,19 +535,14 @@ const steps = ['Buy a plan on Discord.', 'Receive your edgey ID and your CLI key
     setTimeout(() => location.assign('/overview'), 350);
   };
 
-  views.forEach((form) =>
+  views.forEach(form =>
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const msg = form.querySelector<HTMLElement>('[data-msg]');
       if (!msg) return;
-      const say = (text: string) => {
-        msg.textContent = text;
-        msg.hidden = false;
-      };
+      const say = (text: string) => { msg.textContent = text; msg.hidden = false; };
       msg.hidden = true;
-
       if (digitCount() < 16) return say('Enter all 16 digits of your edgey ID.');
-      // Preview mode (no API yet): any complete number opens the workspace.
       if (!API_ENABLED) return enter(form);
       try {
         const { token } = await api<{ token: string }>('/auth/login', { method: 'POST', body: { number: input!.value } });
@@ -171,217 +554,572 @@ const steps = ['Buy a plan on Discord.', 'Receive your edgey ID and your CLI key
     }),
   );
 
-  // Rolling access-number digits on the left card.
-  const digits = document.querySelector<HTMLElement>('[data-digits]');
-  if (digits && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    const strips = [...digits.querySelectorAll<HTMLElement>('.strip')];
-    const roll = () =>
-      strips.forEach((s, i) => {
-        s.style.transitionDelay = `${i * 45}ms`;
-        s.style.transform = `translateY(${-Math.floor(Math.random() * 10) * 1.25}em)`;
-      });
-    requestAnimationFrame(roll);
-    setInterval(roll, 3600);
+  // Smooth scroll for anchor links
+  document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', (e) => {
+      const target = document.querySelector(a.getAttribute('href')!);
+      if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
+    });
+  });
+
+  // Animated counters
+  const counters = document.querySelectorAll<HTMLElement>('[data-count]');
+  const animateCounter = (el: HTMLElement) => {
+    const target = parseFloat(el.dataset.count!);
+    const suffix = el.dataset.suffix ?? '';
+    const isFloat = String(target).includes('.');
+    const duration = 1800;
+    const start = performance.now();
+    const step = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = eased * target;
+      el.textContent = (isFloat ? current.toFixed(1) : Math.round(current).toString()) + suffix;
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        animateCounter(e.target as HTMLElement);
+        counterObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  counters.forEach(c => counterObserver.observe(c));
+
+  // Particles
+  const particlesEl = document.getElementById('particles');
+  if (particlesEl) {
+    for (let i = 0; i < 30; i++) {
+      const dot = document.createElement('span');
+      dot.className = 'ln-particle';
+      dot.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*5}s;animation-duration:${4+Math.random()*4}s;`;
+      particlesEl.appendChild(dot);
+    }
   }
 </script>
 
 <style>
-  .auth {
-    min-height: 100svh;
-    max-width: 1220px;
-    margin: 0 auto;
-    padding: 0 16px;
-    display: flex;
-    flex-direction: column;
-  }
-  .bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; height: 96px; }
-  .brand { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
-  .logo {
-    display: grid;
-    place-items: center;
-    width: 26px;
-    height: 26px;
-    border-radius: 7px;
-    color: var(--accent);
-    background: var(--accent-soft);
-    border: 1px solid var(--accent-line);
-  }
-  .logo { view-transition-name: brand-logo; }
-  .accent { color: var(--accent); }
-  .motto { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.2em; color: var(--accent); opacity: 0.85; }
+  /* ─── Layout ─── */
+  .landing { min-height: 100svh; position: relative; overflow-x: hidden; }
 
-  .split {
-    flex: 1;
-    display: grid;
-    grid-template-columns: minmax(0, 606px) minmax(0, 1fr);
-    align-items: center;
-    gap: 48px;
-    padding: 16px 0 40px;
-  }
+  .ln-container { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
+  .ln-container--narrow { max-width: 800px; }
 
-  .hero {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-height: clamp(520px, calc(100svh - 220px), 720px);
-    padding: 32px;
-    overflow: hidden;
-    border-radius: 18px;
-    background:
-      radial-gradient(120% 80% at 0% 0%, rgb(34 211 238 / 0.08), transparent 55%),
-      linear-gradient(180deg, var(--surface-2), var(--surface));
-    box-shadow: 0 30px 80px -40px rgb(0 0 0 / 0.8);
-  }
-  .kicker {
+  /* ─── Nav ─── */
+  .ln-nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    height: 64px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-family: var(--mono);
-    font-size: 9px;
-    letter-spacing: 0.2em;
+    background: rgb(5 8 11 / 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+  .ln-nav.scrolled { border-color: var(--border); }
+  .ln-nav .ln-container { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+  .ln-brand { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; }
+  .ln-logo {
+    display: grid; place-items: center;
+    width: 28px; height: 28px; border-radius: 8px;
+    color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line);
+  }
+  .acc { color: var(--muted); font-weight: 400; }
+  .ln-links { display: flex; gap: 28px; font-size: 13px; color: var(--muted); }
+  .ln-links a:hover { color: var(--fg); }
+  .ln-nav-right { display: flex; gap: 10px; }
+
+  /* ─── Buttons ─── */
+  .ln-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 38px; padding: 0 16px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; white-space: nowrap;
+    border: 1px solid var(--border-2); background: var(--bg); color: var(--fg);
+    transition: all 0.15s; cursor: pointer;
+  }
+  .ln-btn:hover { border-color: var(--accent-line); color: var(--accent); }
+  .ln-btn--primary { background: var(--accent); border-color: var(--accent); color: #031217; }
+  .ln-btn--primary:hover { filter: brightness(1.1); color: #031217; }
+  .ln-btn--ghost { background: transparent; border-color: var(--border-2); }
+  .ln-btn--lg { height: 46px; padding: 0 22px; font-size: 14px; }
+  .ln-btn--sm { height: 34px; padding: 0 14px; font-size: 12px; }
+  .ln-btn--full { width: 100%; height: 46px; }
+  .ln-link { color: var(--fg); font-weight: 600; background: none; border: 0; cursor: pointer; font: inherit; transition: color 0.15s; }
+  .ln-link:hover { color: var(--accent); }
+
+  /* ─── Background Effects ─── */
+  .ln-orbs {
+    position: absolute; top: 0; left: 0; right: 0; height: 100vh;
+    overflow: hidden; pointer-events: none; z-index: 0;
+  }
+  .ln-orb {
+    position: absolute; border-radius: 50%;
+    filter: blur(100px); opacity: 0.15;
+    animation: orb-float 20s ease-in-out infinite;
+  }
+  .ln-orb--1 {
+    width: 500px; height: 500px; top: -10%; left: -10%;
+    background: radial-gradient(circle, var(--accent), transparent 70%);
+  }
+  .ln-orb--2 {
+    width: 400px; height: 400px; top: 20%; right: -8%;
+    background: radial-gradient(circle, rgb(168 85 247), transparent 70%);
+    animation-delay: -7s; animation-duration: 25s;
+  }
+  .ln-orb--3 {
+    width: 350px; height: 350px; top: 50%; left: 30%;
+    background: radial-gradient(circle, rgb(74 222 128), transparent 70%);
+    animation-delay: -14s; animation-duration: 22s;
+  }
+  @keyframes orb-float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -20px) scale(1.05); }
+    66% { transform: translate(-20px, 15px) scale(0.95); }
+  }
+  .ln-particles {
+    position: absolute; top: 0; left: 0; right: 0; height: 100vh;
+    overflow: hidden; pointer-events: none; z-index: 0;
+  }
+  :global(.ln-particle) {
+    position: absolute;
+    width: 2px; height: 2px; border-radius: 50%;
+    background: var(--accent); opacity: 0;
+    animation: particle-drift ease-in-out infinite;
+  }
+  @keyframes particle-drift {
+    0%, 100% { opacity: 0; transform: translateY(0); }
+    50% { opacity: 0.4; transform: translateY(-20px); }
+  }
+
+  /* ─── Hero ─── */
+  .ln-hero { padding: 100px 0 80px; text-align: center; position: relative; z-index: 1; }
+  .ln-hero-badge {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 8px 18px; border-radius: 999px;
+    background: var(--surface-2); border: 1px solid var(--border);
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em; color: var(--muted);
+  }
+  .ln-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+  .ln-hero-title {
+    margin-top: 32px;
+    font-size: clamp(48px, 8vw, 82px);
+    font-weight: 700; line-height: 1.04; letter-spacing: -0.045em;
+  }
+  .ln-hero-fade, .ln-fade { color: var(--accent); }
+  .ln-hero-sub {
+    margin-top: 22px;
+    font-size: 16px; line-height: 1.65; color: var(--muted);
+  }
+
+  /* Provider strip */
+  .ln-provider-strip {
+    display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;
+    margin-top: 40px; padding: 16px 0;
+  }
+  .ln-provider {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 14px; font-weight: 500; color: var(--muted);
+  }
+  .ln-prov--highlight { color: var(--fg); position: relative; }
+  .ln-prov--highlight::before {
+    content: ''; position: absolute; inset: -6px -14px; border-radius: 8px;
+    border: 1px dashed var(--accent-line);
+  }
+  .ln-prov-icon {
+    display: grid; place-items: center;
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--surface-2); border: 1px solid var(--border);
     color: var(--muted);
   }
-  .kicker b { font-weight: inherit; color: var(--accent); }
-  .dot {
-    width: 5px;
-    height: 5px;
+  .ln-prov-icon--edgey { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-line); }
+
+  .ln-hero-actions { display: flex; justify-content: center; gap: 12px; margin-top: 40px; }
+  .ln-hero-already {
+    margin-top: 20px;
+    font-size: 13px; color: var(--muted);
+  }
+
+  /* ─── Sections ─── */
+  .ln-section { padding: 60px 0; }
+  .ln-section-eyebrow {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.25em; color: var(--muted);
+    text-align: center; margin-bottom: 16px;
+  }
+  .ln-section-title {
+    text-align: center;
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 700; line-height: 1.08; letter-spacing: -0.04em;
+  }
+  .ln-section-title--sm { font-size: clamp(28px, 4vw, 42px); }
+  .ln-section-sub {
+    text-align: center; margin-top: 14px;
+    font-size: 15px; color: var(--muted);
+  }
+  .ln-section-note {
+    text-align: center; margin-top: 20px;
+    font-size: 12px; color: #3d4c55; font-style: italic;
+  }
+  .ln-divider {
+    width: 100%; height: 1px; margin-bottom: 48px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+  }
+
+  /* ─── Activity Card ─── */
+  .ln-activity-card {
+    margin-top: 48px; padding: 28px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, var(--surface-2), var(--surface));
+    border: 1px solid var(--border);
+  }
+  .ln-activity-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .ln-activity-info { display: flex; align-items: center; gap: 12px; }
+  .ln-activity-title { font-size: 15px; font-weight: 600; }
+  .ln-activity-meta { font-size: 12px; color: var(--muted); }
+  .ln-prov-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+  .ln-prov-card {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 32px 16px 24px; border-radius: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .ln-prov-card:hover { border-color: var(--accent-line); transform: translateY(-2px); }
+  .ln-prov-card-name { margin-top: 18px; font-size: 15px; font-weight: 600; }
+  .ln-prov-card-sub { margin-top: 4px; font-size: 12px; color: var(--muted); }
+  .ln-prov-card-stat {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 16px; padding: 5px 12px; border-radius: 999px;
+    font-size: 11px; font-weight: 500; color: var(--muted);
+    background: var(--surface-2); border: 1px solid var(--border);
+  }
+
+  /* ─── Counters ─── */
+  .ln-counters {
+    display: flex; justify-content: center; align-items: center; gap: 32px;
+    margin-top: 40px; margin-bottom: -8px;
+  }
+  .ln-counter { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .ln-counter-val {
+    font-size: clamp(36px, 5vw, 52px); font-weight: 700;
+    letter-spacing: -0.03em; color: var(--fg);
+    font-variant-numeric: tabular-nums;
+  }
+  .ln-counter-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; }
+  .ln-counter-sep { width: 1px; height: 40px; background: var(--border); }
+
+  /* Radar animation */
+  .ln-radar { position: relative; width: 110px; height: 110px; }
+  .ln-radar-ring {
+    position: absolute; inset: 0; border-radius: 50%;
+    border: 1.5px solid rgb(74 222 128 / 0.3);
+    animation: radar-pulse 3s ease-out infinite;
+  }
+  .ln-radar-ring--2 { animation-delay: 1.5s; }
+  .ln-radar-ring--3 { animation-delay: 0.75s; opacity: 0.5; }
+  .ln-radar-ring--purple { border-color: rgb(168 85 247 / 0.3); }
+  .ln-radar-ring--cyan { border-color: rgb(34 211 238 / 0.3); }
+  .ln-radar-icon {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    color: rgb(74 222 128);
+  }
+  .ln-radar-icon--purple { color: rgb(168 85 247); }
+  .ln-radar-icon--cyan { color: var(--accent); }
+  @keyframes radar-pulse {
+    0% { transform: scale(0.6); opacity: 1; }
+    100% { transform: scale(1.3); opacity: 0; }
+  }
+
+  /* Radar sweep */
+  .ln-radar-sweep {
+    position: absolute; inset: 0;
     border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 8px var(--accent);
+    background: conic-gradient(from 0deg, transparent 0deg, rgb(74 222 128 / 0.12) 40deg, transparent 80deg);
+    animation: sweep-spin 4s linear infinite;
   }
-  .mid { margin: auto 0; }
-  .site { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; color: var(--muted); }
-  h1 {
-    margin-top: 26px;
-    font-size: clamp(40px, 6vw, 66px);
-    font-weight: 700;
-    line-height: 1.04;
-    letter-spacing: -0.045em;
-  }
-  h1 span { color: #7f8e97; }
-  .digits {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0 0.7em;
-    margin-top: 34px;
-    font-family: var(--mono);
-    font-size: 22px;
-    letter-spacing: 0.06em;
-    color: #9fb0b9;
-  }
-  .grp { display: flex; }
-  .d { display: inline-block; height: 1.25em; overflow: hidden; }
-  .strip { display: flex; flex-direction: column; transition: transform 1.1s cubic-bezier(0.2, 0.8, 0.2, 1); }
-  .strip span { height: 1.25em; line-height: 1.25em; }
-  .note { margin-top: 14px; font-size: 12px; color: var(--muted); }
-  .hero-foot {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    font-family: var(--mono);
-    font-size: 8.5px;
-    letter-spacing: 0.2em;
-    color: #3d4c55;
-  }
-  .hero-foot .accent { opacity: 0.8; }
+  .ln-radar-sweep--purple { background: conic-gradient(from 0deg, transparent 0deg, rgb(168 85 247 / 0.12) 40deg, transparent 80deg); }
+  .ln-radar-sweep--cyan { background: conic-gradient(from 0deg, transparent 0deg, rgb(34 211 238 / 0.12) 40deg, transparent 80deg); }
+  @keyframes sweep-spin { to { transform: rotate(360deg); } }
 
-  .panel { justify-self: center; width: 100%; max-width: 332px; }
-  .tabs { display: flex; gap: 6px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
-  .tabs button {
-    padding: 9px 14px;
-    border-radius: 8px;
-    border: 1px solid transparent;
-    font-size: 12px;
-    color: var(--muted);
-    transition: color 0.15s, background 0.15s, border-color 0.15s;
+  /* Radar ticks */
+  .ln-radar-ticks {
+    position: absolute; inset: 0;
   }
-  .tabs button:hover { color: var(--fg); }
-  .tabs button.on { color: var(--fg); font-weight: 600; background: var(--surface-2); border-color: var(--accent-line); }
-  .view { padding-top: 44px; }
-  .eyebrow { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.2em; color: var(--muted); }
-  h2 { margin-top: 12px; font-size: 26px; font-weight: 700; letter-spacing: -0.03em; }
-  .lead { margin-top: 14px; font-size: 12.5px; line-height: 1.65; color: var(--muted); }
-  .view > .label, .reveal > .label { display: block; margin-top: 32px; font-size: 12px; font-weight: 600; }
-  .field {
-    display: flex;
-    align-items: center;
-    height: 48px;
-    margin-top: 10px;
-    padding: 0 8px 0 14px;
-    border-radius: 10px;
-    border: 1px solid var(--border-2);
-    background: var(--surface);
+  .ln-tick {
+    position: absolute; left: 50%; top: 50%;
+    width: 2px; height: 6px; border-radius: 1px;
+    background: rgb(74 222 128 / 0.4);
+    transform-origin: center -43px;
+    transform: translateX(-50%) rotate(calc(var(--i) * 30deg));
+    animation: tick-blink 3s ease-in-out infinite;
+    animation-delay: calc(var(--i) * 0.25s);
+  }
+  .ln-radar-ticks--purple .ln-tick { background: rgb(168 85 247 / 0.4); }
+  .ln-radar-ticks--cyan .ln-tick { background: rgb(34 211 238 / 0.4); }
+  @keyframes tick-blink {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  /* Radar blips */
+  .ln-radar-blips { position: absolute; inset: 0; }
+  .ln-blip {
+    position: absolute;
+    left: calc(50% + cos(var(--angle)) * var(--dist));
+    top: calc(50% + sin(var(--angle)) * var(--dist));
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgb(74 222 128); box-shadow: 0 0 8px rgb(74 222 128 / 0.6);
+    transform: translate(-50%, -50%);
+    animation: blip-glow 2s ease-in-out infinite;
+  }
+  .ln-blip--purple { background: rgb(168 85 247); box-shadow: 0 0 8px rgb(168 85 247 / 0.6); }
+  .ln-blip--cyan { background: var(--accent); box-shadow: 0 0 8px rgb(34 211 238 / 0.6); }
+  .ln-blip--fade { animation-delay: 1s; opacity: 0.6; }
+  @keyframes blip-glow {
+    0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(0.8); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+  }
+
+  /* Share bar */
+  .ln-share-bar { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .ln-share-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 10px; }
+  .ln-share-total { color: var(--muted); }
+  .ln-bar-track { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--surface); }
+  .ln-bar-seg { height: 100%; transition: width 0.6s ease; }
+  .ln-bar-seg--green { background: rgb(74 222 128); }
+  .ln-bar-seg--purple { background: rgb(168 85 247); }
+  .ln-bar-seg--cyan { background: var(--accent); }
+  .ln-share-legend { display: flex; gap: 20px; margin-top: 10px; font-size: 12px; color: var(--muted); }
+  .ln-leg-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .ln-leg-dot--green { background: rgb(74 222 128); }
+  .ln-leg-dot--purple { background: rgb(168 85 247); }
+  .ln-leg-dot--cyan { background: var(--accent); }
+
+  /* ─── Features Grid ─── */
+  .ln-feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 48px; }
+  .ln-feat {
+    padding: 24px; border-radius: 14px;
+    background: linear-gradient(180deg, var(--surface-2), var(--surface));
+    border: 1px solid var(--border);
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .ln-feat:hover { border-color: var(--accent-line); transform: translateY(-3px); }
+  .ln-feat-icon {
+    display: grid; place-items: center;
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--accent-soft); border: 1px solid var(--accent-line);
+    color: var(--accent);
+  }
+  .ln-feat h3 { margin-top: 18px; font-size: 15px; font-weight: 600; }
+  .ln-feat p { margin-top: 8px; font-size: 13px; line-height: 1.6; color: var(--muted); }
+  .ln-feat-preview { margin-top: 16px; }
+
+  .ln-feat-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ln-feat-badge {
+    padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
+    transition: all 0.2s;
+  }
+  .ln-feat:hover .ln-feat-badge { border-color: var(--accent-line); color: var(--accent); }
+
+  .ln-feat-keys { display: flex; flex-direction: column; gap: 6px; }
+  .ln-feat-key-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px; border-radius: 6px; font-size: 11px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); transition: all 0.2s;
+  }
+  .ln-feat-key-row--active { border-color: var(--accent-line); color: var(--fg); }
+  .ln-feat-key-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--border-2);
+  }
+  .ln-feat-key-row--active .ln-feat-key-dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .ln-feat-key-badge {
+    margin-left: auto; font-family: var(--mono); font-size: 9px;
+    padding: 2px 6px; border-radius: 4px; background: var(--surface-2); color: var(--muted);
+  }
+
+  .ln-feat-bars { display: flex; flex-direction: column; gap: 6px; }
+  .ln-feat-bar {
+    height: 6px; border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), rgb(168 85 247));
+    width: 0; animation: bar-fill 1.5s ease forwards;
+    animation-delay: var(--delay);
+  }
+  .ln-feat:hover .ln-feat-bar { animation: bar-fill 1s ease forwards; animation-delay: var(--delay); }
+  @keyframes bar-fill { to { width: var(--w); } }
+
+  .ln-feat-code-mini {
+    border-radius: 8px; overflow: hidden;
+    border: 1px solid var(--border); background: var(--surface);
+  }
+  .ln-feat-code-tab {
+    padding: 5px 10px; font-size: 10px; font-family: var(--mono);
+    color: var(--muted); background: var(--surface-2); border-bottom: 1px solid var(--border);
+  }
+  .ln-feat-code-mini code {
+    display: block; padding: 8px 10px;
+    font-size: 11px; font-family: var(--mono); color: var(--fg);
+  }
+
+  /* ─── Code Card ─── */
+  .ln-code-card {
+    margin-top: 40px; max-width: 640px; margin-left: auto; margin-right: auto;
+    border-radius: 14px; overflow: hidden;
+    background: var(--surface); border: 1px solid var(--border);
+  }
+  .ln-code-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 18px;
+    background: var(--surface-2); border-bottom: 1px solid var(--border);
+  }
+  .ln-code-dots { display: flex; gap: 6px; }
+  .ln-code-dots span { width: 10px; height: 10px; border-radius: 50%; background: var(--border-2); }
+  .ln-code-lang { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .ln-code-body {
+    padding: 20px 22px;
+    font-family: var(--mono); font-size: 13px; line-height: 1.7;
+    overflow-x: auto; color: var(--fg);
+  }
+  .ln-code-body code { white-space: pre; }
+  .c-kw { color: rgb(168 85 247); }
+  .c-str { color: rgb(74 222 128); }
+  .c-key { color: var(--accent); }
+  .c-num { color: rgb(251 191 36); }
+
+  /* ─── FAQ ─── */
+  .ln-faq-list { margin-top: 40px; }
+  .ln-faq {
+    border-bottom: 1px solid var(--border);
+  }
+  .ln-faq summary {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 0;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    list-style: none; color: var(--fg);
+    transition: color 0.15s;
+  }
+  .ln-faq summary::-webkit-details-marker { display: none; }
+  .ln-faq summary:hover { color: var(--accent); }
+  .ln-faq summary svg { flex: none; color: var(--muted); transition: transform 0.2s; }
+  .ln-faq[open] summary svg { transform: rotate(45deg); }
+  .ln-faq-body { padding: 0 0 18px; }
+  .ln-faq-body p { font-size: 13px; line-height: 1.65; color: var(--muted); }
+  .ln-faq-body code { padding: 2px 6px; border-radius: 4px; background: var(--surface-2); font-size: 12px; color: var(--accent); }
+  .ln-faq-body a { color: var(--accent); }
+  .ln-faq-more {
+    margin-top: 28px; text-align: center;
+    font-size: 13px; color: var(--muted);
+  }
+  .ln-faq-more a { color: var(--fg); font-weight: 500; }
+  .ln-faq-more a:hover { color: var(--accent); }
+
+  /* ─── CTA ─── */
+  .ln-cta-title {
+    text-align: center;
+    font-size: clamp(36px, 5vw, 56px);
+    font-weight: 700; line-height: 1.08; letter-spacing: -0.04em;
+  }
+  .ln-cta-actions { display: flex; justify-content: center; margin-top: 32px; }
+
+  /* ─── Footer ─── */
+  .ln-footer { padding: 0 0 40px; }
+  .ln-footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px; padding-top: 8px; }
+  .ln-footer-brand p { margin-top: 14px; font-size: 13px; line-height: 1.6; color: var(--muted); }
+  .ln-footer-copy { margin-top: 16px; font-size: 11px; color: #3d4c55; }
+  .ln-footer-col h4 { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; margin-bottom: 14px; }
+  .ln-footer-col a { display: block; padding: 4px 0; font-size: 13px; color: var(--muted); transition: color 0.15s; }
+  .ln-footer-col a:hover { color: var(--fg); }
+
+  /* ─── Sign-in Dialog ─── */
+  .ln-dialog { border: 0; background: transparent; max-width: 100vw; max-height: 100vh; padding: 0; }
+  .ln-dialog::backdrop { background: rgb(0 0 0 / 0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+  .ln-dialog-backdrop { position: fixed; inset: 0; }
+  .ln-dialog-panel {
+    position: relative; z-index: 1;
+    width: min(400px, calc(100vw - 32px));
+    padding: 32px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, var(--surface-2), var(--surface));
+    border: 1px solid var(--border);
+    box-shadow: 0 30px 80px rgb(0 0 0 / 0.5);
+    animation: dialog-in 0.25s ease;
+  }
+  @keyframes dialog-in {
+    from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  }
+  .ln-dialog-close {
+    position: absolute; top: 16px; right: 16px;
+    display: grid; place-items: center;
+    width: 32px; height: 32px; border-radius: 8px;
+    color: var(--muted); transition: color 0.15s, background 0.15s;
+  }
+  .ln-dialog-close:hover { color: var(--fg); background: var(--surface-2); }
+  .ln-dialog-tabs { display: flex; gap: 6px; padding-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .ln-dialog-tabs button {
+    padding: 9px 14px; border-radius: 8px;
+    border: 1px solid transparent; font-size: 12px;
+    color: var(--muted); transition: all 0.15s;
+  }
+  .ln-dialog-tabs button:hover { color: var(--fg); }
+  .ln-dialog-tabs button.on { color: var(--fg); font-weight: 600; background: var(--surface-2); border-color: var(--accent-line); }
+  .ln-dialog-view { padding-top: 28px; }
+  .ln-d-eyebrow { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.2em; color: var(--muted); }
+  .ln-dialog-view h2 { margin-top: 10px; font-size: 24px; font-weight: 700; letter-spacing: -0.03em; }
+  .ln-d-lead { margin-top: 12px; font-size: 13px; line-height: 1.65; color: var(--muted); }
+  .ln-d-label { display: block; margin-top: 24px; font-size: 12px; font-weight: 600; }
+  .ln-d-field {
+    display: flex; align-items: center; height: 48px;
+    margin-top: 10px; padding: 0 8px 0 14px; border-radius: 10px;
+    border: 1px solid var(--border-2); background: var(--surface);
     transition: border-color 0.15s, box-shadow 0.15s;
   }
-  .field:focus-within { border-color: var(--accent-line); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .field input {
-    flex: 1;
-    min-width: 0;
-    background: none;
-    border: 0;
-    outline: none;
-    font-family: var(--mono);
+  .ln-d-field:focus-within { border-color: var(--accent-line); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .ln-d-field input {
+    flex: 1; min-width: 0; background: none; border: 0; outline: none;
+    font-family: var(--mono); font-size: 13px; letter-spacing: 0.12em;
+  }
+  .ln-d-field input::placeholder { color: #3f4d56; }
+  .ln-d-eye {
+    display: grid; place-items: center;
+    width: 32px; height: 32px; border-radius: 7px;
+    color: var(--muted); transition: all 0.15s;
+  }
+  .ln-d-eye:hover { color: var(--fg); background: var(--surface-2); }
+  .ln-d-eye span { display: grid; }
+  .ln-dialog-view .ln-btn--full { margin-top: 18px; }
+  .ln-d-msg { margin-top: 12px; font-size: 11.5px; color: var(--accent); }
+  .granted .ln-btn--full { filter: brightness(1.15); box-shadow: 0 0 0 4px var(--accent-soft), 0 0 24px rgb(34 211 238 / 0.35); }
+  .ln-d-small { margin-top: 18px; font-size: 11px; line-height: 1.6; color: var(--muted); }
+  .ln-d-small.acc { color: var(--accent); opacity: 0.85; }
+  .ln-d-steps {
+    list-style: none; display: flex; flex-direction: column; gap: 12px;
+    margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border);
     font-size: 13px;
-    letter-spacing: 0.12em;
   }
-  .field input::placeholder { color: #3f4d56; }
-  .eye {
-    display: grid;
-    place-items: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 7px;
-    color: var(--muted);
-    transition: color 0.15s, background 0.15s;
-  }
-  .eye:hover { color: var(--fg); background: var(--surface-2); }
-  .eye span { display: grid; }
-  .big { width: 100%; height: 46px; margin-top: 18px; font-size: 12.5px; }
-  .register .big { margin-top: 56px; }
-  .msg { margin-top: 12px; font-size: 11.5px; color: var(--accent); }
-  .reveal { margin-top: 28px; padding: 16px; border-radius: 12px; border: 1px solid var(--accent-line); background: var(--accent-soft); }
-  .reveal > .label { margin-top: 0; }
-  .number { margin-top: 8px; font-family: var(--mono); font-size: 20px; font-weight: 700; letter-spacing: 0.08em; color: var(--accent); }
-  .reveal-actions { display: flex; gap: 8px; margin-top: 12px; }
-  .reveal .big { margin-top: 14px; }
-  .granted .big { filter: brightness(1.15); box-shadow: 0 0 0 4px var(--accent-soft), 0 0 24px rgb(34 211 238 / 0.35); }
-  .small { margin-top: 20px; font-size: 11px; line-height: 1.6; color: var(--muted); }
-  .small.accent { color: var(--accent); opacity: 0.85; }
-  .link { font-weight: 600; color: var(--fg); transition: color 0.15s; }
-  .link:hover { color: var(--accent); }
-  .steps {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    margin-top: 28px;
-    padding-top: 22px;
-    border-top: 1px solid var(--border);
-  }
-  .steps li { display: flex; gap: 14px; font-size: 12px; }
-  .steps .n { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+  .ln-d-steps li { display: flex; gap: 12px; }
+  .ln-d-n { font-family: var(--mono); font-size: 11px; color: var(--muted); }
 
-  .foot {
-    display: flex;
-    justify-content: space-between;
-    gap: 8px 16px;
-    padding: 20px 0 28px;
-    font-family: var(--mono);
-    font-size: 9.5px;
-    letter-spacing: 0.08em;
-    color: #3d4c55;
-  }
-  .links { color: var(--accent); opacity: 0.7; }
-
+  /* ─── Responsive ─── */
   @media (max-width: 900px) {
-    .split { grid-template-columns: minmax(0, 1fr); }
-    .panel { order: -1; justify-self: stretch; max-width: none; }
-    .hero { min-height: 440px; }
+    .ln-prov-cards { grid-template-columns: 1fr; }
+    .ln-feat-grid { grid-template-columns: 1fr 1fr; }
+    .ln-footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
   }
-  @media (max-width: 560px) {
-    .bar { height: 72px; }
-    .hero { min-height: 400px; padding: 24px; }
-    .digits { font-size: 17px; }
-    .foot { flex-direction: column; align-items: center; text-align: center; }
+  @media (max-width: 640px) {
+    .ln-hero { padding: 72px 0 56px; }
+    .ln-hero-actions { flex-direction: column; align-items: center; }
+    .ln-links { display: none; }
+    .ln-feat-grid { grid-template-columns: 1fr; }
+    .ln-footer-grid { grid-template-columns: 1fr; }
+    .ln-provider-strip { gap: 16px; }
+    .ln-share-legend { flex-wrap: wrap; gap: 12px; }
+    .ln-counters { gap: 20px; }
   }
 </style>
