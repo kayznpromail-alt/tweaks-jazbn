@@ -50,7 +50,7 @@ const SignIn1 = ({ apiBase, discordUrl, onSuccess, openRegistration = false }: S
         else setError("Something went wrong. Try again.");
         return;
       }
-      localStorage.setItem("session", data.token);
+      localStorage.setItem("edgey-session", data.token);
       onSuccess?.(data.token);
       location.assign("/overview");
     } catch {
@@ -73,7 +73,7 @@ const SignIn1 = ({ apiBase, discordUrl, onSuccess, openRegistration = false }: S
         return;
       }
       setRegistered({ number: data.number, token: data.token });
-      localStorage.setItem("session", data.token);
+      localStorage.setItem("edgey-session", data.token);
     } catch {
       setError("Can't reach the server right now.");
     } finally {
