@@ -39,6 +39,12 @@ const features = [
 
     <!-- Hero -->
     <section class="ln-hero">
+      <div class="ln-orbs">
+        <div class="ln-orb ln-orb--1"></div>
+        <div class="ln-orb ln-orb--2"></div>
+        <div class="ln-orb ln-orb--3"></div>
+      </div>
+      <div class="ln-particles" id="particles"></div>
       <div class="ln-container">
         <div class="ln-hero-badge">
           <span class="ln-dot"></span>
@@ -92,6 +98,23 @@ const features = [
         </h2>
         <p class="ln-section-sub">A closer look at how your model usage comes together.</p>
 
+        <div class="ln-counters">
+          <div class="ln-counter">
+            <span class="ln-counter-val" data-count={modelCount}>0</span>
+            <span class="ln-counter-label">Models</span>
+          </div>
+          <div class="ln-counter-sep"></div>
+          <div class="ln-counter">
+            <span class="ln-counter-val" data-count={providerCount}>0</span>
+            <span class="ln-counter-label">Providers</span>
+          </div>
+          <div class="ln-counter-sep"></div>
+          <div class="ln-counter">
+            <span class="ln-counter-val" data-count="99.9" data-suffix="%">0%</span>
+            <span class="ln-counter-label">Uptime</span>
+          </div>
+        </div>
+
         <div class="ln-activity-card">
           <div class="ln-activity-head">
             <div class="ln-activity-info">
@@ -109,8 +132,18 @@ const features = [
               <div class="ln-radar">
                 <div class="ln-radar-ring"></div>
                 <div class="ln-radar-ring ln-radar-ring--2"></div>
+                <div class="ln-radar-ring ln-radar-ring--3"></div>
+                <div class="ln-radar-sweep"></div>
+                <div class="ln-radar-ticks">
+                  {Array.from({length: 12}).map((_, i) => <span class="ln-tick" style={`--i:${i}`}></span>)}
+                </div>
                 <div class="ln-radar-icon">
                   <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M22.28 9.37a5.49 5.49 0 0 0-.47-4.5A5.55 5.55 0 0 0 15.83 1.5a5.49 5.49 0 0 0-4.15-1.84A5.55 5.55 0 0 0 6.5 2.57a5.49 5.49 0 0 0-3.67 2.67 5.55 5.55 0 0 0 .68 6.5 5.49 5.49 0 0 0 .47 4.5A5.55 5.55 0 0 0 9.97 19.6a5.49 5.49 0 0 0 4.15 1.84 5.55 5.55 0 0 0 5.18-2.91 5.49 5.49 0 0 0 3.67-2.67 5.55 5.55 0 0 0-.68-6.5zM14.12 20.07a4.13 4.13 0 0 1-2.65-.96l.13-.07 4.4-2.54a.72.72 0 0 0 .36-.62v-6.2l1.86 1.07a.07.07 0 0 1 .04.05v5.14a4.14 4.14 0 0 1-4.14 4.13zM4.16 16.47a4.13 4.13 0 0 1-.49-2.78l.13.08 4.4 2.54a.72.72 0 0 0 .72 0l5.37-3.1v2.14a.07.07 0 0 1-.03.06l-4.45 2.57a4.14 4.14 0 0 1-5.65-1.51zM3.07 7.84A4.13 4.13 0 0 1 5.23 6l-.01.15v5.08a.72.72 0 0 0 .36.62l5.37 3.1-1.86 1.07a.07.07 0 0 1-.06 0l-4.45-2.57A4.14 4.14 0 0 1 3.07 7.84zm15.08 3.51-5.37-3.1 1.86-1.07a.07.07 0 0 1 .06 0l4.45 2.57a4.14 4.14 0 0 1-.64 7.47V12a.72.72 0 0 0-.36-.62v-.03zm1.85-2.8-.13-.08-4.4-2.54a.72.72 0 0 0-.72 0L9.38 9.03V6.89a.07.07 0 0 1 .03-.06l4.45-2.56a4.14 4.14 0 0 1 6.14 4.28zM8.38 12.71 6.52 11.64a.07.07 0 0 1-.04-.05V6.45A4.14 4.14 0 0 1 13.27 3.9l-.13.07-4.4 2.54a.72.72 0 0 0-.36.62v6.2-.62zm1.01-2.18L12 8.95l2.61 1.51v3.01L12 15.05l-2.61-1.51V10.53z"/></svg>
+                </div>
+                <div class="ln-radar-blips">
+                  <span class="ln-blip" style="--angle:35deg;--dist:38px"></span>
+                  <span class="ln-blip" style="--angle:160deg;--dist:42px"></span>
+                  <span class="ln-blip ln-blip--fade" style="--angle:280deg;--dist:35px"></span>
                 </div>
               </div>
               <p class="ln-prov-card-name">OpenAI</p>
@@ -119,11 +152,20 @@ const features = [
             </div>
 
             <div class="ln-prov-card">
-              <div class="ln-radar">
+              <div class="ln-radar ln-radar--purple">
                 <div class="ln-radar-ring ln-radar-ring--purple"></div>
                 <div class="ln-radar-ring ln-radar-ring--2 ln-radar-ring--purple"></div>
+                <div class="ln-radar-ring ln-radar-ring--3 ln-radar-ring--purple"></div>
+                <div class="ln-radar-sweep ln-radar-sweep--purple"></div>
+                <div class="ln-radar-ticks ln-radar-ticks--purple">
+                  {Array.from({length: 12}).map((_, i) => <span class="ln-tick" style={`--i:${i}`}></span>)}
+                </div>
                 <div class="ln-radar-icon ln-radar-icon--purple">
                   <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3l1.5 5H19l-4 3.5 1.5 5.5-4.5-3-4.5 3 1.5-5.5L5 8h5.5z"/></svg>
+                </div>
+                <div class="ln-radar-blips">
+                  <span class="ln-blip ln-blip--purple" style="--angle:70deg;--dist:40px"></span>
+                  <span class="ln-blip ln-blip--purple" style="--angle:210deg;--dist:36px"></span>
                 </div>
               </div>
               <p class="ln-prov-card-name">Anthropic</p>
@@ -132,11 +174,20 @@ const features = [
             </div>
 
             <div class="ln-prov-card">
-              <div class="ln-radar">
+              <div class="ln-radar ln-radar--cyan">
                 <div class="ln-radar-ring ln-radar-ring--cyan"></div>
                 <div class="ln-radar-ring ln-radar-ring--2 ln-radar-ring--cyan"></div>
+                <div class="ln-radar-ring ln-radar-ring--3 ln-radar-ring--cyan"></div>
+                <div class="ln-radar-sweep ln-radar-sweep--cyan"></div>
+                <div class="ln-radar-ticks ln-radar-ticks--cyan">
+                  {Array.from({length: 12}).map((_, i) => <span class="ln-tick" style={`--i:${i}`}></span>)}
+                </div>
                 <div class="ln-radar-icon ln-radar-icon--cyan">
                   <Icon name="terminal" size={26} />
+                </div>
+                <div class="ln-radar-blips">
+                  <span class="ln-blip ln-blip--cyan" style="--angle:120deg;--dist:44px"></span>
+                  <span class="ln-blip ln-blip--cyan ln-blip--fade" style="--angle:300deg;--dist:38px"></span>
                 </div>
               </div>
               <p class="ln-prov-card-name">edgey</p>
@@ -178,11 +229,49 @@ const features = [
         </h2>
 
         <div class="ln-feat-grid">
-          {features.map((f) => (
+          {features.map((f, idx) => (
             <article class="ln-feat">
               <div class="ln-feat-icon"><Icon name={f.icon} size={18} /></div>
               <h3>{f.title}</h3>
               <p>{f.desc}</p>
+              {idx === 0 && (
+                <div class="ln-feat-preview">
+                  <div class="ln-feat-badges">
+                    {f.badges?.map(b => <span class="ln-feat-badge">{b}</span>)}
+                  </div>
+                </div>
+              )}
+              {idx === 1 && (
+                <div class="ln-feat-preview">
+                  <div class="ln-feat-keys">
+                    {f.lines?.map((l, li) => (
+                      <div class={`ln-feat-key-row${li === 0 ? ' ln-feat-key-row--active' : ''}`}>
+                        <span class="ln-feat-key-dot"></span>
+                        <span>{l}</span>
+                        <span class="ln-feat-key-badge">sk_edgey_…</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {idx === 2 && (
+                <div class="ln-feat-preview">
+                  <div class="ln-feat-bars">
+                    <div class="ln-feat-bar" style="--w:85%;--delay:0s"></div>
+                    <div class="ln-feat-bar" style="--w:60%;--delay:0.15s"></div>
+                    <div class="ln-feat-bar" style="--w:40%;--delay:0.3s"></div>
+                    <div class="ln-feat-bar" style="--w:72%;--delay:0.45s"></div>
+                  </div>
+                </div>
+              )}
+              {idx === 4 && (
+                <div class="ln-feat-preview">
+                  <div class="ln-feat-code-mini">
+                    <div class="ln-feat-code-tab">main.py</div>
+                    <code><span class="c-kw">import</span> openai</code>
+                  </div>
+                </div>
+              )}
             </article>
           ))}
         </div>
@@ -472,11 +561,49 @@ response = client.chat.completions.create(
       if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
     });
   });
+
+  // Animated counters
+  const counters = document.querySelectorAll<HTMLElement>('[data-count]');
+  const animateCounter = (el: HTMLElement) => {
+    const target = parseFloat(el.dataset.count!);
+    const suffix = el.dataset.suffix ?? '';
+    const isFloat = String(target).includes('.');
+    const duration = 1800;
+    const start = performance.now();
+    const step = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = eased * target;
+      el.textContent = (isFloat ? current.toFixed(1) : Math.round(current).toString()) + suffix;
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        animateCounter(e.target as HTMLElement);
+        counterObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.5 });
+  counters.forEach(c => counterObserver.observe(c));
+
+  // Particles
+  const particlesEl = document.getElementById('particles');
+  if (particlesEl) {
+    for (let i = 0; i < 30; i++) {
+      const dot = document.createElement('span');
+      dot.className = 'ln-particle';
+      dot.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*5}s;animation-duration:${4+Math.random()*4}s;`;
+      particlesEl.appendChild(dot);
+    }
+  }
 </script>
 
 <style>
   /* ─── Layout ─── */
-  .landing { min-height: 100svh; }
+  .landing { min-height: 100svh; position: relative; overflow-x: hidden; }
 
   .ln-container { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
   .ln-container--narrow { max-width: 800px; }
@@ -526,8 +653,52 @@ response = client.chat.completions.create(
   .ln-link { color: var(--fg); font-weight: 600; background: none; border: 0; cursor: pointer; font: inherit; transition: color 0.15s; }
   .ln-link:hover { color: var(--accent); }
 
+  /* ─── Background Effects ─── */
+  .ln-orbs {
+    position: absolute; top: 0; left: 0; right: 0; height: 100vh;
+    overflow: hidden; pointer-events: none; z-index: 0;
+  }
+  .ln-orb {
+    position: absolute; border-radius: 50%;
+    filter: blur(100px); opacity: 0.15;
+    animation: orb-float 20s ease-in-out infinite;
+  }
+  .ln-orb--1 {
+    width: 500px; height: 500px; top: -10%; left: -10%;
+    background: radial-gradient(circle, var(--accent), transparent 70%);
+  }
+  .ln-orb--2 {
+    width: 400px; height: 400px; top: 20%; right: -8%;
+    background: radial-gradient(circle, rgb(168 85 247), transparent 70%);
+    animation-delay: -7s; animation-duration: 25s;
+  }
+  .ln-orb--3 {
+    width: 350px; height: 350px; top: 50%; left: 30%;
+    background: radial-gradient(circle, rgb(74 222 128), transparent 70%);
+    animation-delay: -14s; animation-duration: 22s;
+  }
+  @keyframes orb-float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -20px) scale(1.05); }
+    66% { transform: translate(-20px, 15px) scale(0.95); }
+  }
+  .ln-particles {
+    position: absolute; top: 0; left: 0; right: 0; height: 100vh;
+    overflow: hidden; pointer-events: none; z-index: 0;
+  }
+  :global(.ln-particle) {
+    position: absolute;
+    width: 2px; height: 2px; border-radius: 50%;
+    background: var(--accent); opacity: 0;
+    animation: particle-drift ease-in-out infinite;
+  }
+  @keyframes particle-drift {
+    0%, 100% { opacity: 0; transform: translateY(0); }
+    50% { opacity: 0.4; transform: translateY(-20px); }
+  }
+
   /* ─── Hero ─── */
-  .ln-hero { padding: 100px 0 80px; text-align: center; }
+  .ln-hero { padding: 100px 0 80px; text-align: center; position: relative; z-index: 1; }
   .ln-hero-badge {
     display: inline-flex; align-items: center; gap: 10px;
     padding: 8px 18px; border-radius: 999px;
@@ -627,14 +798,29 @@ response = client.chat.completions.create(
     background: var(--surface-2); border: 1px solid var(--border);
   }
 
+  /* ─── Counters ─── */
+  .ln-counters {
+    display: flex; justify-content: center; align-items: center; gap: 32px;
+    margin-top: 40px; margin-bottom: -8px;
+  }
+  .ln-counter { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .ln-counter-val {
+    font-size: clamp(36px, 5vw, 52px); font-weight: 700;
+    letter-spacing: -0.03em; color: var(--fg);
+    font-variant-numeric: tabular-nums;
+  }
+  .ln-counter-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; }
+  .ln-counter-sep { width: 1px; height: 40px; background: var(--border); }
+
   /* Radar animation */
-  .ln-radar { position: relative; width: 100px; height: 100px; }
+  .ln-radar { position: relative; width: 110px; height: 110px; }
   .ln-radar-ring {
     position: absolute; inset: 0; border-radius: 50%;
     border: 1.5px solid rgb(74 222 128 / 0.3);
     animation: radar-pulse 3s ease-out infinite;
   }
   .ln-radar-ring--2 { animation-delay: 1.5s; }
+  .ln-radar-ring--3 { animation-delay: 0.75s; opacity: 0.5; }
   .ln-radar-ring--purple { border-color: rgb(168 85 247 / 0.3); }
   .ln-radar-ring--cyan { border-color: rgb(34 211 238 / 0.3); }
   .ln-radar-icon {
@@ -647,6 +833,56 @@ response = client.chat.completions.create(
   @keyframes radar-pulse {
     0% { transform: scale(0.6); opacity: 1; }
     100% { transform: scale(1.3); opacity: 0; }
+  }
+
+  /* Radar sweep */
+  .ln-radar-sweep {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent 0deg, rgb(74 222 128 / 0.12) 40deg, transparent 80deg);
+    animation: sweep-spin 4s linear infinite;
+  }
+  .ln-radar-sweep--purple { background: conic-gradient(from 0deg, transparent 0deg, rgb(168 85 247 / 0.12) 40deg, transparent 80deg); }
+  .ln-radar-sweep--cyan { background: conic-gradient(from 0deg, transparent 0deg, rgb(34 211 238 / 0.12) 40deg, transparent 80deg); }
+  @keyframes sweep-spin { to { transform: rotate(360deg); } }
+
+  /* Radar ticks */
+  .ln-radar-ticks {
+    position: absolute; inset: 0;
+  }
+  .ln-tick {
+    position: absolute; left: 50%; top: 50%;
+    width: 2px; height: 6px; border-radius: 1px;
+    background: rgb(74 222 128 / 0.4);
+    transform-origin: center -43px;
+    transform: translateX(-50%) rotate(calc(var(--i) * 30deg));
+    animation: tick-blink 3s ease-in-out infinite;
+    animation-delay: calc(var(--i) * 0.25s);
+  }
+  .ln-radar-ticks--purple .ln-tick { background: rgb(168 85 247 / 0.4); }
+  .ln-radar-ticks--cyan .ln-tick { background: rgb(34 211 238 / 0.4); }
+  @keyframes tick-blink {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  /* Radar blips */
+  .ln-radar-blips { position: absolute; inset: 0; }
+  .ln-blip {
+    position: absolute;
+    left: calc(50% + cos(var(--angle)) * var(--dist));
+    top: calc(50% + sin(var(--angle)) * var(--dist));
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgb(74 222 128); box-shadow: 0 0 8px rgb(74 222 128 / 0.6);
+    transform: translate(-50%, -50%);
+    animation: blip-glow 2s ease-in-out infinite;
+  }
+  .ln-blip--purple { background: rgb(168 85 247); box-shadow: 0 0 8px rgb(168 85 247 / 0.6); }
+  .ln-blip--cyan { background: var(--accent); box-shadow: 0 0 8px rgb(34 211 238 / 0.6); }
+  .ln-blip--fade { animation-delay: 1s; opacity: 0.6; }
+  @keyframes blip-glow {
+    0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(0.8); }
+    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
   }
 
   /* Share bar */
@@ -681,6 +917,56 @@ response = client.chat.completions.create(
   }
   .ln-feat h3 { margin-top: 18px; font-size: 15px; font-weight: 600; }
   .ln-feat p { margin-top: 8px; font-size: 13px; line-height: 1.6; color: var(--muted); }
+  .ln-feat-preview { margin-top: 16px; }
+
+  .ln-feat-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .ln-feat-badge {
+    padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
+    transition: all 0.2s;
+  }
+  .ln-feat:hover .ln-feat-badge { border-color: var(--accent-line); color: var(--accent); }
+
+  .ln-feat-keys { display: flex; flex-direction: column; gap: 6px; }
+  .ln-feat-key-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 10px; border-radius: 6px; font-size: 11px;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); transition: all 0.2s;
+  }
+  .ln-feat-key-row--active { border-color: var(--accent-line); color: var(--fg); }
+  .ln-feat-key-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--border-2);
+  }
+  .ln-feat-key-row--active .ln-feat-key-dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .ln-feat-key-badge {
+    margin-left: auto; font-family: var(--mono); font-size: 9px;
+    padding: 2px 6px; border-radius: 4px; background: var(--surface-2); color: var(--muted);
+  }
+
+  .ln-feat-bars { display: flex; flex-direction: column; gap: 6px; }
+  .ln-feat-bar {
+    height: 6px; border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), rgb(168 85 247));
+    width: 0; animation: bar-fill 1.5s ease forwards;
+    animation-delay: var(--delay);
+  }
+  .ln-feat:hover .ln-feat-bar { animation: bar-fill 1s ease forwards; animation-delay: var(--delay); }
+  @keyframes bar-fill { to { width: var(--w); } }
+
+  .ln-feat-code-mini {
+    border-radius: 8px; overflow: hidden;
+    border: 1px solid var(--border); background: var(--surface);
+  }
+  .ln-feat-code-tab {
+    padding: 5px 10px; font-size: 10px; font-family: var(--mono);
+    color: var(--muted); background: var(--surface-2); border-bottom: 1px solid var(--border);
+  }
+  .ln-feat-code-mini code {
+    display: block; padding: 8px 10px;
+    font-size: 11px; font-family: var(--mono); color: var(--fg);
+  }
 
   /* ─── Code Card ─── */
   .ln-code-card {
@@ -834,5 +1120,6 @@ response = client.chat.completions.create(
     .ln-footer-grid { grid-template-columns: 1fr; }
     .ln-provider-strip { gap: 16px; }
     .ln-share-legend { flex-wrap: wrap; gap: 12px; }
+    .ln-counters { gap: 20px; }
   }
 </style>

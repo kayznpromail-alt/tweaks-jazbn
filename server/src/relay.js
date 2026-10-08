@@ -61,17 +61,18 @@ export function publicError(kind, status, text, cfg) {
  * Forwards a request to the upstream provider with the server's own key, streams the answer back
  * and reports the token usage once it is known (end of body, client disconnect, or error).
  */
-export async function relay({ cfg, kind, path, body, incoming, onDone }) {
+export async function relay({ cfg, kind, path, body, incoming, onDone, upstreamKey }) {
   const headers = { 'content-type': 'application/json' };
   for (const h of PASS_HEADERS) {
     const v = incoming.headers.get(h);
     if (v) headers[h] = v;
   }
+  const apiKey = upstreamKey ?? cfg.upstreamKey;
   if (kind === 'anthropic') {
-    headers['x-api-key'] = cfg.upstreamKey;
+    headers['x-api-key'] = apiKey;
     headers['anthropic-version'] ??= '2023-06-01';
   } else {
-    headers.authorization = `Bearer ${cfg.upstreamKey}`;
+    headers.authorization = `Bearer ${apiKey}`;
   }
 
   const stream = body?.stream === true;
