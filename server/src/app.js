@@ -11,8 +11,10 @@ import { cliReleaseRoutes } from './cli-release.js';
 import { errorBody, relay, upstreamModel } from './relay.js';
 import {
   hashSecret,
+  hashPassword,
   isAccessNumber,
   isApiKey,
+  isUsername,
   maskKey,
   newAccessNumber,
   newApiKey,
@@ -20,6 +22,7 @@ import {
   normalizeNumber,
   openSecret,
   sealSecret,
+  verifyPassword,
 } from './security.js';
 
 const DAY = 86_400_000;
@@ -40,8 +43,10 @@ export function createApp({ cfg, db, clock = now }) {
 
   const q = {
     accountByNumber: db.prepare('SELECT * FROM accounts WHERE number_hash = ?'),
+    accountByUsername: db.prepare('SELECT * FROM accounts WHERE username = ?'),
     account: db.prepare('SELECT * FROM accounts WHERE id = ?'),
     insertAccount: db.prepare('INSERT INTO accounts (number_hash, created_at) VALUES (?, ?)'),
+    insertAccountWithCreds: db.prepare('INSERT INTO accounts (number_hash, username, password_hash, created_at) VALUES (?, ?, ?, ?)'),
     insertSession: db.prepare('INSERT INTO sessions (token_hash, account_id, created_at, expires_at) VALUES (?, ?, ?, ?)'),
     session: db.prepare(
       'SELECT a.* FROM sessions s JOIN accounts a ON a.id = s.account_id WHERE s.token_hash = ? AND s.expires_at > ?',
@@ -112,28 +117,43 @@ export function createApp({ cfg, db, clock = now }) {
     }),
   );
 
-  site.post('/auth/register', (c) => {
+  site.post('/auth/register', async (c) => {
     if (!cfg.openRegistration) return c.json({ error: 'registration_closed' }, 403);
     if (!registerLimit(ip(c))) return c.json({ error: 'too_many_requests' }, 429);
-    let number;
+    const body = await c.req.json().catch(() => ({}));
+    const username = String(body.username ?? '').trim().toLowerCase();
+    const password = String(body.password ?? '');
+    if (!isUsername(username)) return c.json({ error: 'invalid_username' }, 400);
+    if (password.length < 6) return c.json({ error: 'password_too_short' }, 400);
+    if (q.accountByUsername.get(username)) return c.json({ error: 'username_taken' }, 409);
+    const number = newAccessNumber();
     let id;
-    for (let tries = 0; tries < 5 && !id; tries++) {
-      number = newAccessNumber();
-      try {
-        id = Number(q.insertAccount.run(hash(number), clock()).lastInsertRowid);
-      } catch {}
+    try {
+      id = Number(q.insertAccountWithCreds.run(hash(number), username, hashPassword(password), clock()).lastInsertRowid);
+    } catch {
+      return c.json({ error: 'username_taken' }, 409);
     }
-    if (!id) return c.json({ error: 'try_again' }, 500);
-    return c.json({ number, token: newSession(id) }, 201);
+    return c.json({ token: newSession(id) }, 201);
   });
 
   site.post('/auth/login', async (c) => {
     if (!loginLimit(ip(c))) return c.json({ error: 'too_many_requests' }, 429);
     const body = await c.req.json().catch(() => ({}));
-    const digits = normalizeNumber(body.number);
-    if (!isAccessNumber(digits)) return c.json({ error: 'invalid_number' }, 400);
-    const account = q.accountByNumber.get(hash(digits));
-    if (!account || account.disabled) return c.json({ error: 'unknown_number' }, 401);
+    // Legacy: login with 16-digit edgey ID
+    if (body.number) {
+      const digits = normalizeNumber(body.number);
+      if (!isAccessNumber(digits)) return c.json({ error: 'invalid_number' }, 400);
+      const account = q.accountByNumber.get(hash(digits));
+      if (!account || account.disabled) return c.json({ error: 'unknown_number' }, 401);
+      return c.json({ token: newSession(account.id) });
+    }
+    // Username + password login
+    const username = String(body.username ?? '').trim().toLowerCase();
+    const password = String(body.password ?? '');
+    if (!username || !password) return c.json({ error: 'missing_credentials' }, 400);
+    const account = q.accountByUsername.get(username);
+    if (!account || account.disabled || !account.password_hash) return c.json({ error: 'invalid_credentials' }, 401);
+    if (!verifyPassword(password, account.password_hash)) return c.json({ error: 'invalid_credentials' }, 401);
     return c.json({ token: newSession(account.id) });
   });
 

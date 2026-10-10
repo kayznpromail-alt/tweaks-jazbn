@@ -13,6 +13,8 @@ const UPSTREAM_KEY = 'upstream-secret';
 const seen = [];
 let upstream;
 let base;
+let userN = 0;
+const nextUser = () => `testuser${++userN}`;
 
 // Fake upstream provider speaking both API dialects.
 function fakeUpstream(req, res) {
@@ -119,11 +121,12 @@ function setup(overrides = {}) {
 }
 
 async function account(ctx, balance = 0) {
-  const reg = await ctx.call('/auth/register', { method: 'POST' });
-  const { number, token } = await reg.json();
+  const username = nextUser();
+  const reg = await ctx.call('/auth/register', { method: 'POST', body: { username, password: 'testpass123' } });
+  const { token } = await reg.json();
   if (balance) ctx.db.prepare('UPDATE accounts SET balance = ?').run(balance);
   const created = await (await ctx.call('/keys', { method: 'POST', token, body: { name: 'laptop' } })).json();
-  return { number, token, key: created.key, keyId: created.id };
+  return { username, token, key: created.key, keyId: created.id };
 }
 const balanceOf = (db) => db.prepare('SELECT balance FROM accounts').get().balance;
 
@@ -152,28 +155,31 @@ describe('usage tracker', () => {
 });
 
 describe('accounts and keys', () => {
-  test('register, log in with the number, log out', async () => {
+  test('register with username+password, log in, log out', async () => {
     const ctx = setup();
-    const reg = await ctx.call('/auth/register', { method: 'POST' });
+    const username = nextUser();
+    const reg = await ctx.call('/auth/register', { method: 'POST', body: { username, password: 'mypassword' } });
     assert.equal(reg.status, 201);
-    const { number } = await reg.json();
-    const spaced = number.replace(/(\d{4})(?=\d)/g, '$1 ');
-    const login = await ctx.call('/auth/login', { method: 'POST', body: { number: spaced } });
-    assert.equal(login.status, 200);
-    const { token } = await login.json();
+    const { token } = await reg.json();
     const me = await (await ctx.call('/me', { token })).json();
     assert.equal(me.balance, 0);
     assert.equal(me.maxKeys, 6);
-    assert.equal((await ctx.call('/auth/logout', { method: 'POST', token })).status, 200);
-    assert.equal((await ctx.call('/me', { token })).status, 401);
-    assert.equal((await ctx.call('/auth/login', { method: 'POST', body: { number: '1234123412341234' } })).status, 401);
+    // Log in with username+password
+    const login = await ctx.call('/auth/login', { method: 'POST', body: { username, password: 'mypassword' } });
+    assert.equal(login.status, 200);
+    const { token: t2 } = await login.json();
+    assert.equal((await ctx.call('/auth/logout', { method: 'POST', token: t2 })).status, 200);
+    assert.equal((await ctx.call('/me', { token: t2 })).status, 401);
+    // Wrong password
+    assert.equal((await ctx.call('/auth/login', { method: 'POST', body: { username, password: 'wrong' } })).status, 401);
+    // Duplicate username
+    assert.equal((await ctx.call('/auth/register', { method: 'POST', body: { username, password: 'other123' } })).status, 409);
   });
 
-  test('the access number is never stored in clear', async () => {
+  test('password and username are validated', async () => {
     const ctx = setup();
-    const { number } = await (await ctx.call('/auth/register', { method: 'POST' })).json();
-    const dump = JSON.stringify(ctx.db.prepare('SELECT * FROM accounts').all());
-    assert.ok(!dump.includes(number));
+    assert.equal((await ctx.call('/auth/register', { method: 'POST', body: { username: 'ab', password: 'testpass' } })).status, 400);
+    assert.equal((await ctx.call('/auth/register', { method: 'POST', body: { username: 'valid_user', password: '12345' } })).status, 400);
   });
 
   test('keys: shown once, masked after, limited to 6, can be disabled', async () => {
@@ -392,7 +398,7 @@ describe('CLI keys (usage read from the provider)', () => {
 
   test('sign-up is closed unless OPEN_REGISTRATION is on', async () => {
     const ctx = setup({ openRegistration: false });
-    assert.equal((await ctx.call('/auth/register', { method: 'POST' })).status, 403);
+    assert.equal((await ctx.call('/auth/register', { method: 'POST', body: { username: 'blocked', password: 'testpass' } })).status, 403);
   });
 
   test('admin creates an account with a CLI key; the customer sees usage, never the key', async () => {
@@ -594,7 +600,7 @@ describe('earnings', () => {
 
   test('customers cannot create keys unless CUSTOMER_KEYS is on', async () => {
     const ctx = setup({ customerKeys: false });
-    const { token } = await (await ctx.call('/auth/register', { method: 'POST' })).json();
+    const { token } = await (await ctx.call('/auth/register', { method: 'POST', body: { username: nextUser(), password: 'testpass' } })).json();
     const res = await ctx.call('/keys', { method: 'POST', token, body: { name: 'mine' } });
     assert.equal(res.status, 403);
     assert.equal((await res.json()).error, 'key_creation_disabled');
