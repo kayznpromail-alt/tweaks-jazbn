@@ -115,6 +115,11 @@ export function openDb(path) {
     ['deleted_at', 'INTEGER'], // deleted from the panel; payments are kept for the earnings
   ])
     if (!accountCols.includes(col)) db.exec(`ALTER TABLE accounts ADD COLUMN ${col} ${type}`);
+  if (!accountCols.includes('username')) {
+    db.exec('ALTER TABLE accounts ADD COLUMN username TEXT');
+    db.exec('CREATE UNIQUE INDEX IF NOT EXISTS accounts_username ON accounts(username) WHERE username IS NOT NULL');
+  }
+  if (!accountCols.includes('password_hash')) db.exec('ALTER TABLE accounts ADD COLUMN password_hash TEXT');
   db.exec('CREATE INDEX IF NOT EXISTS accounts_provider_id ON accounts(provider_id_hash)');
   // Manual sales entered with their cost in euros.
   if (!db.prepare('PRAGMA table_info(sales)').all().some((c) => c.name === 'cost_eur')) db.exec('ALTER TABLE sales ADD COLUMN cost_eur REAL');

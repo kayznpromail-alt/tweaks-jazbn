@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, createHmac, hkdfSync, randomBytes, randomInt } from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHmac, hkdfSync, randomBytes, randomInt, scryptSync, timingSafeEqual } from 'node:crypto';
 
 const BASE62 = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 
@@ -43,3 +43,17 @@ export function openSecret(pepper, sealed) {
 }
 
 export const maskSecret = (key) => (key.length > 12 ? `${key.slice(0, 6)}…${key.slice(-4)}` : '••••');
+
+export const isUsername = (v) => /^[a-zA-Z0-9_]{3,20}$/.test(v ?? '');
+
+export function hashPassword(password) {
+  const salt = randomBytes(16).toString('hex');
+  const derived = scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${derived}`;
+}
+
+export function verifyPassword(password, stored) {
+  const [salt, hash] = stored.split(':');
+  const test = scryptSync(password, salt, 64);
+  return timingSafeEqual(Buffer.from(hash, 'hex'), test);
+}

@@ -86,14 +86,24 @@ export async function relay({ cfg, kind, path, body, incoming, onDone, upstreamK
     onDone(usage, status);
   };
 
-  let res;
-  try {
-    res = await fetch(`${cfg.upstreamBase}/v1${path}`, {
+  const doFetch = () =>
+    fetch(`${cfg.upstreamBase}/v1${path}`, {
       method: 'POST',
       headers,
       body: JSON.stringify(payload),
       signal: incoming.signal,
     });
+
+  let res;
+  try {
+    res = await doFetch();
+    // Retry on 429 / 503 / 529 up to 2 times with backoff.
+    for (let attempt = 0; attempt < 2 && (res.status === 429 || res.status === 503 || res.status === 529); attempt++) {
+      const after = Number(res.headers.get('retry-after')) || 0;
+      const delay = Math.max(after * 1000, (attempt + 1) * 1500);
+      await new Promise((r) => setTimeout(r, Math.min(delay, 8000)));
+      try { res = await doFetch(); } catch { break; }
+    }
   } catch {
     settle(null, 502);
     return Response.json(errorBody(kind, 502, 'upstream_unavailable', 'The model provider did not respond. Try again.'), {

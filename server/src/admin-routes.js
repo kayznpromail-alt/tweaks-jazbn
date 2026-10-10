@@ -76,6 +76,7 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
     db.prepare('UPDATE accounts SET number_hash = ?, number_sealed = ? WHERE id = ?').run(hashSecret(cfg.pepper, number), sealSecret(cfg.pepper, number), id);
   const summary = (a) => ({
     id: a.id,
+    username: a.username ?? null,
     balance: a.balance,
     paidEur: a.paid_eur,
     disabled: !!a.disabled,
@@ -252,7 +253,7 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
     add(db.prepare('SELECT * FROM accounts WHERE provider_id_hash = ?').all(providerHash(q)));
     if (/^#?\d{1,9}$/.test(q)) add(db.prepare('SELECT * FROM accounts WHERE id = ?').all(Number(q.replace('#', ''))));
     const like = `%${q.replace(/[%_]/g, '')}%`;
-    add(db.prepare('SELECT * FROM accounts WHERE discord LIKE ? OR note LIKE ? ORDER BY id DESC LIMIT 20').all(like, like));
+    add(db.prepare('SELECT * FROM accounts WHERE username LIKE ? OR discord LIKE ? OR note LIKE ? ORDER BY id DESC LIMIT 20').all(like, like, like));
     for (const [id, r] of found) if (r.deleted_at) found.delete(id);
     return c.json({ accounts: [...found.values()].slice(0, 20).map(summary) });
   });

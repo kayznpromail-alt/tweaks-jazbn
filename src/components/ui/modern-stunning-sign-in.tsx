@@ -12,27 +12,20 @@ interface SignInProps {
 
 const SignIn1 = ({ apiBase, discordUrl, onSuccess, openRegistration = false }: SignInProps) => {
   const [tab, setTab] = useState<"signin" | "register">("signin");
-  const [number, setNumber] = useState("");
-  const [showNumber, setShowNumber] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [registered, setRegistered] = useState<{ number: string; token: string } | null>(null);
-  const [copied, setCopied] = useState(false);
-
-  const formatNumber = (raw: string) => {
-    const digits = raw.replace(/\D/g, "").slice(0, 16);
-    return digits.replace(/(\d{4})(?=\d)/g, "$1 ");
-  };
-
-  const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNumber(formatNumber(e.target.value));
-    setError("");
-  };
 
   const handleSignIn = async () => {
-    const digits = number.replace(/\D/g, "");
-    if (digits.length < 16) {
-      setError("Enter all 16 digits of your edgey ID.");
+    if (!username.trim()) {
+      setError("Enter your username.");
+      return;
+    }
+    if (!password) {
+      setError("Enter your password.");
       return;
     }
     setError("");
@@ -41,11 +34,11 @@ const SignIn1 = ({ apiBase, discordUrl, onSuccess, openRegistration = false }: S
       const res = await fetch(`${apiBase}/auth/login`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ number: digits }),
+        body: JSON.stringify({ username: username.trim().toLowerCase(), password }),
       });
       const data = await res.json();
       if (!res.ok) {
-        if (data.error === "unknown_number") setError("No account uses this edgey ID.");
+        if (data.error === "invalid_credentials") setError("Invalid username or password.");
         else if (data.error === "too_many_requests") setError("Too many attempts. Wait a minute.");
         else setError("Something went wrong. Try again.");
         return;
@@ -61,19 +54,40 @@ const SignIn1 = ({ apiBase, discordUrl, onSuccess, openRegistration = false }: S
   };
 
   const handleRegister = async () => {
+    const user = username.trim().toLowerCase();
+    if (!user || !/^[a-zA-Z0-9_]{3,20}$/.test(user)) {
+      setError("Username must be 3–20 characters (letters, numbers, _).");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords don't match.");
+      return;
+    }
     setError("");
     setLoading(true);
     try {
-      const res = await fetch(`${apiBase}/auth/register`, { method: "POST" });
+      const res = await fetch(`${apiBase}/auth/register`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username: user, password }),
+      });
       const data = await res.json();
       if (!res.ok) {
         if (data.error === "registration_closed") setError("Registration is currently closed.");
+        else if (data.error === "username_taken") setError("This username is already taken.");
+        else if (data.error === "invalid_username") setError("Username must be 3–20 characters (letters, numbers, _).");
+        else if (data.error === "password_too_short") setError("Password must be at least 6 characters.");
         else if (data.error === "too_many_requests") setError("Too many attempts. Try again later.");
         else setError("Something went wrong. Try again.");
         return;
       }
-      setRegistered({ number: data.number, token: data.token });
       localStorage.setItem("edgey-session", data.token);
+      onSuccess?.(data.token);
+      location.assign("/overview");
     } catch {
       setError("Can't reach the server right now.");
     } finally {
@@ -81,57 +95,11 @@ const SignIn1 = ({ apiBase, discordUrl, onSuccess, openRegistration = false }: S
     }
   };
 
-  const copyNumber = async () => {
-    if (!registered) return;
-    await navigator.clipboard.writeText(registered.number);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      tab === "signin" ? handleSignIn() : handleRegister();
+    }
   };
-
-  const enterWorkspace = () => {
-    location.assign("/overview");
-  };
-
-  if (registered) {
-    return (
-      <div className="flex flex-col items-center w-full max-w-sm rounded-3xl bg-gradient-to-r from-[#ffffff10] to-[#0a0a0f] backdrop-blur-sm shadow-2xl p-8">
-        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-emerald-500/20 mb-6">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M20 6L9 17l-5-5" />
-          </svg>
-        </div>
-        <h2 className="text-2xl font-semibold text-white mb-2 text-center">You're in.</h2>
-        <p className="text-sm text-gray-400 mb-6 text-center">
-          Save your edgey ID — it's your only way to sign in.
-        </p>
-        <div className="w-full flex flex-col gap-3">
-          <div className="relative">
-            <input
-              readOnly
-              value={registered.number.replace(/(\d{4})(?=\d)/g, "$1 ")}
-              className="w-full px-5 py-3 rounded-xl bg-white/10 text-white font-mono text-center text-lg tracking-widest focus:outline-none"
-            />
-          </div>
-          <button
-            onClick={copyNumber}
-            className="w-full bg-white/10 text-white font-medium px-5 py-3 rounded-full shadow hover:bg-white/20 transition text-sm"
-          >
-            {copied ? "Copied!" : "Copy edgey ID"}
-          </button>
-          <hr className="opacity-10" />
-          <button
-            onClick={enterWorkspace}
-            className="w-full bg-gradient-to-b from-cyan-500 to-cyan-600 text-white font-medium px-5 py-3 rounded-full shadow hover:brightness-110 transition text-sm"
-          >
-            Open workspace
-          </button>
-          <p className="text-xs text-red-400/80 text-center mt-1">
-            Keep your edgey ID private. You won't see it again.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col items-center w-full max-w-sm rounded-3xl bg-gradient-to-r from-[#ffffff10] to-[#0a0a0f] backdrop-blur-sm shadow-2xl p-8">
@@ -169,26 +137,34 @@ const SignIn1 = ({ apiBase, discordUrl, onSuccess, openRegistration = false }: S
         {tab === "signin" ? (
           <>
             <div className="w-full flex flex-col gap-3">
-              <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">edgey ID</label>
+              <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Username</label>
+              <input
+                placeholder="your username"
+                type="text"
+                value={username}
+                className="w-full px-5 py-3 rounded-xl bg-white/10 text-white placeholder-gray-500 text-sm tracking-wider focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+                onChange={(e) => { setUsername(e.target.value); setError(""); }}
+                onKeyDown={onKeyDown}
+                autoComplete="username"
+                spellCheck={false}
+              />
+              <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Password</label>
               <div className="relative">
                 <input
-                  placeholder="0000 0000 0000 0000"
-                  type={showNumber ? "text" : "password"}
-                  inputMode="numeric"
-                  value={number}
-                  maxLength={19}
-                  className="w-full px-5 py-3 rounded-xl bg-white/10 text-white placeholder-gray-500 text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
-                  onChange={handleNumberChange}
-                  onKeyDown={(e) => e.key === "Enter" && handleSignIn()}
+                  placeholder="your password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  className="w-full px-5 py-3 rounded-xl bg-white/10 text-white placeholder-gray-500 text-sm tracking-wider focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+                  onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                  onKeyDown={onKeyDown}
                   autoComplete="current-password"
-                  spellCheck={false}
                 />
                 <button
                   type="button"
-                  onClick={() => setShowNumber(!showNumber)}
+                  onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
                 >
-                  {showNumber ? (
+                  {showPassword ? (
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                       <line x1="1" y1="1" x2="23" y2="23" />
@@ -215,10 +191,60 @@ const SignIn1 = ({ apiBase, discordUrl, onSuccess, openRegistration = false }: S
           <>
             {openRegistration ? (
               <>
-                <p className="text-sm text-gray-400 text-center">
-                  Create a free account. You'll receive a 16-digit edgey ID to sign in.
-                </p>
-                {error && <div className="text-sm text-red-400 text-center">{error}</div>}
+                <div className="w-full flex flex-col gap-3">
+                  <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Username</label>
+                  <input
+                    placeholder="choose a username"
+                    type="text"
+                    value={username}
+                    maxLength={20}
+                    className="w-full px-5 py-3 rounded-xl bg-white/10 text-white placeholder-gray-500 text-sm tracking-wider focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+                    onChange={(e) => { setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, "")); setError(""); }}
+                    onKeyDown={onKeyDown}
+                    autoComplete="username"
+                    spellCheck={false}
+                  />
+                  <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Password</label>
+                  <div className="relative">
+                    <input
+                      placeholder="min 6 characters"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      className="w-full px-5 py-3 rounded-xl bg-white/10 text-white placeholder-gray-500 text-sm tracking-wider focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+                      onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                      onKeyDown={onKeyDown}
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                    >
+                      {showPassword ? (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                          <line x1="1" y1="1" x2="23" y2="23" />
+                        </svg>
+                      ) : (
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                  <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Confirm password</label>
+                  <input
+                    placeholder="re-enter password"
+                    type={showPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    className="w-full px-5 py-3 rounded-xl bg-white/10 text-white placeholder-gray-500 text-sm tracking-wider focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
+                    onChange={(e) => { setConfirmPassword(e.target.value); setError(""); }}
+                    onKeyDown={onKeyDown}
+                    autoComplete="new-password"
+                  />
+                  {error && <div className="text-sm text-red-400 text-center">{error}</div>}
+                </div>
                 <button
                   onClick={handleRegister}
                   disabled={loading}
@@ -230,7 +256,7 @@ const SignIn1 = ({ apiBase, discordUrl, onSuccess, openRegistration = false }: S
             ) : (
               <>
                 <p className="text-sm text-gray-400 text-center">
-                  Your edgey ID and CLI key are delivered with your purchase. No email or password needed.
+                  Your credentials are delivered with your purchase. No email needed.
                 </p>
                 <ol className="flex flex-col gap-2 text-sm text-gray-300">
                   <li className="flex gap-3 items-start">
@@ -239,7 +265,7 @@ const SignIn1 = ({ apiBase, discordUrl, onSuccess, openRegistration = false }: S
                   </li>
                   <li className="flex gap-3 items-start">
                     <span className="text-cyan-400 font-mono text-xs mt-0.5">02</span>
-                    Receive your edgey ID and CLI key.
+                    Receive your username and password.
                   </li>
                   <li className="flex gap-3 items-start">
                     <span className="text-cyan-400 font-mono text-xs mt-0.5">03</span>
@@ -266,11 +292,11 @@ const SignIn1 = ({ apiBase, discordUrl, onSuccess, openRegistration = false }: S
             {tab === "signin" ? (
               <>New here?{" "}
                 <button onClick={() => { setTab("register"); setError(""); }} className="underline text-white/80 hover:text-white">
-                  Get your access.
+                  Create an account.
                 </button>
               </>
             ) : (
-              <>Already have an ID?{" "}
+              <>Already have an account?{" "}
                 <button onClick={() => { setTab("signin"); setError(""); }} className="underline text-white/80 hover:text-white">
                   Sign in.
                 </button>
