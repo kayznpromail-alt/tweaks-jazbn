@@ -5,6 +5,7 @@ COPY shared/ ./shared/
 COPY server/package.json server/package-lock.json ./server/
 RUN cd server && npm ci --omit=dev
 COPY server/src ./server/src
+COPY server/panel ./server/panel
 WORKDIR /app/server
 ENV NODE_ENV=production PORT=8787 DATABASE_PATH=/data/edgey.db
 VOLUME /data
