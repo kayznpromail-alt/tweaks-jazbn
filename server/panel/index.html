@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>edgey admin</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0f;--card:#111118;--border:#1e1e2e;--accent:#22d3ee;--accent2:#06b6d4;--text:#e4e4e7;--muted:#71717a;--red:#ef4444;--green:#22c55e;--yellow:#eab308}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+a{color:var(--accent);text-decoration:none}
+button{cursor:pointer;font:inherit}
+input,select,textarea{font:inherit;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 12px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+/* layout */
+.sidebar{width:220px;background:var(--card);border-right:1px solid var(--border);padding:16px 0;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:10}
+.sidebar h1{font-size:16px;padding:0 20px 16px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.sidebar h1 span{color:var(--accent)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;color:var(--muted);font-size:14px;transition:.15s}
+.nav-item:hover,.nav-item.active{color:var(--text);background:rgba(255,255,255,.04)}
+.nav-item.active{border-right:2px solid var(--accent)}
+.main{margin-left:220px;flex:1;padding:24px;min-height:100vh}
+/* login */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;margin-left:0}
+.login-box{background:var(--card);padding:32px;border-radius:16px;width:100%;max-width:360px;border:1px solid var(--border)}
+.login-box h2{font-size:18px;margin-bottom:20px;text-align:center}
+.login-box h2 span{color:var(--accent)}
+.login-box input{width:100%;margin-bottom:12px}
+/* components */
+.page-title{font-size:20px;font-weight:600;margin-bottom:20px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+.stat-card .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.stat-card .value{font-size:22px;font-weight:600}
+.stat-card .value.accent{color:var(--accent)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px}
+.card h3{font-size:15px;font-weight:600;margin-bottom:12px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 12px;color:var(--muted);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+td{padding:8px 12px;border-bottom:1px solid var(--border)}
+tr:hover td{background:rgba(255,255,255,.02)}
+.badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:500}
+.badge-green{background:rgba(34,197,94,.15);color:var(--green)}
+.badge-red{background:rgba(239,68,68,.15);color:var(--red)}
+.badge-yellow{background:rgba(234,179,8,.15);color:var(--yellow)}
+.badge-cyan{background:rgba(34,211,238,.15);color:var(--accent)}
+.btn{padding:8px 16px;border-radius:8px;border:none;font-size:13px;font-weight:500;transition:.15s}
+.btn-primary{background:var(--accent2);color:#000}
+.btn-primary:hover{background:var(--accent)}
+.btn-danger{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.btn-danger:hover{background:rgba(239,68,68,.25)}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--border)}
+.btn-outline:hover{border-color:var(--muted)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.search-bar{display:flex;gap:8px;margin-bottom:16px}
+.search-bar input{flex:1}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.row.mb{margin-bottom:12px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:12px;color:var(--muted)}
+.field input,.field select{min-width:160px}
+.mono{font-family:'SF Mono',Monaco,Consolas,monospace;font-size:12px}
+.toast{position:fixed;top:20px;right:20px;background:#1e1e2e;color:var(--text);padding:12px 20px;border-radius:10px;border:1px solid var(--border);font-size:13px;z-index:999;animation:fadeIn .2s}
+.toast.error{border-color:var(--red);color:var(--red)}
+.toast.success{border-color:var(--green);color:var(--green)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;width:100%;max-width:440px}
+.modal h3{margin-bottom:16px}
+.modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.copyable{cursor:pointer;position:relative}
+.copyable:hover{color:var(--accent)}
+.detail-grid{display:grid;grid-template-columns:140px 1fr;gap:8px 16px;font-size:13px}
+.detail-grid .k{color:var(--muted)}
+.tab-bar{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:-1px}
+.tab-btn{padding:8px 16px;font-size:13px;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;transition:.15s}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.empty{text-align:center;color:var(--muted);padding:32px;font-size:14px}
+@media(max-width:768px){.sidebar{display:none}.main{margin-left:0}}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+const $ = (s, p) => (p || document).querySelector(s);
+const $$ = (s, p) => [...(p || document).querySelectorAll(s)];
+const h = (tag, attrs, ...kids) => {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') el.className = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else if (k === 'html') el.innerHTML = v;
+    else el.setAttribute(k, v);
+  }
+  for (const c of kids) {
+    if (c == null) continue;
+    el.append(typeof c === 'string' ? document.createTextNode(c) : c);
+  }
+  return el;
+};
+
+let TOKEN = localStorage.getItem('edgey-admin-token') || '';
+const API = location.origin;
+
+async function api(path, opts = {}) {
+  const res = await fetch(API + '/admin' + path, {
+    method: opts.method || 'GET',
+    headers: {
+      'authorization': 'Bearer ' + TOKEN,
+      ...(opts.body ? { 'content-type': 'application/json' } : {}),
+    },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'request_failed');
+  return data;
+}
+
+function toast(msg, type = '') {
+  const t = h('div', { class: 'toast ' + type }, msg);
+  document.body.append(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+const fmt = n => Number(n || 0).toLocaleString('en-US');
+const fmtTokens = n => {
+  if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n / 1e3).toFixed(0) + 'K';
+  return String(n);
+};
+const fmtDate = ts => ts ? new Date(ts).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+
+// --- Router ---
+function navigate(hash) {
+  location.hash = hash;
+}
+function currentRoute() {
+  const h = location.hash.slice(1) || 'dashboard';
+  const [page, ...rest] = h.split('/');
+  return { page, params: rest };
+}
+
+// --- Views ---
+function renderLogin() {
+  const app = $('#app');
+  app.innerHTML = '';
+  app.className = '';
+  const wrap = h('div', { class: 'login-wrap' });
+  const box = h('div', { class: 'login-box' });
+  box.append(
+    h('h2', {}, 'edgey', h('span', {}, ' admin')),
+    h('input', { type: 'password', id: 'token-input', placeholder: 'Admin token' }),
+    h('button', { class: 'btn btn-primary', style: 'width:100%', onclick: doLogin }, 'Sign in'),
+  );
+  wrap.append(box);
+  app.append(wrap);
+  setTimeout(() => $('#token-input')?.focus(), 50);
+}
+
+async function doLogin() {
+  const input = $('#token-input');
+  TOKEN = input.value.trim();
+  try {
+    await api('/stats');
+    localStorage.setItem('edgey-admin-token', TOKEN);
+    render();
+  } catch {
+    toast('Invalid token', 'error');
+    TOKEN = '';
+  }
+}
+
+function logout() {
+  TOKEN = '';
+  localStorage.removeItem('edgey-admin-token');
+  renderLogin();
+}
+
+function renderShell() {
+  const app = $('#app');
+  app.innerHTML = '';
+  const sidebar = h('div', { class: 'sidebar' });
+  sidebar.append(h('h1', {}, 'edgey', h('span', {}, '.admin')));
+  const navItems = [
+    ['dashboard', 'Dashboard'],
+    ['accounts', 'Accounts'],
+    ['payments', 'Payments'],
+    ['earnings', 'Earnings'],
+    ['sales', 'Sales'],
+  ];
+  for (const [id, label] of navItems) {
+    sidebar.append(h('a', { href: '#' + id, class: 'nav-item', 'data-page': id }, label));
+  }
+  sidebar.append(h('div', { style: 'flex:1' }));
+  sidebar.append(h('a', { class: 'nav-item', href: '#', onclick: e => { e.preventDefault(); logout(); } }, 'Sign out'));
+  const main = h('div', { class: 'main', id: 'main' });
+  app.append(sidebar, main);
+}
+
+function setActiveNav(page) {
+  $$('.nav-item').forEach(el => {
+    const p = el.dataset.page;
+    el.classList.toggle('active', p === page || (page === 'account' && p === 'accounts'));
+  });
+}
+
+async function renderPage() {
+  const { page, params } = currentRoute();
+  setActiveNav(page);
+  const main = $('#main');
+  if (!main) return;
+  main.innerHTML = '<div class="empty">Loading...</div>';
+  try {
+    switch (page) {
+      case 'dashboard': await renderDashboard(main); break;
+      case 'accounts': await renderAccounts(main); break;
+      case 'account': await renderAccount(main, params[0]); break;
+      case 'payments': await renderPayments(main); break;
+      case 'earnings': await renderEarnings(main); break;
+      case 'sales': await renderSales(main); break;
+      default: main.innerHTML = '<div class="empty">Page not found</div>';
+    }
+  } catch (err) {
+    if (err.message === 'unauthorized') { logout(); return; }
+    main.innerHTML = `<div class="empty" style="color:var(--red)">Error: ${err.message}</div>`;
+  }
+}
+
+// --- Dashboard ---
+async function renderDashboard(el) {
+  const s = await api('/stats');
+  el.innerHTML = '';
+  el.append(h('div', { class: 'page-title' }, 'Dashboard'));
+  const grid = h('div', { class: 'stats-grid' });
+  const cards = [
+    ['Accounts', fmt(s.accounts), ''],
+    ['Active (24h)', fmt(s.activeAccounts24h), 'accent'],
+    ['Tokens owed', fmtTokens(s.tokensOwed), ''],
+    ['Revenue', `€${Number(s.revenueEur).toFixed(2)}`, 'accent'],
+    ['Revenue (30d)', `€${Number(s.revenue30dEur).toFixed(2)}`, ''],
+    ['Payments (30d)', fmt(s.payments30d), ''],
+    ['Requests (24h)', fmt(s.requests24h), ''],
+    ['Tokens (24h)', fmtTokens(s.tokens24h), ''],
+    ['Charged (24h)', fmtTokens(s.charged24h), ''],
+    ['CLI keys', fmt(s.cliKeys), ''],
+    ['To fulfil', fmt(s.paymentsToFulfil), s.paymentsToFulfil > 0 ? '' : ''],
+  ];
+  for (const [label, value, cls] of cards) {
+    grid.append(h('div', { class: 'stat-card' },
+      h('div', { class: 'label' }, label),
+      h('div', { class: 'value ' + cls }, value),
+    ));
+  }
+  el.append(grid);
+}
+
+// --- Accounts ---
+async function renderAccounts(el) {
+  el.innerHTML = '';
+  el.append(h('div', { class: 'page-title' }, 'Accounts'));
+  const bar = h('div', { class: 'search-bar' });
+  const input = h('input', { type: 'text', placeholder: 'Search by username, Discord, note, edgey ID or #id...', id: 'search-q' });
+  const searchBtn = h('button', { class: 'btn btn-primary', onclick: () => doSearch(input.value) }, 'Search');
+  const newBtn = h('button', { class: 'btn btn-outline', onclick: showNewAccountModal }, '+ New');
+  bar.append(input, searchBtn, newBtn);
+  el.append(bar);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(input.value); });
+
+  const table = h('div', { class: 'card', id: 'accounts-list' });
+  el.append(table);
+  const data = await api('/accounts?limit=50');
+  renderAccountsTable(table, data.accounts);
+}
+
+function renderAccountsTable(container, accounts) {
+  if (!accounts.length) { container.innerHTML = '<div class="empty">No accounts found</div>'; return; }
+  const tbl = h('table');
+  tbl.append(h('thead', {}, h('tr', {},
+    h('th', {}, 'ID'), h('th', {}, 'Username'), h('th', {}, 'Balance'), h('th', {}, 'Paid'),
+    h('th', {}, 'Keys'), h('th', {}, 'Status'), h('th', {}, 'Last req'), h('th', {}, 'Discord'),
+  )));
+  const tbody = h('tbody');
+  for (const a of accounts) {
+    const tr = h('tr', { style: 'cursor:pointer', onclick: () => navigate('account/' + a.id) },
+      h('td', { class: 'mono' }, '#' + a.id),
+      h('td', {}, a.username || h('span', { style: 'color:var(--muted)' }, '—')),
+      h('td', { class: 'mono' }, fmtTokens(a.balance)),
+      h('td', {}, '€' + Number(a.paidEur).toFixed(2)),
+      h('td', {}, String(a.keys)),
+      h('td', {}, a.disabled
+        ? h('span', { class: 'badge badge-red' }, 'Disabled')
+        : h('span', { class: 'badge badge-green' }, 'Active')),
+      h('td', { style: 'font-size:12px;color:var(--muted)' }, fmtDate(a.lastRequestAt)),
+      h('td', { style: 'font-size:12px' }, a.discord || ''),
+    );
+    tbody.append(tr);
+  }
+  tbl.append(tbody);
+  container.innerHTML = '';
+  container.append(h('div', { class: 'table-wrap' }, tbl));
+}
+
+async function doSearch(q) {
+  if (!q.trim()) { const data = await api('/accounts?limit=50'); renderAccountsTable($('#accounts-list'), data.accounts); return; }
+  const data = await api('/search?q=' + encodeURIComponent(q.trim()));
+  renderAccountsTable($('#accounts-list'), data.accounts);
+}
+
+function showNewAccountModal() {
+  const bg = h('div', { class: 'modal-bg', onclick: e => { if (e.target === bg) bg.remove(); } });
+  const modal = h('div', { class: 'modal' });
+  modal.append(h('h3', {}, 'New account'));
+  const fields = h('div', { style: 'display:flex;flex-direction:column;gap:10px' });
+  fields.append(
+    h('div', { class: 'field' }, h('label', {}, 'Username (optional)'), h('input', { id: 'new-username', placeholder: 'letters, numbers, _' })),
+    h('div', { class: 'field' }, h('label', {}, 'Password (if username set)'), h('input', { id: 'new-password', type: 'password', placeholder: 'min 6 chars' })),
+    h('div', { class: 'field' }, h('label', {}, 'Discord'), h('input', { id: 'new-discord', placeholder: 'Discord username' })),
+    h('div', { class: 'field' }, h('label', {}, 'Note'), h('input', { id: 'new-note', placeholder: 'Internal note' })),
+    h('div', { class: 'row' },
+      h('label', { style: 'font-size:13px;display:flex;align-items:center;gap:6px' },
+        h('input', { type: 'checkbox', id: 'new-apikey' }), 'Generate API key'),
+    ),
+  );
+  modal.append(fields);
+  modal.append(h('div', { class: 'actions' },
+    h('button', { class: 'btn btn-outline', onclick: () => bg.remove() }, 'Cancel'),
+    h('button', { class: 'btn btn-primary', onclick: async () => {
+      const body = {};
+      const u = $('#new-username').value.trim();
+      const p = $('#new-password').value;
+      if (u) { body.username = u; body.password = p; }
+      const discord = $('#new-discord').value.trim();
+      const note = $('#new-note').value.trim();
+      if (discord) body.discord = discord;
+      if (note) body.note = note;
+      if ($('#new-apikey').checked) body.apiKey = true;
+      try {
+        const res = await api('/accounts', { method: 'POST', body });
+        bg.remove();
+        toast('Account created! Number: ' + res.number, 'success');
+        navigate('account/' + res.account.id);
+      } catch (err) { toast(err.message, 'error'); }
+    } }, 'Create'),
+  ));
+  bg.append(modal);
+  document.body.append(bg);
+}
+
+// --- Account Detail ---
+async function renderAccount(el, id) {
+  const a = await api('/accounts/' + id);
+  el.innerHTML = '';
+
+  // Header
+  const header = h('div', { style: 'display:flex;align-items:center;gap:12px;margin-bottom:20px' });
+  header.append(
+    h('a', { href: '#accounts', style: 'color:var(--muted);font-size:20px' }, '←'),
+    h('div', { class: 'page-title', style: 'margin:0' }, `Account #${a.id}`),
+    a.username ? h('span', { class: 'badge badge-cyan', style: 'font-size:13px' }, a.username) : null,
+    a.disabled ? h('span', { class: 'badge badge-red' }, 'Disabled') : h('span', { class: 'badge badge-green' }, 'Active'),
+  );
+  el.append(header);
+
+  // Info
+  const info = h('div', { class: 'card' });
+  info.append(h('h3', {}, 'Info'));
+  const grid = h('div', { class: 'detail-grid' });
+  grid.append(
+    h('div', { class: 'k' }, 'Balance'), h('div', { class: 'mono' }, fmt(a.balance) + ' tokens'),
+    h('div', { class: 'k' }, 'Paid'), h('div', {}, '€' + Number(a.paidEur).toFixed(2)),
+    h('div', { class: 'k' }, 'Created'), h('div', {}, fmtDate(a.createdAt)),
+    h('div', { class: 'k' }, 'Username'), h('div', {}, a.username || '—'),
+    h('div', { class: 'k' }, 'Edgey ID'), h('div', { class: 'mono' }, a.numberFull || '—'),
+    h('div', { class: 'k' }, 'Provider ID'), h('div', { class: 'mono' }, a.providerIdFull || a.providerId || '—'),
+    h('div', { class: 'k' }, 'Discord'), h('div', {}, a.discord || '—'),
+    h('div', { class: 'k' }, 'Note'), h('div', {}, a.note || '—'),
+    h('div', { class: 'k' }, 'CLI key'), h('div', {}, a.cli?.masked || '—'),
+  );
+  info.append(grid);
+  el.append(info);
+
+  // Actions
+  const actions = h('div', { class: 'card' });
+  actions.append(h('h3', {}, 'Actions'));
+  const btns = h('div', { class: 'row', style: 'flex-wrap:wrap;gap:8px' });
+  btns.append(
+    h('button', { class: 'btn btn-primary btn-sm', onclick: () => showCreditModal(id) }, 'Credit tokens'),
+    h('button', { class: 'btn btn-outline btn-sm', onclick: () => showCredentialsModal(id, a.username) }, 'Set credentials'),
+    h('button', { class: 'btn btn-outline btn-sm', onclick: () => showProfileModal(id, a) }, 'Edit profile'),
+    h('button', { class: 'btn btn-outline btn-sm', onclick: () => showNewKeyModal(id) }, 'New API key'),
+    h('button', { class: 'btn btn-outline btn-sm', onclick: () => showModelAccessModal(id) }, 'Model access'),
+    h('button', { class: 'btn btn-outline btn-sm', onclick: () => showCliKeyModal(id) }, 'CLI key'),
+    h('button', { class: 'btn btn-outline btn-sm', onclick: async () => {
+      if (!confirm('Generate a new edgey ID? The old one will stop working.')) return;
+      const res = await api('/accounts/' + id + '/number', { method: 'POST' });
+      toast('New number: ' + res.number, 'success');
+      renderPage();
+    } }, 'New edgey ID'),
+    h('button', { class: a.disabled ? 'btn btn-primary btn-sm' : 'btn btn-danger btn-sm', onclick: async () => {
+      await api('/accounts/' + id + '/status', { method: 'POST', body: { disabled: !a.disabled } });
+      toast(a.disabled ? 'Enabled' : 'Disabled', 'success');
+      renderPage();
+    } }, a.disabled ? 'Enable' : 'Disable'),
+    h('button', { class: 'btn btn-danger btn-sm', onclick: async () => {
+      if (!confirm('Delete this account? This cannot be undone.')) return;
+      await api('/accounts/' + id, { method: 'DELETE' });
+      toast('Account deleted', 'success');
+      navigate('accounts');
+    } }, 'Delete'),
+  );
+  actions.append(btns);
+  el.append(actions);
+
+  // Model access
+  if (a.modelAccess?.length) {
+    const mc = h('div', { class: 'card' });
+    mc.append(h('h3', {}, 'Model access'));
+    const tbl = h('table');
+    tbl.append(h('thead', {}, h('tr', {}, h('th', {}, 'Model'), h('th', {}, 'Quota'), h('th', {}, 'Used'), h('th', {}, 'Key'), h('th', {}, ''))));
+    const tbody = h('tbody');
+    for (const m of a.modelAccess) {
+      tbody.append(h('tr', {},
+        h('td', { class: 'mono' }, m.model),
+        h('td', {}, fmtTokens(m.quota)),
+        h('td', {}, fmtTokens(m.used)),
+        h('td', {}, m.hasUpstreamKey ? h('span', { class: 'badge badge-green' }, 'Yes') : '—'),
+        h('td', {}, h('button', { class: 'btn btn-danger btn-sm', onclick: async () => {
+          await api('/accounts/' + id + '/models/' + m.model, { method: 'DELETE' });
+          toast('Revoked ' + m.model, 'success');
+          renderPage();
+        } }, 'Revoke')),
+      ));
+    }
+    tbl.append(tbody);
+    mc.append(h('div', { class: 'table-wrap' }, tbl));
+    el.append(mc);
+  }
+
+  // API keys
+  if (a.apiKeys?.length) {
+    const kc = h('div', { class: 'card' });
+    kc.append(h('h3', {}, 'API keys'));
+    const tbl = h('table');
+    tbl.append(h('thead', {}, h('tr', {}, h('th', {}, 'Name'), h('th', {}, 'Key'), h('th', {}, 'Status'), h('th', {}, 'Last used'), h('th', {}, ''))));
+    const tbody = h('tbody');
+    for (const k of a.apiKeys) {
+      tbody.append(h('tr', {},
+        h('td', {}, k.name),
+        h('td', { class: 'mono copyable', onclick: () => { navigator.clipboard.writeText(k.full || k.masked); toast('Copied!', 'success'); } }, k.full || k.masked),
+        h('td', {}, k.enabled ? h('span', { class: 'badge badge-green' }, 'Active') : h('span', { class: 'badge badge-red' }, 'Disabled')),
+        h('td', { style: 'font-size:12px;color:var(--muted)' }, fmtDate(k.last_used_at)),
+        h('td', {}, h('button', { class: 'btn btn-danger btn-sm', onclick: async () => {
+          if (!confirm('Delete this key?')) return;
+          await api('/accounts/' + id + '/keys/' + k.id, { method: 'DELETE' });
+          toast('Key deleted', 'success');
+          renderPage();
+        } }, 'Delete')),
+      ));
+    }
+    tbl.append(tbody);
+    kc.append(h('div', { class: 'table-wrap' }, tbl));
+    el.append(kc);
+  }
+
+  // Recent usage
+  if (a.usage?.length) {
+    const uc = h('div', { class: 'card' });
+    uc.append(h('h3', {}, 'Recent usage'));
+    const tbl = h('table');
+    tbl.append(h('thead', {}, h('tr', {}, h('th', {}, 'Model'), h('th', {}, 'Tokens'), h('th', {}, 'Charged'), h('th', {}, 'Status'), h('th', {}, 'Time'))));
+    const tbody = h('tbody');
+    for (const u of a.usage.slice(0, 25)) {
+      tbody.append(h('tr', {},
+        h('td', { class: 'mono' }, u.model),
+        h('td', {}, fmtTokens(u.total_tokens)),
+        h('td', {}, fmtTokens(u.charged)),
+        h('td', {}, u.status < 300 ? h('span', { class: 'badge badge-green' }, String(u.status)) : h('span', { class: 'badge badge-red' }, String(u.status))),
+        h('td', { style: 'font-size:12px;color:var(--muted)' }, fmtDate(u.created_at)),
+      ));
+    }
+    tbl.append(tbody);
+    uc.append(h('div', { class: 'table-wrap' }, tbl));
+    el.append(uc);
+  }
+
+  // Payments
+  if (a.payments?.length) {
+    const pc = h('div', { class: 'card' });
+    pc.append(h('h3', {}, 'Payments'));
+    const tbl = h('table');
+    tbl.append(h('thead', {}, h('tr', {}, h('th', {}, 'Amount'), h('th', {}, 'Tokens'), h('th', {}, 'Provider'), h('th', {}, 'Status'), h('th', {}, 'Note'), h('th', {}, 'Date'))));
+    const tbody = h('tbody');
+    for (const p of a.payments) {
+      tbody.append(h('tr', {},
+        h('td', {}, '€' + Number(p.amount_eur).toFixed(2)),
+        h('td', {}, fmtTokens(p.tokens)),
+        h('td', {}, p.provider),
+        h('td', {}, p.credited ? h('span', { class: 'badge badge-green' }, 'Credited') : h('span', { class: 'badge badge-yellow' }, p.status)),
+        h('td', { style: 'font-size:12px' }, p.note || ''),
+        h('td', { style: 'font-size:12px;color:var(--muted)' }, fmtDate(p.created_at)),
+      ));
+    }
+    tbl.append(tbody);
+    pc.append(h('div', { class: 'table-wrap' }, tbl));
+    el.append(pc);
+  }
+}
+
+// --- Modals ---
+function showCreditModal(id) {
+  const bg = h('div', { class: 'modal-bg', onclick: e => { if (e.target === bg) bg.remove(); } });
+  const modal = h('div', { class: 'modal' });
+  modal.append(h('h3', {}, 'Credit tokens'));
+  modal.append(
+    h('div', { style: 'display:flex;flex-direction:column;gap:10px' },
+      h('div', { class: 'field' }, h('label', {}, 'Tokens (e.g. 200M, 1.5B)'), h('input', { id: 'cr-tokens' })),
+      h('div', { class: 'field' }, h('label', {}, 'Price paid (€)'), h('input', { id: 'cr-eur', type: 'number', value: '0' })),
+      h('div', { class: 'field' }, h('label', {}, 'Note'), h('input', { id: 'cr-note', value: 'manual credit' })),
+    ),
+  );
+  modal.append(h('div', { class: 'actions' },
+    h('button', { class: 'btn btn-outline', onclick: () => bg.remove() }, 'Cancel'),
+    h('button', { class: 'btn btn-primary', onclick: async () => {
+      try {
+        await api('/accounts/' + id + '/credit', { method: 'POST', body: {
+          tokens: $('#cr-tokens').value, eur: Number($('#cr-eur').value), note: $('#cr-note').value,
+        } });
+        bg.remove(); toast('Credited!', 'success'); renderPage();
+      } catch (err) { toast(err.message, 'error'); }
+    } }, 'Credit'),
+  ));
+  bg.append(modal); document.body.append(bg);
+}
+
+function showCredentialsModal(id, currentUsername) {
+  const bg = h('div', { class: 'modal-bg', onclick: e => { if (e.target === bg) bg.remove(); } });
+  const modal = h('div', { class: 'modal' });
+  modal.append(h('h3', {}, 'Set credentials'));
+  modal.append(
+    h('div', { style: 'display:flex;flex-direction:column;gap:10px' },
+      h('div', { class: 'field' }, h('label', {}, 'Username'), h('input', { id: 'cred-user', value: currentUsername || '' })),
+      h('div', { class: 'field' }, h('label', {}, 'Password'), h('input', { id: 'cred-pass', type: 'password', placeholder: 'min 6 chars' })),
+    ),
+  );
+  modal.append(h('div', { class: 'actions' },
+    h('button', { class: 'btn btn-outline', onclick: () => bg.remove() }, 'Cancel'),
+    h('button', { class: 'btn btn-primary', onclick: async () => {
+      try {
+        await api('/accounts/' + id + '/credentials', { method: 'POST', body: {
+          username: $('#cred-user').value, password: $('#cred-pass').value,
+        } });
+        bg.remove(); toast('Credentials updated!', 'success'); renderPage();
+      } catch (err) { toast(err.message, 'error'); }
+    } }, 'Save'),
+  ));
+  bg.append(modal); document.body.append(bg);
+}
+
+function showProfileModal(id, a) {
+  const bg = h('div', { class: 'modal-bg', onclick: e => { if (e.target === bg) bg.remove(); } });
+  const modal = h('div', { class: 'modal' });
+  modal.append(h('h3', {}, 'Edit profile'));
+  modal.append(
+    h('div', { style: 'display:flex;flex-direction:column;gap:10px' },
+      h('div', { class: 'field' }, h('label', {}, 'Provider user ID'), h('input', { id: 'pf-provider', value: a.providerIdFull || '' })),
+      h('div', { class: 'field' }, h('label', {}, 'Discord'), h('input', { id: 'pf-discord', value: a.discord || '' })),
+      h('div', { class: 'field' }, h('label', {}, 'Note'), h('input', { id: 'pf-note', value: a.note || '' })),
+    ),
+  );
+  modal.append(h('div', { class: 'actions' },
+    h('button', { class: 'btn btn-outline', onclick: () => bg.remove() }, 'Cancel'),
+    h('button', { class: 'btn btn-primary', onclick: async () => {
+      try {
+        await api('/accounts/' + id + '/profile', { method: 'POST', body: {
+          providerUserId: $('#pf-provider').value || null, discord: $('#pf-discord').value || null, note: $('#pf-note').value || null,
+        } });
+        bg.remove(); toast('Profile updated!', 'success'); renderPage();
+      } catch (err) { toast(err.message, 'error'); }
+    } }, 'Save'),
+  ));
+  bg.append(modal); document.body.append(bg);
+}
+
+function showNewKeyModal(id) {
+  const bg = h('div', { class: 'modal-bg', onclick: e => { if (e.target === bg) bg.remove(); } });
+  const modal = h('div', { class: 'modal' });
+  modal.append(h('h3', {}, 'New API key'));
+  modal.append(h('div', { class: 'field' }, h('label', {}, 'Name'), h('input', { id: 'key-name', value: 'API key' })));
+  modal.append(h('div', { class: 'actions' },
+    h('button', { class: 'btn btn-outline', onclick: () => bg.remove() }, 'Cancel'),
+    h('button', { class: 'btn btn-primary', onclick: async () => {
+      try {
+        const res = await api('/accounts/' + id + '/keys', { method: 'POST', body: { name: $('#key-name').value } });
+        bg.remove();
+        toast('Key created! Click to copy.', 'success');
+        navigator.clipboard.writeText(res.key);
+        renderPage();
+      } catch (err) { toast(err.message, 'error'); }
+    } }, 'Create'),
+  ));
+  bg.append(modal); document.body.append(bg);
+}
+
+function showModelAccessModal(id) {
+  const bg = h('div', { class: 'modal-bg', onclick: e => { if (e.target === bg) bg.remove(); } });
+  const modal = h('div', { class: 'modal' });
+  modal.append(h('h3', {}, 'Grant model access'));
+  modal.append(
+    h('div', { style: 'display:flex;flex-direction:column;gap:10px' },
+      h('div', { class: 'field' }, h('label', {}, 'Model ID'), h('input', { id: 'ma-model', placeholder: 'e.g. edgeybeast' })),
+      h('div', { class: 'field' }, h('label', {}, 'Upstream key (optional)'), h('input', { id: 'ma-key', placeholder: 'customer\'s own upstream key' })),
+    ),
+  );
+  modal.append(h('div', { class: 'actions' },
+    h('button', { class: 'btn btn-outline', onclick: () => bg.remove() }, 'Cancel'),
+    h('button', { class: 'btn btn-primary', onclick: async () => {
+      try {
+        const body = { model: $('#ma-model').value };
+        const key = $('#ma-key').value.trim();
+        if (key) body.upstreamKey = key;
+        await api('/accounts/' + id + '/models', { method: 'POST', body });
+        bg.remove(); toast('Access granted!', 'success'); renderPage();
+      } catch (err) { toast(err.message, 'error'); }
+    } }, 'Grant'),
+  ));
+  bg.append(modal); document.body.append(bg);
+}
+
+function showCliKeyModal(id) {
+  const bg = h('div', { class: 'modal-bg', onclick: e => { if (e.target === bg) bg.remove(); } });
+  const modal = h('div', { class: 'modal' });
+  modal.append(h('h3', {}, 'Link CLI key'));
+  modal.append(
+    h('div', { style: 'display:flex;flex-direction:column;gap:10px' },
+      h('div', { class: 'field' }, h('label', {}, 'CLI API key'), h('input', { id: 'cli-key', placeholder: 'upstream provider key' })),
+      h('p', { style: 'font-size:12px;color:var(--muted)' }, 'Set empty and save to remove the CLI key.'),
+    ),
+  );
+  modal.append(h('div', { class: 'actions' },
+    h('button', { class: 'btn btn-outline', onclick: () => bg.remove() }, 'Cancel'),
+    h('button', { class: 'btn btn-primary', onclick: async () => {
+      try {
+        const key = $('#cli-key').value.trim() || null;
+        await api('/accounts/' + id + '/cli', { method: 'POST', body: { key } });
+        bg.remove(); toast('CLI key updated!', 'success'); renderPage();
+      } catch (err) { toast(err.message, 'error'); }
+    } }, 'Save'),
+  ));
+  bg.append(modal); document.body.append(bg);
+}
+
+// --- Payments ---
+async function renderPayments(el) {
+  const data = await api('/payments?limit=100');
+  el.innerHTML = '';
+  el.append(h('div', { class: 'page-title' }, 'Payments'));
+  if (!data.payments.length) { el.append(h('div', { class: 'empty' }, 'No payments yet')); return; }
+  const card = h('div', { class: 'card' });
+  const tbl = h('table');
+  tbl.append(h('thead', {}, h('tr', {},
+    h('th', {}, 'ID'), h('th', {}, 'Account'), h('th', {}, 'Amount'), h('th', {}, 'Tokens'),
+    h('th', {}, 'Provider'), h('th', {}, 'Status'), h('th', {}, 'Fulfilled'), h('th', {}, 'Note'), h('th', {}, 'Date'), h('th', {}, ''),
+  )));
+  const tbody = h('tbody');
+  for (const p of data.payments) {
+    tbody.append(h('tr', {},
+      h('td', { class: 'mono' }, '#' + p.id),
+      h('td', {}, h('a', { href: '#account/' + p.account_id, class: 'mono' }, '#' + p.account_id)),
+      h('td', {}, '€' + Number(p.amount_eur).toFixed(2)),
+      h('td', {}, fmtTokens(p.tokens)),
+      h('td', {}, p.provider),
+      h('td', {}, p.credited ? h('span', { class: 'badge badge-green' }, 'Credited') : h('span', { class: 'badge badge-yellow' }, p.status)),
+      h('td', {},
+        p.fulfilled ? h('span', { class: 'badge badge-green' }, 'Yes')
+          : h('button', { class: 'btn btn-sm btn-outline', onclick: async (e) => {
+              await api('/payments/' + p.id + '/fulfilled', { method: 'POST', body: { fulfilled: true } });
+              e.target.replaceWith(h('span', { class: 'badge badge-green' }, 'Yes'));
+              toast('Marked fulfilled', 'success');
+            } }, 'Mark done'),
+      ),
+      h('td', { style: 'font-size:12px' }, p.note || ''),
+      h('td', { style: 'font-size:12px;color:var(--muted)' }, fmtDate(p.created_at)),
+      h('td', {}),
+    ));
+  }
+  tbl.append(tbody);
+  card.append(h('div', { class: 'table-wrap' }, tbl));
+  el.append(card);
+}
+
+// --- Earnings ---
+async function renderEarnings(el) {
+  const data = await api('/earnings');
+  el.innerHTML = '';
+  el.append(h('div', { class: 'page-title' }, 'Earnings'));
+  const grid = h('div', { class: 'stats-grid' });
+  for (const [label, period] of [['This month', data.month], ['All time', data.allTime]]) {
+    grid.append(
+      h('div', { class: 'stat-card' }, h('div', { class: 'label' }, label + ' revenue'), h('div', { class: 'value accent' }, '€' + Number(period.revenueEur ?? 0).toFixed(2))),
+      h('div', { class: 'stat-card' }, h('div', { class: 'label' }, label + ' cost'), h('div', { class: 'value' }, '$' + Number(period.costUsd ?? 0).toFixed(2))),
+      h('div', { class: 'stat-card' }, h('div', { class: 'label' }, label + ' profit'), h('div', { class: 'value' }, '€' + Number(period.profitEur ?? 0).toFixed(2))),
+    );
+  }
+  el.append(grid);
+
+  if (data.specials?.length) {
+    const sc = h('div', { class: 'card' });
+    sc.append(h('h3', {}, 'Special products'));
+    const tbl = h('table');
+    tbl.append(h('thead', {}, h('tr', {}, h('th', {}, 'Product'), h('th', {}, 'Price'), h('th', {}, 'Cost'))));
+    const tbody = h('tbody');
+    for (const s of data.specials) tbody.append(h('tr', {}, h('td', {}, s.name), h('td', {}, '€' + s.eur), h('td', {}, '$' + s.costUsd)));
+    tbl.append(tbody);
+    sc.append(h('div', { class: 'table-wrap' }, tbl));
+    el.append(sc);
+  }
+}
+
+// --- Sales ---
+async function renderSales(el) {
+  const data = await api('/sales');
+  el.innerHTML = '';
+  el.append(h('div', { class: 'page-title' }, 'Manual sales'));
+  const bar = h('div', { style: 'margin-bottom:16px' });
+  bar.append(h('button', { class: 'btn btn-primary', onclick: showNewSaleModal }, '+ New sale'));
+  el.append(bar);
+
+  if (!data.sales.length) { el.append(h('div', { class: 'empty' }, 'No sales yet')); return; }
+  const card = h('div', { class: 'card' });
+  const tbl = h('table');
+  tbl.append(h('thead', {}, h('tr', {},
+    h('th', {}, 'Product'), h('th', {}, 'Price'), h('th', {}, 'Cost'), h('th', {}, 'Note'), h('th', {}, 'Date'), h('th', {}, ''),
+  )));
+  const tbody = h('tbody');
+  for (const s of data.sales) {
+    tbody.append(h('tr', {},
+      h('td', {}, s.product),
+      h('td', {}, '€' + Number(s.amount_eur).toFixed(2)),
+      h('td', {}, s.cost_eur != null ? '€' + Number(s.cost_eur).toFixed(2) : '$' + Number(s.cost_usd).toFixed(2)),
+      h('td', { style: 'font-size:12px' }, s.note || ''),
+      h('td', { style: 'font-size:12px;color:var(--muted)' }, fmtDate(s.created_at)),
+      h('td', {}, h('button', { class: 'btn btn-danger btn-sm', onclick: async () => {
+        if (!confirm('Delete this sale?')) return;
+        await api('/sales/' + s.id, { method: 'DELETE' });
+        toast('Deleted', 'success'); renderPage();
+      } }, 'Delete')),
+    ));
+  }
+  tbl.append(tbody);
+  card.append(h('div', { class: 'table-wrap' }, tbl));
+  el.append(card);
+}
+
+function showNewSaleModal() {
+  const bg = h('div', { class: 'modal-bg', onclick: e => { if (e.target === bg) bg.remove(); } });
+  const modal = h('div', { class: 'modal' });
+  modal.append(h('h3', {}, 'New manual sale'));
+  modal.append(
+    h('div', { style: 'display:flex;flex-direction:column;gap:10px' },
+      h('div', { class: 'field' }, h('label', {}, 'Product'), h('input', { id: 'sale-product', value: 'Sale' })),
+      h('div', { class: 'field' }, h('label', {}, 'Price paid (€)'), h('input', { id: 'sale-eur', type: 'number' })),
+      h('div', { class: 'field' }, h('label', {}, 'Cost (€)'), h('input', { id: 'sale-cost', type: 'number' })),
+      h('div', { class: 'field' }, h('label', {}, 'Note'), h('input', { id: 'sale-note' })),
+    ),
+  );
+  modal.append(h('div', { class: 'actions' },
+    h('button', { class: 'btn btn-outline', onclick: () => bg.remove() }, 'Cancel'),
+    h('button', { class: 'btn btn-primary', onclick: async () => {
+      try {
+        await api('/sales', { method: 'POST', body: {
+          product: $('#sale-product').value, eur: Number($('#sale-eur').value),
+          costEur: Number($('#sale-cost').value), note: $('#sale-note').value,
+        } });
+        bg.remove(); toast('Sale recorded!', 'success'); renderPage();
+      } catch (err) { toast(err.message, 'error'); }
+    } }, 'Save'),
+  ));
+  bg.append(modal); document.body.append(bg);
+}
+
+// --- Init ---
+function render() {
+  if (!TOKEN) { renderLogin(); return; }
+  renderShell();
+  renderPage();
+}
+
+window.addEventListener('hashchange', () => { if (TOKEN) renderPage(); });
+$('#token-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+render();
+</script>
+</body>
+</html>
