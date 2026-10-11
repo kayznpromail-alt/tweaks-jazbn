@@ -321,6 +321,7 @@ function showNewAccountModal() {
     h('div', { class: 'field' }, h('label', {}, 'Password (if username set)'), h('input', { id: 'new-password', type: 'password', placeholder: 'min 6 chars' })),
     h('div', { class: 'field' }, h('label', {}, 'Discord'), h('input', { id: 'new-discord', placeholder: 'Discord username' })),
     h('div', { class: 'field' }, h('label', {}, 'Note'), h('input', { id: 'new-note', placeholder: 'Internal note' })),
+    h('div', { class: 'field' }, h('label', {}, 'Initial tokens (e.g. 200M, 1.5B)'), h('input', { id: 'new-tokens', placeholder: 'leave empty for 0' })),
     h('div', { class: 'row' },
       h('label', { style: 'font-size:13px;display:flex;align-items:center;gap:6px' },
         h('input', { type: 'checkbox', id: 'new-apikey' }), 'Generate API key'),
@@ -341,6 +342,10 @@ function showNewAccountModal() {
       if ($('#new-apikey').checked) body.apiKey = true;
       try {
         const res = await api('/accounts', { method: 'POST', body });
+        const tokens = $('#new-tokens').value.trim();
+        if (tokens) {
+          await api('/accounts/' + res.account.id + '/credit', { method: 'POST', body: { tokens, note: 'initial credit' } });
+        }
         bg.remove();
         toast('Account created! Number: ' + res.number, 'success');
         navigate('account/' + res.account.id);
