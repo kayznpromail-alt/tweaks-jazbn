@@ -8,8 +8,10 @@ import { creditPayment, now, tx } from './db.js';
 import { createLimiter } from './ratelimit.js';
 import { earningsFor, sumEarnings } from './earnings.js';
 import {
+  hashPassword,
   hashSecret,
   isAccessNumber,
+  isUsername,
   maskKey,
   maskSecret,
   newAccessNumber,
@@ -165,14 +167,21 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
   admin.post('/accounts', async (c) => {
     const body = await c.req.json().catch(() => ({}));
     const { cliKey } = body;
+    const username = body.username ? String(body.username).trim().toLowerCase() : null;
+    const password = body.password ? String(body.password) : null;
+    if (username && !isUsername(username)) return c.json({ error: 'invalid_username' }, 400);
+    if (username && (!password || password.length < 6)) return c.json({ error: 'password_too_short' }, 400);
     // Optional first sale, recorded with the account (its tokens become the customer's limit).
     const sale = body.sale ? parseSale(body.sale) : null;
     if (sale?.error) return c.json({ error: sale.error }, 400);
     if (sale && sale.tokens < 0) return c.json({ error: 'invalid_amount' }, 400);
+    if (username && db.prepare('SELECT 1 FROM accounts WHERE username = ?').get(username))
+      return c.json({ error: 'username_taken' }, 409);
     const number = newAccessNumber();
     const id = Number(
-      db.prepare('INSERT INTO accounts (number_hash, created_at) VALUES (?, ?)').run(hashSecret(cfg.pepper, number), clock())
-        .lastInsertRowid,
+      username
+        ? db.prepare('INSERT INTO accounts (number_hash, username, password_hash, created_at) VALUES (?, ?, ?, ?)').run(hashSecret(cfg.pepper, number), username, hashPassword(password), clock()).lastInsertRowid
+        : db.prepare('INSERT INTO accounts (number_hash, created_at) VALUES (?, ?)').run(hashSecret(cfg.pepper, number), clock()).lastInsertRowid,
     );
     saveNumber(id, number);
     const profileError = setProfile(id, body);
@@ -239,6 +248,22 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
     if (!a) return c.json({ error: 'not_found' }, 404);
     const err = setProfile(a.id, await c.req.json().catch(() => ({})));
     if (err) return c.json({ error: err }, err === 'provider_id_in_use' ? 409 : 400);
+    return c.json(summary(account(a.id)));
+  });
+
+  // Set or change username+password on an existing account.
+  admin.post('/accounts/:id/credentials', async (c) => {
+    const a = account(Number(c.req.param('id')));
+    if (!a) return c.json({ error: 'not_found' }, 404);
+    const body = await c.req.json().catch(() => ({}));
+    const username = body.username ? String(body.username).trim().toLowerCase() : null;
+    const password = body.password ? String(body.password) : null;
+    if (!username) return c.json({ error: 'invalid_username' }, 400);
+    if (!isUsername(username)) return c.json({ error: 'invalid_username' }, 400);
+    if (!password || password.length < 6) return c.json({ error: 'password_too_short' }, 400);
+    const other = db.prepare('SELECT id FROM accounts WHERE username = ? AND id != ?').get(username, a.id);
+    if (other) return c.json({ error: 'username_taken' }, 409);
+    db.prepare('UPDATE accounts SET username = ?, password_hash = ? WHERE id = ?').run(username, hashPassword(password), a.id);
     return c.json(summary(account(a.id)));
   });
 
