@@ -46,39 +46,51 @@ export default function Wallet() {
   const filtered = filter === 'all' ? payments : payments.filter(p => filter === 'credited' ? p.status === 'credited' : p.status === 'pending');
 
   return (
-    <div style={{ animation: 'pageIn 0.35s cubic-bezier(0.23,1,0.32,1)' }}>
-      <div className="flex justify-between items-center mb-5">
-        <h2 className="text-[18px] font-bold tracking-tight">Wallet</h2>
-        <button onClick={() => setTopupOpen(true)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold text-white border-none transition-all duration-150 hover:brightness-110" style={{ background: 'linear-gradient(135deg, var(--color-accent), #8b5cf6)', boxShadow: '0 2px 8px rgba(108,92,231,0.25)' }}>
+    <div style={{ animation: 'pageIn 0.45s cubic-bezier(0.2,0.8,0.2,1)' }}>
+      <div className="text-[10px] font-semibold uppercase mb-3" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.14em', color: 'var(--color-accent)' }}>
+        WORKSPACE / WALLET
+      </div>
+
+      <div className="flex justify-between items-center mb-2">
+        <h1 className="font-bold" style={{ fontSize: 'clamp(28px, 5vw, 38px)', letterSpacing: '-.035em', lineHeight: 1.1 }}>
+          Wallet
+        </h1>
+        <button
+          onClick={() => setTopupOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold transition-all duration-150 hover:brightness-110"
+          style={{ background: 'var(--color-accent)', color: '#031217', border: 'none' }}
+        >
           <Plus size={13} /> Add Tokens
         </button>
       </div>
+      <p className="text-muted text-[13px] mb-6">Manage your token balance and payment history.</p>
+      <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)', marginBottom: 32 }} />
 
-      <div className="grid grid-cols-3 gap-4 mb-6 max-md:grid-cols-1">
-        <StatCard icon={<Coins size={18} />} label="Available Balance" value={fmtTokens(balance)} iconBg="rgba(167,139,250,0.12)" iconColor="#a78bfa" accent="var(--color-accent2)" />
-        <StatCard icon={<Activity size={18} />} label="Requests (24h)" value={fmtNum(requests24h)} iconBg="rgba(99,102,241,0.12)" iconColor="#818cf8" />
-        <StatCard icon={<KeyRound size={18} />} label="Active API Keys" value={keyCount != null ? String(keyCount) : '--'} iconBg="rgba(251,191,36,0.12)" iconColor="#fbbf24" />
+      {/* Stat cards */}
+      <div className="grid grid-cols-3 gap-5 mb-8 max-md:grid-cols-1">
+        <WalletStat label="Available balance" value={fmtTokens(balance)} accent />
+        <WalletStat label="Requests (24h)" value={fmtNum(requests24h)} />
+        <WalletStat label="Active keys" value={keyCount != null ? String(keyCount) : '--'} />
       </div>
 
       {modelAccess.length > 0 && (
-        <div className="rounded-xl p-5 mb-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
-          <h3 className="text-[13px] font-semibold mb-3.5">Model Quotas</h3>
+        <div className="rounded-[14px] p-6 mb-8" style={{ background: 'linear-gradient(180deg, var(--color-card), var(--color-bg2))', border: '1px solid var(--color-border)' }}>
+          <div className="text-[9.5px] font-semibold uppercase mb-4" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.18em', color: 'var(--color-muted)' }}>
+            Model quotas
+          </div>
           <div className="grid gap-2.5">
             {modelAccess.map(ma => (
-              <div key={ma.model} className="flex items-center gap-3.5 p-3.5 rounded-lg" style={{ background: 'var(--color-bg2)', border: '1px solid var(--color-border)' }}>
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa' }}>
-                  {ma.model.slice(0, 2).toUpperCase()}
-                </div>
+              <div key={ma.model} className="flex items-center gap-3.5 p-3.5 rounded-lg" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[12.5px] font-semibold">{ma.model}</div>
-                  <div className="text-[10.5px] text-muted">{fmtTokens(ma.used)} used of {fmtTokens(ma.quota)}</div>
+                  <div className="text-[12px] font-semibold">{ma.model}</div>
+                  <div className="text-[10px] text-muted">{fmtTokens(ma.used)} used of {fmtTokens(ma.quota)}</div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-24 h-[5px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                  <div className="w-24 rounded-full overflow-hidden" style={{ height: 4, background: 'var(--color-bg2)' }}>
                     <div className="h-full rounded-full transition-all duration-300" style={{ width: `${Math.min(100, (ma.used / ma.quota) * 100)}%`, background: ma.remaining > 0 ? 'var(--color-accent)' : 'var(--color-red)' }} />
                   </div>
                   <div className="text-right min-w-[60px]">
-                    <div className="text-[14px] font-bold" style={{ color: ma.remaining > 0 ? 'var(--color-accent2)' : 'var(--color-red)' }}>{fmtTokens(ma.remaining)}</div>
+                    <div className="text-[14px] font-bold" style={{ color: ma.remaining > 0 ? 'var(--color-accent)' : 'var(--color-red)' }}>{fmtTokens(ma.remaining)}</div>
                   </div>
                 </div>
               </div>
@@ -87,17 +99,20 @@ export default function Wallet() {
         </div>
       )}
 
-      <div className="rounded-xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
+      {/* Activity */}
+      <div className="rounded-[14px] p-6" style={{ background: 'linear-gradient(180deg, var(--color-card), var(--color-bg2))', border: '1px solid var(--color-border)' }}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-[13px] font-semibold">Activity</h3>
-          <div className="flex gap-0.5 rounded-lg p-[3px]" style={{ background: 'var(--color-bg2)' }}>
+          <div className="text-[9.5px] font-semibold uppercase" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.18em', color: 'var(--color-muted)' }}>
+            Activity
+          </div>
+          <div className="flex gap-0.5 rounded-lg p-[3px]" style={{ background: 'var(--color-bg)' }}>
             {(['all', 'credited', 'pending'] as const).map(f => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
                 className="px-3 py-[5px] rounded-md text-[11px] font-semibold border-none transition-all duration-150"
                 style={filter === f
-                  ? { background: 'var(--color-accent)', color: '#fff', boxShadow: '0 1px 4px rgba(108,92,231,0.25)' }
+                  ? { background: 'var(--color-accent)', color: '#031217' }
                   : { background: 'none', color: 'var(--color-muted)' }
                 }
               >
@@ -112,17 +127,17 @@ export default function Wallet() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-[12.5px]">
-              <thead><tr>{['ID', 'Amount', 'Tokens', 'Method', 'Status', 'Date'].map(h => <th key={h} className="text-left px-3 py-2 text-muted font-medium text-[10.5px] uppercase tracking-wider whitespace-nowrap" style={{ borderBottom: '1px solid var(--color-border)' }}>{h}</th>)}</tr></thead>
+              <thead><tr>{['ID', 'Amount', 'Tokens', 'Method', 'Status', 'Date'].map(h => <th key={h} className="text-left px-3 py-2 text-muted font-medium text-[10px] uppercase tracking-wider whitespace-nowrap" style={{ borderBottom: '1px solid var(--color-border)', fontFamily: 'var(--font-mono)' }}>{h}</th>)}</tr></thead>
               <tbody>
                 {filtered.map(p => (
                   <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="px-3 py-2.5 text-muted whitespace-nowrap" style={{ borderBottom: '1px solid var(--color-border)' }}>#{p.id}</td>
                     <td className="px-3 py-2.5 font-medium whitespace-nowrap" style={{ borderBottom: '1px solid var(--color-border)' }}>{fmtEur(p.amount_eur)}</td>
-                    <td className="px-3 py-2.5 whitespace-nowrap" style={{ borderBottom: '1px solid var(--color-border)' }}>{fmtTokens(p.tokens)}</td>
+                    <td className="px-3 py-2.5 whitespace-nowrap" style={{ borderBottom: '1px solid var(--color-border)', fontFamily: 'var(--font-mono)', fontSize: '11px' }}>{fmtTokens(p.tokens)}</td>
                     <td className="px-3 py-2.5 text-muted whitespace-nowrap" style={{ borderBottom: '1px solid var(--color-border)' }}>{p.note || p.provider}</td>
                     <td className="px-3 py-2.5 whitespace-nowrap" style={{ borderBottom: '1px solid var(--color-border)' }}>
                       <span className="inline-flex items-center gap-1.5">
-                        <span className="w-[7px] h-[7px] rounded-full" style={{ background: p.status === 'credited' ? 'var(--color-green)' : p.status === 'pending' ? 'var(--color-yellow)' : 'var(--color-red)', boxShadow: p.status === 'credited' ? '0 0 6px rgba(52,211,153,0.4)' : p.status === 'pending' ? '0 0 6px rgba(251,191,36,0.4)' : '0 0 6px rgba(248,113,113,0.4)' }} />
+                        <span className="w-[7px] h-[7px] rounded-full" style={{ background: p.status === 'credited' ? '#4ade80' : p.status === 'pending' ? 'var(--color-yellow)' : 'var(--color-red)', boxShadow: p.status === 'credited' ? '0 0 6px rgba(74,222,128,0.4)' : p.status === 'pending' ? '0 0 6px rgba(251,191,36,0.4)' : '0 0 6px rgba(248,113,113,0.4)' }} />
                         <span className="text-[11px] capitalize">{p.status}</span>
                       </span>
                     </td>
@@ -140,15 +155,22 @@ export default function Wallet() {
   );
 }
 
-function StatCard({ icon, label, value, accent, iconBg, iconColor }: { icon: React.ReactNode; label: string; value: string; accent?: string; iconBg?: string; iconColor?: string }) {
+function WalletStat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className="rounded-xl px-5 py-5 flex items-center gap-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
-      <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: iconBg || 'var(--color-accent-surface)', color: iconColor || 'var(--color-accent2)' }}>
-        {icon}
+    <div className="p-6 rounded-[14px]" style={{ background: 'linear-gradient(180deg, var(--color-card), var(--color-bg2))', border: '1px solid var(--color-border)' }}>
+      <div className="text-[9.5px] font-semibold uppercase mb-3" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.18em', color: 'var(--color-muted)' }}>
+        {label}
       </div>
-      <div>
-        <div className="text-[11.5px] font-medium text-muted mb-1.5">{label}</div>
-        <div className="text-[24px] font-bold tracking-tight leading-none" style={{ color: accent }}>{value}</div>
+      <div
+        className="text-[28px] font-semibold leading-none"
+        style={accent ? {
+          letterSpacing: '-.03em',
+          background: 'linear-gradient(90deg, var(--color-text), var(--color-accent))',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+        } : { letterSpacing: '-.03em' }}
+      >
+        {value}
       </div>
     </div>
   );
@@ -187,13 +209,14 @@ function TopupModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: ()
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }} onClick={onClose}>
-      <div className="rounded-2xl p-7 w-full max-w-[420px]" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border2)', boxShadow: '0 4px 32px rgba(0,0,0,0.5)', animation: 'modalIn 0.25s cubic-bezier(0.23,1,0.32,1)' }} onClick={e => e.stopPropagation()}>
-        <h3 className="text-[16px] font-bold mb-5 tracking-tight">Add Tokens</h3>
+      <div className="rounded-2xl p-7 w-full max-w-[480px]" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border2)', boxShadow: '0 4px 32px rgba(0,0,0,0.5)', animation: 'modalIn 0.25s cubic-bezier(0.23,1,0.32,1)' }} onClick={e => e.stopPropagation()}>
+        <h3 className="text-[18px] font-bold mb-1 tracking-tight">Add Tokens</h3>
+        <p className="text-[12px] text-muted mb-5">Select a payment method and token pack.</p>
 
-        <div className="mb-4">
-          <label className="block text-[10.5px] font-semibold text-muted mb-1.5 uppercase tracking-wider">Pay with</label>
+        <div className="mb-5">
+          <div className="text-[9.5px] font-semibold uppercase mb-2" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.18em', color: 'var(--color-muted)' }}>Pay with</div>
           <div className="relative" ref={ddRef}>
-            <div onClick={() => setCoinOpen(!coinOpen)} className="flex items-center justify-between px-3.5 py-2.5 rounded-lg cursor-pointer text-[13px] transition-all duration-150" style={{ background: 'var(--color-bg2)', border: '1px solid var(--color-border2)' }}>
+            <div onClick={() => setCoinOpen(!coinOpen)} className="flex items-center justify-between px-3.5 py-2.5 rounded-lg cursor-pointer text-[13px] transition-all duration-150" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border2)' }}>
               <span>{coin ? `${coin.symbol} - ${coin.name}` : 'Select cryptocurrency'}</span>
               <ChevronDown size={14} className="text-muted" style={{ transform: coinOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
             </div>
@@ -201,9 +224,9 @@ function TopupModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: ()
               <div className="absolute top-full left-0 right-0 mt-1 rounded-lg z-10 max-h-[200px] overflow-y-auto" style={{ background: 'var(--color-card2)', border: '1px solid var(--color-border2)', boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}>
                 {CATALOG.coins.map(c => (
                   <div key={c.id} onClick={() => { setSelectedCoin(c.id); setCoinOpen(false); }} className="flex items-center gap-2.5 px-3.5 py-2.5 cursor-pointer text-[12.5px] transition-colors hover:bg-white/[0.03]">
-                    <span className="font-bold min-w-[40px] text-accent2">{c.symbol}</span>
+                    <span className="font-bold min-w-[40px]" style={{ color: 'var(--color-accent)' }}>{c.symbol}</span>
                     <span>{c.name}</span>
-                    <span className="text-muted text-[10px] ml-auto">{c.network}</span>
+                    <span className="text-muted text-[10px] ml-auto" style={{ fontFamily: 'var(--font-mono)' }}>{c.network}</span>
                   </div>
                 ))}
               </div>
@@ -211,37 +234,37 @@ function TopupModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: ()
           </div>
         </div>
 
-        <div className="mb-4">
-          <label className="block text-[10.5px] font-semibold text-muted mb-1.5 uppercase tracking-wider">Token pack</label>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(85px,1fr))] gap-2">
+        <div className="mb-5">
+          <div className="text-[9.5px] font-semibold uppercase mb-2" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.18em', color: 'var(--color-muted)' }}>Token pack</div>
+          <div className="grid grid-cols-2 gap-2.5">
             {CATALOG.packs.map((p, i) => (
               <button
                 key={i}
                 onClick={() => setSelectedPack(i)}
-                className="py-3 px-2 rounded-lg text-center text-[12px] transition-all duration-150 border-none"
+                className="py-3.5 px-3 rounded-xl text-left transition-all duration-150 border-none"
                 style={selectedPack === i
-                  ? { background: 'var(--color-accent-surface2)', boxShadow: '0 0 0 2px var(--color-accent)', border: '1px solid var(--color-accent)' }
-                  : { background: 'var(--color-bg2)', border: '1px solid var(--color-border2)' }
+                  ? { background: 'var(--color-accent-surface2)', border: '2px solid var(--color-accent)' }
+                  : { background: 'var(--color-bg)', border: '1px solid var(--color-border)' }
                 }
               >
-                <div className="font-bold text-[14px] tracking-tight">{fmtEur(p.eur)}</div>
-                <div className="text-[10px] text-muted mt-0.5">{fmtTokens(p.tokens)}</div>
+                <div className="font-bold text-[15px] tracking-tight">{fmtEur(p.eur)}</div>
+                <div className="text-[10px] text-muted mt-0.5" style={{ fontFamily: 'var(--font-mono)' }}>{fmtTokens(p.tokens)} tokens</div>
               </button>
             ))}
           </div>
         </div>
 
         {ready && (
-          <div className="rounded-xl p-4 mt-4" style={{ background: 'var(--color-bg2)', border: '1px solid var(--color-border)' }}>
+          <div className="rounded-xl p-4 mb-5" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
             <div className="flex justify-between text-[12px] mb-2"><span className="text-muted">Pack</span><span>{fmtEur(pack!.eur)}</span></div>
             <div className="flex justify-between text-[12px] mb-2"><span className="text-muted">Payment</span><span>{coin!.symbol} ({coin!.network})</span></div>
-            <div className="flex justify-between text-[12px] pt-2.5 mt-2 font-bold" style={{ borderTop: '1px solid var(--color-border)' }}><span className="text-muted">You receive</span><span className="text-accent2">{fmtTokens(pack!.tokens)} tokens</span></div>
+            <div className="flex justify-between text-[12px] pt-2.5 mt-2 font-bold" style={{ borderTop: '1px solid var(--color-border)' }}><span className="text-muted">You receive</span><span style={{ color: 'var(--color-accent)' }}>{fmtTokens(pack!.tokens)} tokens</span></div>
           </div>
         )}
 
-        <div className="flex gap-2.5 justify-end mt-5">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg text-[12px] font-semibold" style={{ background: 'var(--color-bg2)', border: '1px solid var(--color-border2)', color: 'var(--color-text)' }}>Cancel</button>
-          <button onClick={submit} disabled={!ready || loading} className="px-4 py-2 rounded-lg text-[12px] font-semibold text-white border-none disabled:opacity-50 transition-all duration-150 hover:brightness-110" style={{ background: 'linear-gradient(135deg, var(--color-accent), #8b5cf6)', boxShadow: '0 2px 8px rgba(108,92,231,0.25)' }}>
+        <div className="flex gap-2.5 justify-end">
+          <button onClick={onClose} className="px-4 py-2 rounded-lg text-[12px] font-semibold transition-all duration-150" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border2)', color: 'var(--color-text)' }}>Cancel</button>
+          <button onClick={submit} disabled={!ready || loading} className="px-5 py-2 rounded-lg text-[12px] font-semibold border-none disabled:opacity-50 transition-all duration-150 hover:brightness-110" style={{ background: 'var(--color-accent)', color: '#031217' }}>
             {loading ? 'Processing...' : 'Continue to Payment'}
           </button>
         </div>

@@ -77,7 +77,7 @@ export default function AuthView({ onAuth }: Props) {
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
           border: '1px solid rgba(255,255,255,0.12)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 80px rgba(108,92,231,0.08)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.4), 0 0 80px rgba(34,211,238,0.08)',
           animation: 'authIn 0.5s cubic-bezier(0.23,1,0.32,1)',
         }}
       >
@@ -95,13 +95,13 @@ export default function AuthView({ onAuth }: Props) {
             <form onSubmit={handleLogin}>
               <FloatingField icon={<User size={16} />} label="Username" value={user} onChange={setUser} type="text" autoComplete="username" />
               <FloatingField icon={<Lock size={16} />} label="Password" value={pass} onChange={setPass} type="password" autoComplete="current-password" />
-              <button type="submit" className="w-full py-3.5 rounded-xl border-none text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all duration-250" style={{ background: 'linear-gradient(135deg, var(--color-accent), #8b5cf6)', boxShadow: '0 4px 16px rgba(108,92,231,0.35)' }}>
+              <button type="submit" className="w-full py-3.5 rounded-xl border-none text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all duration-250" style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent2))', boxShadow: '0 4px 16px rgba(34,211,238,0.25)' }}>
                 Sign In <ArrowRight size={18} />
               </button>
             </form>
             <p className="text-center mt-5 text-[13px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
               Don't have an account?{' '}
-              <a className="font-semibold text-accent2 cursor-pointer hover:text-[#c4b5fd]" onClick={() => { setMode('register'); setErr(''); }}>Register</a>
+              <a className="font-semibold text-accent2 cursor-pointer hover:text-accent" onClick={() => { setMode('register'); setErr(''); }}>Register</a>
             </p>
             <div className="flex items-center gap-3.5 my-5 text-[11px] font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.25)' }}>
               <span className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.08)' }} />
@@ -120,13 +120,13 @@ export default function AuthView({ onAuth }: Props) {
             <form onSubmit={handleRegister}>
               <FloatingField icon={<User size={16} />} label="Username" value={user} onChange={setUser} type="text" autoComplete="username" />
               <FloatingField icon={<Lock size={16} />} label="Password" value={pass} onChange={setPass} type="password" autoComplete="new-password" />
-              <button type="submit" className="w-full py-3.5 rounded-xl border-none text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all duration-250" style={{ background: 'linear-gradient(135deg, var(--color-accent), #8b5cf6)', boxShadow: '0 4px 16px rgba(108,92,231,0.35)' }}>
+              <button type="submit" className="w-full py-3.5 rounded-xl border-none text-sm font-semibold text-white flex items-center justify-center gap-2 transition-all duration-250" style={{ background: 'linear-gradient(135deg, var(--color-accent), var(--color-accent2))', boxShadow: '0 4px 16px rgba(34,211,238,0.25)' }}>
                 Create Account <ArrowRight size={18} />
               </button>
             </form>
             <p className="text-center mt-5 text-[13px]" style={{ color: 'rgba(255,255,255,0.4)' }}>
               Already have an account?{' '}
-              <a className="font-semibold text-accent2 cursor-pointer hover:text-[#c4b5fd]" onClick={() => { setMode('login'); setErr(''); }}>Sign In</a>
+              <a className="font-semibold text-accent2 cursor-pointer hover:text-accent" onClick={() => { setMode('login'); setErr(''); }}>Sign In</a>
             </p>
           </>
         )}
