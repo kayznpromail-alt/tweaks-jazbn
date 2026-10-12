@@ -1,17 +1,18 @@
 ---
 import Public from '../layouts/Public.astro';
 import Icon from '../components/Icon.astro';
+import { DISCORD_URL } from '../data/site';
 
 const features = [
   {
     icon: 'wallet',
     title: 'Crypto wallet top-up',
-    text: 'After signing in, choose an available cryptocurrency and network, enter a USD amount, and get the exact payment address and QR code. The checkout shows the amount, network and expiry before you send funds.',
+    text: 'Choose a cryptocurrency and network, enter an amount, and get a payment address with QR code. The checkout shows the amount, network and expiry before you send.',
   },
   {
     icon: 'badgeCheck',
     title: 'Verified delivery',
-    text: 'Funds are credited only after the payment is confirmed and matched to the order. Partial, unsigned or mismatched payments are not credited automatically.',
+    text: 'Funds are credited only after confirmation on the network. Partial or mismatched payments are reviewed by support.',
   },
   {
     icon: 'key',
@@ -20,45 +21,116 @@ const features = [
   },
 ] as const;
 const steps = [
-  'Register or sign in with your 16-digit access number.',
-  'Open Top up wallet.',
-  'Select the cryptocurrency and follow the instructions.',
-  'Wait for network confirmation; the tokens are then added to your CLI key shortly after.',
+  { text: 'Sign in with your 16-digit access number.', detail: 'Create an account if you don\'t have one yet.' },
+  { text: 'Open your wallet and select Top up.', detail: 'Choose the amount that fits your usage.' },
+  { text: 'Pick the cryptocurrency and follow checkout.', detail: 'BTC, ETH, LTC, USDT, SOL via NOWPayments.' },
+  { text: 'Wait for network confirmation.', detail: 'Tokens are added to your balance shortly after.' },
 ];
 ---
 <Public title="Products" active="products">
-      <section class="hero">
-        <p class="kicker"><i class="dot"></i>CRYPTO SERVICES</p>
-        <h1>Build more with your <span class="accent">edgey</span> workspace.</h1>
-        <p class="lead">Buy weighted API units for supported AI models using cryptocurrency. Your balance is shared by your API keys and edgeyCLI.</p>
-        <div class="cta">
-          <a href="/#register" class="btn primary">Create an account and view checkout <Icon name="arrowRight" size={14} /></a>
-          <a href="/" class="btn">Sign in</a>
-        </div>
-      </section>
+  <section class="hero">
+    <p class="kicker"><i class="dot"></i>PRODUCTS & PRICING</p>
+    <h1>Build more with your <span class="accent">edgey</span> workspace.</h1>
+    <p class="lead">Buy weighted API units for supported AI models using cryptocurrency. Your balance is shared by your API keys and edgeyCLI.</p>
+    <div class="cta">
+      <a href="/#register" class="btn primary">Get started <Icon name="arrowRight" size={14} /></a>
+      <a href="/setup" class="btn">Setup guide <Icon name="arrowUpRight" size={13} /></a>
+    </div>
+  </section>
 
-      <section class="grid">
-        {features.map((f, i) => (
-          <article class="card feat">
-            <div class="feat-top">
-              <span class="g-icon"><Icon name={f.icon} /></span>
-              <span class="idx">0{i + 1}</span>
-            </div>
-            <h2>{f.title}</h2>
-            <p>{f.text}</p>
-          </article>
-        ))}
-      </section>
-
-      <section class="card how">
-        <div class="how-head">
-          <p class="card-title"><Icon name="terminal" /> How it works</p>
-          <span class="tag">4 steps</span>
+  <section class="grid">
+    {features.map((f, i) => (
+      <article class="card feat">
+        <div class="feat-top">
+          <span class="g-icon"><Icon name={f.icon} /></span>
+          <span class="idx">0{i + 1}</span>
         </div>
-        <ol>
-          {steps.map((s, i) => (
-            <li><span class="n">{String(i + 1).padStart(2, '0')}</span><span class="p">$</span><span>{s}</span></li>
-          ))}
-        </ol>
-      </section>
+        <h2>{f.title}</h2>
+        <p>{f.text}</p>
+      </article>
+    ))}
+  </section>
+
+  <section class="card steps-card">
+    <div class="steps-head">
+      <div>
+        <p class="card-title row"><Icon name="terminal" /> How it works</p>
+        <p class="card-sub">From sign-in to your first top-up in four steps.</p>
+      </div>
+      <span class="tag">4 STEPS</span>
+    </div>
+    <ol class="steps">
+      {steps.map((s, i) => (
+        <li>
+          <span class="step-num">{String(i + 1).padStart(2, '0')}</span>
+          <div>
+            <p class="step-text">{s.text}</p>
+            <p class="step-detail">{s.detail}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <a href={DISCORD_URL} class="card pad help-card" target="_blank" rel="noopener">
+    <span class="help-icon"><Icon name="discord" size={20} /></span>
+    <span class="help-text">
+      <span class="card-title">Questions about payments?</span>
+      <span class="card-sub">Our support team is on Discord. We can help with pending, partial or expired payments.</span>
+    </span>
+    <span class="btn">Discord <Icon name="arrowUpRight" size={13} /></span>
+  </a>
 </Public>
+
+<style>
+  .row { display: flex; align-items: center; gap: 10px; }
+  .pad { padding: 24px; }
+
+  .steps-card { margin-top: 16px; overflow: hidden; }
+  .steps-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 24px; border-bottom: 1px solid var(--border);
+  }
+  .steps { list-style: none; }
+  .steps li {
+    display: flex; gap: 16px; align-items: flex-start;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .steps li:last-child { border-bottom: 0; }
+  .steps li:hover { background: var(--surface-2); }
+  .step-num {
+    flex: none;
+    display: grid; place-items: center;
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    font-family: var(--mono);
+    font-size: 11px; font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+  }
+  .step-text { font-size: 13px; font-weight: 600; }
+  .step-detail { margin-top: 4px; font-size: 12px; color: var(--muted); }
+
+  .help-card {
+    display: flex; align-items: center; gap: 16px;
+    margin-top: 16px;
+    transition: border-color 0.15s;
+  }
+  .help-card:hover { border-color: var(--accent-line); }
+  .help-icon {
+    display: grid; place-items: center;
+    width: 44px; height: 44px; flex: none;
+    border-radius: 10px;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border: 1px solid var(--accent-line);
+  }
+  .help-text { flex: 1; display: flex; flex-direction: column; }
+  @media (max-width: 640px) {
+    .help-card { flex-wrap: wrap; }
+    .steps-head { flex-direction: column; align-items: flex-start; gap: 8px; }
+  }
+</style>

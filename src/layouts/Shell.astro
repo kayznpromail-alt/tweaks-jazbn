@@ -18,10 +18,10 @@ const { title, noindex = false } = Astro.props;
     <meta name="theme-color" content="#05080b" />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
     <script is:inline>
-      // Opening effect: every load of the home page, once per tab elsewhere, never with reduced motion.
+      // Opening effect: home page only, never with reduced motion.
       try {
         var home = location.pathname === '/' || location.pathname === '/index.html';
-        if ((home || !sessionStorage.getItem('edgey-intro')) && !matchMedia('(prefers-reduced-motion: reduce)').matches)
+        if (home && !matchMedia('(prefers-reduced-motion: reduce)').matches)
           document.documentElement.classList.add('intro-on');
       } catch (e) {}
       // Browsers without cross-page view transitions get a simple fade-in instead.
