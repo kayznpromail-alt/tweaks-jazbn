@@ -15,21 +15,30 @@ interface Payment {
   created_at: number;
 }
 
+interface ModelAccess {
+  model: string;
+  quota: number;
+  used: number;
+  remaining: number;
+  grantedAt: number;
+}
+
 export default function Wallet() {
   const [balance, setBalance] = useState<number | null>(null);
   const [requests24h, setRequests24h] = useState<number | null>(null);
   const [keyCount, setKeyCount] = useState<number | null>(null);
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [modelAccess, setModelAccess] = useState<ModelAccess[]>([]);
   const [filter, setFilter] = useState('all');
   const [topupOpen, setTopupOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
       const [me, pay] = await Promise.all([
-        api<{ balance: number; requests24h: number; keyCount: number }>('/me'),
+        api<{ balance: number; requests24h: number; keyCount: number; modelAccess?: ModelAccess[] }>('/me'),
         api<{ payments: Payment[] }>('/payments'),
       ]);
-      if (me) { setBalance(me.balance); setRequests24h(me.requests24h); setKeyCount(me.keyCount); }
+      if (me) { setBalance(me.balance); setRequests24h(me.requests24h); setKeyCount(me.keyCount); if (me.modelAccess) setModelAccess(me.modelAccess); }
       if (pay?.payments) setPayments(pay.payments);
     })();
   }, []);
@@ -58,6 +67,36 @@ export default function Wallet() {
           <p className="text-[13px] text-muted">Your tokens work across all supported models. Rates vary by model.</p>
         </div>
       </div>
+
+      {modelAccess.length > 0 && (
+        <div className="rounded-xl p-6 mb-6" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <h3 className="text-sm font-semibold mb-4">Model Subscriptions</h3>
+          <div className="grid gap-3">
+            {modelAccess.map(ma => (
+              <div key={ma.model} className="flex items-center justify-between p-4 rounded-lg" style={{ background: 'var(--color-bg2)', border: '1px solid var(--color-border)' }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: 'var(--color-accent-surface)', color: 'var(--color-accent2)' }}>
+                    {ma.model.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold">{ma.model}</div>
+                    <div className="text-[11px] text-muted">{fmtTokens(ma.used)} used of {fmtTokens(ma.quota)}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="w-32 h-2 rounded-full overflow-hidden" style={{ background: 'var(--color-bg)' }}>
+                    <div className="h-full rounded-full" style={{ width: `${Math.min(100, (ma.used / ma.quota) * 100)}%`, background: ma.remaining > 0 ? 'linear-gradient(90deg, var(--color-accent), #8b5cf6)' : 'var(--color-red)' }} />
+                  </div>
+                  <div className="text-right min-w-[70px]">
+                    <div className="text-sm font-bold" style={{ color: ma.remaining > 0 ? 'var(--color-accent2)' : 'var(--color-red)' }}>{fmtTokens(ma.remaining)}</div>
+                    <div className="text-[10px] text-muted">remaining</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="rounded-xl p-6" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
         <h3 className="text-sm font-semibold mb-3.5">Recent Activity</h3>

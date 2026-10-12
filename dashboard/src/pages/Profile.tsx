@@ -3,6 +3,14 @@ import { Check } from 'lucide-react';
 import { api } from '@/lib/api';
 import { fmtTokens, fmtNum, fmtEur, fmtPct } from '@/lib/utils';
 
+interface ModelAccess {
+  model: string;
+  quota: number;
+  used: number;
+  remaining: number;
+  grantedAt: number;
+}
+
 interface MeData {
   username: string;
   balance: number;
@@ -12,6 +20,7 @@ interface MeData {
   requests24h: number;
   successful24h: number;
   requests90d: number;
+  modelAccess?: ModelAccess[];
 }
 
 export default function Profile() {
@@ -55,6 +64,26 @@ export default function Profile() {
           <ProfileField label="Total Spent" value={fmtEur(me.paidEur)} />
         </div>
       </div>
+
+      {me.modelAccess && me.modelAccess.length > 0 && (
+        <div className="rounded-2xl p-7 mb-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+          <h3 className="text-sm font-semibold mb-3.5">Model Subscriptions</h3>
+          <div className="grid gap-3">
+            {me.modelAccess.map(ma => (
+              <div key={ma.model} className="flex items-center justify-between p-4 rounded-xl" style={{ background: 'var(--color-bg2)', border: '1px solid var(--color-border)' }}>
+                <div>
+                  <div className="text-sm font-semibold">{ma.model}</div>
+                  <div className="text-[11px] text-muted">{fmtTokens(ma.used)} / {fmtTokens(ma.quota)}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[15px] font-bold" style={{ color: ma.remaining > 0 ? 'var(--color-accent2)' : 'var(--color-red)' }}>{fmtTokens(ma.remaining)}</div>
+                  <div className="text-[10px] text-muted">remaining</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="rounded-2xl p-7 mb-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
         <h3 className="text-sm font-semibold mb-3.5">Getting Started</h3>

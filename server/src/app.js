@@ -90,6 +90,7 @@ export function createApp({ cfg, db, clock = now }) {
     ),
     charge: db.prepare('UPDATE accounts SET balance = balance - ? WHERE id = ?'),
     modelAccess: db.prepare('SELECT quota, used, upstream_key_sealed FROM model_access WHERE account_id = ? AND model = ?'),
+    modelAccessAll: db.prepare('SELECT model, quota, used, granted_at FROM model_access WHERE account_id = ?'),
     chargeModelUsage: db.prepare('UPDATE model_access SET used = used + ? WHERE account_id = ? AND model = ?'),
     usageSince: db.prepare('SELECT created_at, total_tokens, status FROM usage WHERE account_id = ? AND created_at >= ?'),
     countSince: db.prepare(
@@ -220,6 +221,9 @@ export function createApp({ cfg, db, clock = now }) {
       requests90d: quarter.n,
       // CLI key linked by the admin: plan, status and usage read from the provider.
       cli: await cli.status(a.id),
+      modelAccess: q.modelAccessAll.all(a.id).map(({ model, quota, used, granted_at }) => ({
+        model, quota, used, remaining: Math.max(0, quota - used), grantedAt: granted_at,
+      })),
     });
   });
 

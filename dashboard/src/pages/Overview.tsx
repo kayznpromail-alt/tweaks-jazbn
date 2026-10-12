@@ -4,6 +4,13 @@ import { fmtTokens, fmtNum, fmtPct, fmtAgo, fmtMs } from '@/lib/utils';
 import Chart from '@/components/Chart';
 import ModelList from '@/components/ModelList';
 
+interface ModelAccess {
+  model: string;
+  quota: number;
+  used: number;
+  remaining: number;
+}
+
 interface MeData {
   requests24h: number;
   successful24h: number;
@@ -11,6 +18,7 @@ interface MeData {
   balance: number;
   firstKey?: string;
   keyCount?: number;
+  modelAccess?: ModelAccess[];
 }
 
 interface Bucket { start: number; tokens: number; }
@@ -69,6 +77,9 @@ export default function Overview() {
         <Stat label="Success Rate" value={me?.requests24h ? fmtPct(me.successful24h, me.requests24h) : '--'} color="var(--color-green)" />
         <Stat label="Token Balance" value={fmtTokens(me?.balance)} color="var(--color-cyan)" />
         <Stat label="Requests (90d)" value={fmtNum(me?.requests90d)} />
+        {me?.modelAccess?.map(ma => (
+          <Stat key={ma.model} label={ma.model} value={fmtTokens(ma.remaining)} hint={`${fmtTokens(ma.used)} used of ${fmtTokens(ma.quota)}`} color="var(--color-accent2)" />
+        ))}
       </div>
 
       <div className="rounded-xl p-6 mb-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
@@ -141,11 +152,12 @@ export default function Overview() {
   );
 }
 
-function Stat({ label, value, color }: { label: string; value: string; color?: string }) {
+function Stat({ label, value, color, hint }: { label: string; value: string; color?: string; hint?: string }) {
   return (
     <div className="rounded-xl p-5 transition-all duration-200 hover:shadow-[0_1px_2px_rgba(0,0,0,0.3),0_4px_16px_rgba(0,0,0,0.2)]" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
       <div className="text-[11px] font-semibold text-muted uppercase tracking-wider mb-2">{label}</div>
       <div className="text-[26px] font-bold tracking-tight" style={{ color }}>{value}</div>
+      {hint && <div className="text-[11px] text-muted mt-1">{hint}</div>}
     </div>
   );
 }
