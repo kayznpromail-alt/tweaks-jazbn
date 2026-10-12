@@ -112,23 +112,7 @@ canvas{width:100%;border-radius:8px}
 .os-tab{padding:5px 12px;border-radius:6px;font-size:12px;background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer}
 .os-tab.active{background:var(--card2);color:var(--text);border-color:var(--accent2)}
 .os-panel{display:none}.os-panel.active{display:block}
-/* wallet */
-.balance-card{background:linear-gradient(135deg,#111118 0%,#16161e 100%);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:24px;text-align:center}
-.balance-card .bal-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
-.balance-card .bal-val{font-size:36px;font-weight:700;color:var(--accent)}
-.balance-card .bal-eur{font-size:14px;color:var(--muted);margin-top:4px}
-.packs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:24px}
-.pack{background:var(--card);border:2px solid var(--border);border-radius:12px;padding:18px;text-align:center;cursor:pointer;transition:.2s}
-.pack:hover{border-color:var(--accent2)}
-.pack.selected{border-color:var(--accent);background:rgba(34,211,238,.04)}
-.pack .tok{font-size:20px;font-weight:700;margin-bottom:4px}
-.pack .eur{font-size:14px;color:var(--accent)}
-.coins{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
-.coin{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--card);font-size:13px;cursor:pointer;transition:.2s}
-.coin:hover{border-color:var(--accent2)}
-.coin.selected{border-color:var(--accent);background:rgba(34,211,238,.04)}
-.coin .sym{font-weight:600}
-.coin .net{color:var(--muted);font-size:11px;margin-left:4px}
+/* wallet (old styles removed, see wallet redesign below) */
 /* modal */
 .modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:100}
 .modal-bg.open{display:flex}
@@ -216,6 +200,9 @@ canvas{width:100%;border-radius:8px}
   .key-grid{grid-template-columns:1fr}
   .card-row{flex-direction:column}
   .stats{grid-template-columns:1fr 1fr}
+  .wallet-stats{grid-template-columns:1fr}
+  .profile-grid{grid-template-columns:1fr}
+  .pack-presets{flex-wrap:wrap}
 }
 @media(max-width:480px){
   .stats{grid-template-columns:1fr}
@@ -587,6 +574,38 @@ print(message.content[0].text)</div>
   </div>
 </div>
 
+<!-- Top Up Modal -->
+<div id="topup-modal" class="modal-bg">
+  <div class="modal topup-modal">
+    <h3>Add Tokens</h3>
+    <div class="field">
+      <label>Pay with</label>
+      <div class="coin-select">
+        <div class="coin-dropdown" id="coin-dd" onclick="toggleCoinDD()">
+          <span id="coin-dd-label">Select cryptocurrency</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="coin-options" id="coin-dd-opts"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Token pack</label>
+      <div class="pack-presets" id="pack-presets"></div>
+    </div>
+    <div id="topup-summary-wrap" style="display:none">
+      <div class="topup-summary">
+        <div class="topup-row"><span class="tr-label">Pack</span><span id="ts-pack">--</span></div>
+        <div class="topup-row"><span class="tr-label">Payment</span><span id="ts-coin">--</span></div>
+        <div class="topup-row"><span class="tr-label">You receive</span><span id="ts-tokens" style="color:var(--accent)">--</span></div>
+      </div>
+    </div>
+    <div class="actions" style="margin-top:18px">
+      <button class="btn btn-s" onclick="closeModal('topup-modal')">Cancel</button>
+      <button class="btn btn-p" id="topup-go-btn" onclick="doTopup()" disabled>Continue to Payment</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const CATALOG = {
   providers: [
@@ -735,6 +754,7 @@ function go(page) {
   else if (page==='requests') loadRequests();
   else if (page==='setup') loadSetup();
   else if (page==='wallet') loadWallet();
+  else if (page==='profile') loadProfile();
 }
 
 // Overview
@@ -990,77 +1010,144 @@ function fillUserKey() {
 }
 
 // Wallet
+let allPayments = [];
+let txFilter = 'all';
+
 async function loadWallet() {
   const [meData, payments] = await Promise.all([api('/me'), api('/payments')]);
   if (meData) {
     me = meData;
-    document.getElementById('bal-tokens').textContent = fmtTokens(meData.balance);
-    document.getElementById('bal-paid').textContent = 'Total spent: '+fmtEur(meData.paidEur);
+    document.getElementById('w-balance').textContent = fmtTokens(meData.balance);
+    document.getElementById('w-requests').textContent = fmtNum(meData.requests24h);
+    document.getElementById('w-keys').textContent = meData.keyCount ?? '--';
   }
-
-  // Render packs
-  const pg = document.getElementById('packs-grid');
-  pg.innerHTML = CATALOG.packs.map((p,i) => `
-    <div class="pack ${selectedPack===i?'selected':''}" onclick="selectPack(${i})">
-      <div class="tok">${fmtTokens(p.tokens)}</div>
-      <div class="eur">${fmtEur(p.eur)}</div>
-    </div>
-  `).join('');
-
-  // Render coins
-  const cl = document.getElementById('coins-list');
-  cl.innerHTML = CATALOG.coins.map(c => `
-    <div class="coin ${selectedCoin===c.id?'selected':''}" onclick="selectCoin('${c.id}')">
-      <span class="sym">${c.symbol}</span><span class="net">${c.network}</span>
-    </div>
-  `).join('');
-
-  // Payments
-  if (payments?.payments) {
-    const rows = payments.payments;
-    const tbody = document.getElementById('pay-tbody');
-    const empty = document.getElementById('pay-empty');
-    if (!rows.length) { tbody.innerHTML=''; empty.style.display=''; return; }
-    empty.style.display='none';
-    tbody.innerHTML = rows.map(p => `
-      <tr>
-        <td style="color:var(--muted)">#${p.id}</td>
-        <td>${fmtEur(p.amount_eur)}</td>
-        <td>${fmtTokens(p.tokens)}</td>
-        <td>${p.note||p.provider}</td>
-        <td><span class="badge pay-status ${p.status==='credited'?'b-green':p.status==='pending'?'b-yellow':'b-red'}">${p.status}</span></td>
-        <td style="color:var(--muted)">${fmtDate(p.created_at)}</td>
-      </tr>
-    `).join('');
-  }
-  updateTopupBtn();
+  allPayments = payments?.payments || [];
+  renderPayments();
 }
 
-function selectPack(i) {
-  selectedPack = i;
-  document.querySelectorAll('.pack').forEach((el,j) => el.classList.toggle('selected',j===i));
-  updateTopupBtn();
+function filterTx(filter) {
+  txFilter = filter;
+  document.querySelectorAll('.tx-tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase() === (filter === 'all' ? 'all' : filter === 'credited' ? 'confirmed' : 'pending')));
+  renderPayments();
 }
-function selectCoin(id) {
+
+function renderPayments() {
+  const rows = txFilter === 'all' ? allPayments : allPayments.filter(p => txFilter === 'credited' ? p.status === 'credited' : p.status === 'pending');
+  const tbody = document.getElementById('pay-tbody');
+  const empty = document.getElementById('pay-empty');
+  if (!rows.length) { tbody.innerHTML = ''; empty.style.display = ''; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = rows.map(p => `
+    <tr>
+      <td style="color:var(--muted)">#${p.id}</td>
+      <td>${fmtEur(p.amount_eur)}</td>
+      <td>${fmtTokens(p.tokens)}</td>
+      <td>${p.note || p.provider}</td>
+      <td><span class="badge pay-status ${p.status === 'credited' ? 'b-green' : p.status === 'pending' ? 'b-yellow' : 'b-red'}">${p.status}</span></td>
+      <td style="color:var(--muted)">${fmtDate(p.created_at)}</td>
+    </tr>
+  `).join('');
+}
+
+// Top-up modal
+function openTopup() {
+  selectedPack = null;
+  selectedCoin = null;
+  document.getElementById('coin-dd-label').textContent = 'Select cryptocurrency';
+  document.getElementById('topup-summary-wrap').style.display = 'none';
+  document.getElementById('topup-go-btn').disabled = true;
+  const presets = document.getElementById('pack-presets');
+  presets.innerHTML = CATALOG.packs.map((p, i) => `
+    <div class="pack-btn" onclick="pickPack(${i})">
+      <div class="pb-eur">${fmtEur(p.eur)}</div>
+      <div class="pb-tok">${fmtTokens(p.tokens)} tokens</div>
+    </div>
+  `).join('');
+  const opts = document.getElementById('coin-dd-opts');
+  opts.innerHTML = CATALOG.coins.map(c => `
+    <div class="coin-opt" onclick="pickCoin('${c.id}')">
+      <span class="c-sym">${c.symbol}</span>
+      <span>${c.name}</span>
+      <span class="c-net">${c.network}</span>
+    </div>
+  `).join('');
+  document.getElementById('topup-modal').classList.add('open');
+}
+
+function toggleCoinDD() {
+  document.getElementById('coin-dd-opts').classList.toggle('open');
+}
+
+function pickCoin(id) {
   selectedCoin = id;
-  document.querySelectorAll('.coin').forEach(el => el.classList.toggle('selected',el.querySelector('.sym').textContent===CATALOG.coins.find(c=>c.id===id)?.symbol));
-  updateTopupBtn();
+  const coin = CATALOG.coins.find(c => c.id === id);
+  document.getElementById('coin-dd-label').textContent = coin.symbol + ' - ' + coin.name;
+  document.getElementById('coin-dd-opts').classList.remove('open');
+  updateTopupSummary();
 }
-function updateTopupBtn() {
-  document.getElementById('topup-btn').disabled = selectedPack==null || !selectedCoin;
+
+function pickPack(i) {
+  selectedPack = i;
+  document.querySelectorAll('.pack-btn').forEach((el, j) => el.classList.toggle('active', j === i));
+  updateTopupSummary();
+}
+
+function updateTopupSummary() {
+  const ready = selectedPack != null && selectedCoin;
+  document.getElementById('topup-go-btn').disabled = !ready;
+  if (!ready) { document.getElementById('topup-summary-wrap').style.display = 'none'; return; }
+  const pack = CATALOG.packs[selectedPack];
+  const coin = CATALOG.coins.find(c => c.id === selectedCoin);
+  document.getElementById('ts-pack').textContent = fmtEur(pack.eur);
+  document.getElementById('ts-coin').textContent = coin.symbol + ' (' + coin.network + ')';
+  document.getElementById('ts-tokens').textContent = fmtTokens(pack.tokens) + ' tokens';
+  document.getElementById('topup-summary-wrap').style.display = '';
 }
 
 async function doTopup() {
-  if (selectedPack==null||!selectedCoin) return;
-  const btn = document.getElementById('topup-btn');
-  btn.disabled=true; btn.textContent='Processing...';
-  const r = await api('/topup',{method:'POST',body:JSON.stringify({pack:selectedPack,coin:selectedCoin})});
-  btn.textContent='Purchase'; btn.disabled=false;
+  if (selectedPack == null || !selectedCoin) return;
+  const btn = document.getElementById('topup-go-btn');
+  btn.disabled = true; btn.textContent = 'Processing...';
+  const r = await api('/topup', { method: 'POST', body: JSON.stringify({ pack: selectedPack, coin: selectedCoin }) });
+  btn.textContent = 'Continue to Payment'; btn.disabled = false;
   if (!r) { toast('Payment failed'); return; }
   if (r.error) { toast(r.error); return; }
-  if (r.invoiceUrl) window.open(r.invoiceUrl,'_blank');
+  if (r.invoiceUrl) window.open(r.invoiceUrl, '_blank');
+  closeModal('topup-modal');
   toast('Payment initiated! Complete it in the opened window.');
   loadWallet();
+}
+
+// Profile
+async function loadProfile() {
+  if (!me) me = await api('/me');
+  if (!me) return;
+  const username = me.username || 'User';
+  const initials = username.slice(0, 2).toUpperCase();
+  document.getElementById('profile-initials').textContent = initials;
+  document.getElementById('profile-username').textContent = username;
+  document.getElementById('profile-sub').textContent = 'Customer account';
+  document.getElementById('pf-balance').textContent = fmtTokens(me.balance);
+  document.getElementById('pf-keys').textContent = (me.keyCount ?? 0) + ' / ' + (me.maxKeys ?? 6);
+  document.getElementById('pf-spent').textContent = fmtEur(me.paidEur);
+  const checks = [
+    { done: true, text: 'Create your account' },
+    { done: (me.keyCount ?? 0) > 0, text: 'Generate an API key' },
+    { done: me.balance > 0, text: 'Add tokens to your wallet' },
+    { done: (me.requests24h ?? 0) > 0 || (me.requests90d ?? 0) > 0, text: 'Make your first API request' },
+  ];
+  document.getElementById('checklist').innerHTML = checks.map(c => `
+    <li>
+      <span class="check-icon ${c.done ? 'check-done' : 'check-todo'}">${c.done ? '&#10003;' : ''}</span>
+      <span${c.done ? '' : ' style="color:var(--muted)"'}>${c.text}</span>
+    </li>
+  `).join('');
+  document.getElementById('profile-stats-row').innerHTML = `
+    <div class="stat"><div class="label">Requests (24h)</div><div class="val">${fmtNum(me.requests24h)}</div></div>
+    <div class="stat"><div class="label">Success Rate (24h)</div><div class="val green">${me.requests24h ? fmtPct(me.successful24h, me.requests24h) : '--'}</div></div>
+    <div class="stat"><div class="label">Requests (90d)</div><div class="val">${fmtNum(me.requests90d)}</div></div>
+    <div class="stat"><div class="label">Token Balance</div><div class="val cyan">${fmtTokens(me.balance)}</div></div>
+  `;
 }
 
 function esc(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
@@ -1088,6 +1175,12 @@ document.getElementById('login-pass').addEventListener('keydown', e => { if (e.k
 document.getElementById('login-number').addEventListener('keydown', e => { if (e.key==='Enter') doLoginNumber(); });
 document.getElementById('reg-pass').addEventListener('keydown', e => { if (e.key==='Enter') doRegister(); });
 document.getElementById('key-name').addEventListener('keydown', e => { if (e.key==='Enter') createKey(); });
+
+// Close coin dropdown on outside click
+document.addEventListener('click', e => {
+  const dd = document.querySelector('.coin-select');
+  if (dd && !dd.contains(e.target)) document.getElementById('coin-dd-opts').classList.remove('open');
+});
 </script>
 </body>
 </html>
