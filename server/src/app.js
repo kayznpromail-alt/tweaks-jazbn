@@ -33,6 +33,24 @@ const RANGES = {
   '30d': { span: 30 * DAY, buckets: 30 },
 };
 
+// Cached dawvq cli-capabilities (revision for opus-private JB mode).
+let _capabilitiesCache = { data: null, fetchedAt: 0 };
+async function getDawvqCapabilities(cfg) {
+  const now = Date.now();
+  if (_capabilitiesCache.data && now - _capabilitiesCache.fetchedAt < 3_600_000) return _capabilitiesCache.data;
+  try {
+    const res = await fetch(`${cfg.upstreamBase}/v1/cli-capabilities`, {
+      headers: { authorization: `Bearer ${cfg.upstreamKey}` },
+    });
+    if (!res.ok) return _capabilitiesCache.data;
+    const data = await res.json();
+    _capabilitiesCache = { data, fetchedAt: now };
+    return data;
+  } catch {
+    return _capabilitiesCache.data;
+  }
+}
+
 export function createApp({ cfg, db, clock = now }) {
   const app = new Hono();
   const hash = (v) => hashSecret(cfg.pepper, v);
@@ -352,6 +370,23 @@ export function createApp({ cfg, db, clock = now }) {
     }),
   );
 
+  // CLI capabilities: tells the client which modes are available (e.g. opus-private for JB).
+  app.get('/v1/cli-capabilities', apiAuth('openai'), async (c) => {
+    const key = c.get('key');
+    const caps = await getDawvqCapabilities(cfg);
+    const modes = [];
+    const access = db.prepare('SELECT model FROM model_access WHERE account_id = ?').all(key.account_id);
+    const hasOpusPrivate = access.some((r) => r.model === 'opus-private');
+    if (hasOpusPrivate && caps) {
+      const opusEntry = Array.isArray(caps.modes)
+        ? caps.modes.find((m) => m.id === 'opus-private')
+        : null;
+      if (opusEntry) modes.push(opusEntry);
+      else if (caps['opus-private']) modes.push({ id: 'opus-private', revision: caps['opus-private'] });
+    }
+    return c.json({ modes, capabilities: modes.map((m) => m.id) });
+  });
+
   // Balance of the key's account, in the same shape as the upstream provider's /v1/account,
   // so CLIs that read it show the edgey balance.
   app.get('/v1/account', apiAuth('openai'), (c) => {
@@ -399,10 +434,20 @@ export function createApp({ cfg, db, clock = now }) {
           402,
         );
 
+      // Pass dawvq_mode to upstream if the user has the corresponding permission.
+      let dawvqMode = null;
+      if (body.dawvq_mode && typeof body.dawvq_mode === 'object' && body.dawvq_mode.id) {
+        const modeAccess = db.prepare('SELECT 1 FROM model_access WHERE account_id = ? AND model = ?').get(key.account_id, body.dawvq_mode.id);
+        if (!modeAccess)
+          return c.json(errorBody(kind, 403, 'jailbreak_not_allowed', 'You do not have access to this mode.'), 403);
+        dawvqMode = body.dawvq_mode;
+      }
+
       const started = clock();
       q.touchKey.run(started, key.key_id);
       const upModel = upstreamModel(body.model);
-      const upBody = upModel !== body.model ? { ...body, model: upModel } : body;
+      let upBody = upModel !== body.model ? { ...body, model: upModel } : body;
+      if (dawvqMode) upBody = { ...upBody, dawvq_mode: dawvqMode };
       return relay({
         cfg,
         kind,
