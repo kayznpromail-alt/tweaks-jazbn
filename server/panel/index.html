@@ -601,12 +601,27 @@ function showNewKeyModal(id) {
     h('button', { class: 'btn btn-primary', onclick: async () => {
       try {
         const res = await api('/accounts/' + id + '/keys', { method: 'POST', body: { name: $('#key-name').value } });
+        showKeyResultModal(res.key);
         bg.remove();
-        toast('Key created! Click to copy.', 'success');
-        navigator.clipboard.writeText(res.key);
-        renderPage();
       } catch (err) { toast(err.message, 'error'); }
     } }, 'Create'),
+  ));
+  bg.append(modal); document.body.append(bg);
+}
+
+function showKeyResultModal(key) {
+  const bg = h('div', { class: 'modal-bg', onclick: e => { if (e.target === bg) bg.remove(); } });
+  const modal = h('div', { class: 'modal' });
+  modal.append(h('h3', {}, 'API key created'));
+  modal.append(h('p', { style: 'font-size:12px;color:var(--muted);margin-bottom:12px' }, 'Copy this key now. You can also find it later in the account details.'));
+  const keyBox = h('div', {
+    style: 'padding:14px;border-radius:10px;border:1px solid var(--accent);background:rgba(34,211,238,.06);cursor:pointer;word-break:break-all;font-family:monospace;font-size:13px;color:var(--accent)',
+    onclick: () => { navigator.clipboard.writeText(key); toast('Copied!', 'success'); },
+  }, key);
+  modal.append(keyBox);
+  modal.append(h('div', { class: 'actions' },
+    h('button', { class: 'btn btn-primary', onclick: () => { navigator.clipboard.writeText(key); toast('Copied!', 'success'); } }, 'Copy'),
+    h('button', { class: 'btn btn-outline', onclick: () => { bg.remove(); renderPage(); } }, 'Done'),
   ));
   bg.append(modal); document.body.append(bg);
 }
