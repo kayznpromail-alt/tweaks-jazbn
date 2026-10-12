@@ -25,8 +25,8 @@ export default function Chart({ buckets, range }: { buckets: Bucket[]; range: st
     ctx.clearRect(0, 0, w, h);
 
     if (!buckets?.length) {
-      ctx.fillStyle = '#626472';
-      ctx.font = '12px Inter, sans-serif';
+      ctx.fillStyle = '#7d8d98';
+      ctx.font = '12px system-ui, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('No data for this period', w / 2, h / 2);
       return;
@@ -39,18 +39,18 @@ export default function Chart({ buckets, range }: { buckets: Bucket[]; range: st
 
     for (let i = 0; i <= 4; i++) {
       const y = padT + ch * (1 - i / 4);
-      ctx.strokeStyle = 'rgba(255,255,255,0.035)';
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
       ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(w - padR, y); ctx.stroke();
-      ctx.fillStyle = '#626472';
-      ctx.font = '10px Inter, sans-serif';
+      ctx.fillStyle = '#7d8d98';
+      ctx.font = '10px system-ui, sans-serif';
       ctx.textAlign = 'right';
       ctx.fillText(fmtTokens(max * i / 4), padL - 8, y + 3);
     }
 
     const grad = ctx.createLinearGradient(0, padT, 0, padT + ch);
-    grad.addColorStop(0, 'rgba(167,139,250,0.85)');
-    grad.addColorStop(1, 'rgba(108,92,231,0.6)');
+    grad.addColorStop(0, 'rgba(34,211,238,0.85)');
+    grad.addColorStop(1, 'rgba(56,189,248,0.6)');
 
     buckets.forEach((b, i) => {
       const bh = (b.tokens / max) * ch;
@@ -60,8 +60,8 @@ export default function Chart({ buckets, range }: { buckets: Bucket[]; range: st
       const y = padT + ch - bh;
 
       const glow = ctx.createLinearGradient(0, y, 0, padT + ch);
-      glow.addColorStop(0, 'rgba(108,92,231,0.06)');
-      glow.addColorStop(1, 'rgba(108,92,231,0)');
+      glow.addColorStop(0, 'rgba(34,211,238,0.06)');
+      glow.addColorStop(1, 'rgba(34,211,238,0)');
       ctx.fillStyle = glow;
       ctx.fillRect(x - 1, y, bw + 2, bh);
 
@@ -77,8 +77,8 @@ export default function Chart({ buckets, range }: { buckets: Bucket[]; range: st
       ctx.fill();
     });
 
-    ctx.fillStyle = '#626472';
-    ctx.font = '10px Inter, sans-serif';
+    ctx.fillStyle = '#7d8d98';
+    ctx.font = '10px system-ui, sans-serif';
     ctx.textAlign = 'center';
     const step = Math.max(1, Math.floor(buckets.length / 6));
     buckets.forEach((b, i) => {

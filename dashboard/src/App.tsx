@@ -1,5 +1,4 @@
-import { useState, useCallback } from 'react';
-import { Menu } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
 import { getToken, clearToken, api } from '@/lib/api';
 import AuthView from '@/components/AuthView';
 import Sidebar, { type PageId } from '@/components/Sidebar';
@@ -23,8 +22,7 @@ const PAGE: Record<PageId, React.ComponentType> = {
 export default function App() {
   const [authed, setAuthed] = useState(!!getToken());
   const [page, setPage] = useState<PageId>('overview');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const [username, setUsername] = useState('');
 
   const handleAuth = useCallback(() => setAuthed(true), []);
 
@@ -33,6 +31,14 @@ export default function App() {
     clearToken();
     setAuthed(false);
   }, []);
+
+  useEffect(() => {
+    if (authed) {
+      api<{ username?: string }>('/me').then(r => {
+        if (r?.username) setUsername(r.username);
+      });
+    }
+  }, [authed]);
 
   if (!authed) {
     return (
@@ -48,27 +54,22 @@ export default function App() {
   return (
     <>
       <Toast />
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="fixed top-3.5 left-3.5 z-20 p-2.5 px-3 rounded-lg border-none md:hidden"
-        style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 2px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2)', color: 'var(--color-text)' }}
-      >
-        <Menu size={18} />
-      </button>
       <Sidebar
         page={page}
         onNavigate={setPage}
         onLogout={handleLogout}
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        collapsed={collapsed}
-        onToggleCollapse={() => setCollapsed(!collapsed)}
+        open={false}
+        onClose={() => {}}
+        collapsed={false}
+        onToggleCollapse={() => {}}
+        username={username}
       />
       <main
-        className="max-md:ml-0 min-h-screen px-8 pt-6 pb-10 max-md:px-4 max-md:pt-14"
+        className="max-md:pb-20"
         style={{
-          marginLeft: collapsed ? 68 : 240,
-          transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)',
+          maxWidth: 1256,
+          margin: '0 auto',
+          padding: '120px 16px 80px',
         }}
       >
         <PageComponent />

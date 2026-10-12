@@ -53,26 +53,34 @@ export default function Keys() {
   }
 
   return (
-    <div style={{ animation: 'pageIn 0.35s cubic-bezier(0.23,1,0.32,1)' }}>
-      <div className="flex justify-between items-center mb-5">
-        <h2 className="text-[18px] font-bold tracking-tight">API Keys</h2>
+    <div style={{ animation: 'pageIn 0.45s cubic-bezier(0.2,0.8,0.2,1)' }}>
+      <div className="text-[10px] font-semibold uppercase mb-3" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.14em', color: 'var(--color-accent)' }}>
+        WORKSPACE / KEYS
+      </div>
+
+      <div className="flex justify-between items-center mb-2">
+        <h1 className="font-bold" style={{ fontSize: 'clamp(28px, 5vw, 38px)', letterSpacing: '-.035em', lineHeight: 1.1 }}>
+          API Keys
+        </h1>
         <button
           onClick={() => { setKeyName(''); setModalOpen(true); }}
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-[12px] font-semibold text-white border-none transition-all duration-150 hover:brightness-110"
-          style={{ background: 'linear-gradient(135deg, var(--color-accent), #8b5cf6)', boxShadow: '0 2px 8px rgba(108,92,231,0.25)' }}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-semibold transition-all duration-150 hover:brightness-110"
+          style={{ background: 'var(--color-accent)', color: '#031217', border: 'none' }}
         >
           <Plus size={13} /> Create Key
         </button>
       </div>
+      <p className="text-muted text-[13px] mb-6">Manage your API keys for authentication.</p>
+      <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)', marginBottom: 32 }} />
 
-      <div className="flex gap-4 max-md:flex-col">
+      <div className="flex gap-5 max-md:flex-col">
         <div className="flex-1 min-w-0">
           {revealed && (
-            <div className="rounded-xl p-5 mb-3 text-center" style={{ background: 'var(--color-accent-surface)', border: '1px solid rgba(108,92,231,0.15)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
+            <div className="rounded-[14px] p-5 mb-4 text-center" style={{ background: 'var(--color-accent-surface)', border: '1px solid var(--color-accent-line)' }}>
               <p className="text-[12px] text-text2 mb-2">Your new API key:</p>
-              <code className="text-[12px] text-accent2 break-all" style={{ fontFamily: 'var(--font-mono)' }}>{revealed}</code>
-              <p className="text-[11px] text-yellow mt-2 font-medium">Save this key now - you won't see it again!</p>
-              <button onClick={() => copyText(revealed)} className="mt-2.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white border-none" style={{ background: 'var(--color-accent)' }}>Copy Key</button>
+              <code className="text-[12px] break-all" style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-accent)' }}>{revealed}</code>
+              <p className="text-[11px] mt-2 font-medium" style={{ color: 'var(--color-yellow)' }}>Save this key now - you won't see it again!</p>
+              <button onClick={() => copyText(revealed)} className="mt-2.5 px-4 py-1.5 rounded-lg text-[11px] font-semibold border-none" style={{ background: 'var(--color-accent)', color: '#031217' }}>Copy Key</button>
             </div>
           )}
 
@@ -81,13 +89,13 @@ export default function Keys() {
           {keys.map(k => (
             <div
               key={k.id}
-              className="flex items-center justify-between px-4 py-3.5 rounded-xl mb-2.5 transition-all duration-150 hover:bg-card2"
-              style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}
+              className="flex items-center justify-between px-4 py-3.5 rounded-[14px] mb-3 transition-all duration-150 hover:bg-white/[0.02]"
+              style={{ background: 'linear-gradient(180deg, var(--color-card), var(--color-bg2))', border: '1px solid var(--color-border)' }}
             >
               <div className="flex-1 min-w-0">
                 <div className="text-[13px] font-semibold mb-0.5">{k.name}</div>
                 <div className="text-[11px] text-muted" style={{ fontFamily: 'var(--font-mono)' }}>{k.masked}</div>
-                <div className="flex gap-3.5 mt-1.5 text-[10.5px] text-muted">
+                <div className="flex gap-3.5 mt-1.5 text-[10px] text-muted" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.05em' }}>
                   <span>Created {fmtDate(k.createdAt)}</span>
                   <span>Last used {k.lastUsedAt ? fmtAgo(k.lastUsedAt) : 'never'}</span>
                 </div>
@@ -106,8 +114,8 @@ export default function Keys() {
                 </button>
                 <button
                   onClick={() => deleteKey(k.id, k.name)}
-                  className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-red border-none"
-                  style={{ background: 'var(--color-red-bg)' }}
+                  className="px-3 py-1.5 rounded-lg text-[11px] font-semibold border-none transition-all duration-150"
+                  style={{ background: 'var(--color-red-bg)', color: 'var(--color-red)' }}
                 >
                   Delete
                 </button>
@@ -116,31 +124,31 @@ export default function Keys() {
           ))}
         </div>
 
-        <div className="w-[280px] max-md:w-full shrink-0 rounded-xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
-          <h4 className="text-[12px] font-semibold mb-3 flex items-center gap-2">
-            <Link size={14} className="text-accent2" /> Connect your app
+        <div className="w-[280px] max-md:w-full shrink-0 rounded-[14px] p-5" style={{ background: 'linear-gradient(180deg, var(--color-card), var(--color-bg2))', border: '1px solid var(--color-border)' }}>
+          <h4 className="text-[9.5px] font-semibold uppercase mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.18em', color: 'var(--color-muted)' }}>
+            <Link size={13} className="text-accent" /> Connect your app
           </h4>
           <div className="mb-3">
-            <div className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">Base URL</div>
+            <div className="text-[9px] font-semibold text-muted uppercase mb-1" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.14em' }}>Base URL</div>
             <div
               onClick={() => copyText('https://api.edgey.shop/v1')}
               className="px-3 py-2 rounded-lg text-[11px] cursor-pointer break-all transition-all duration-150 hover:border-accent"
-              style={{ fontFamily: 'var(--font-mono)', background: 'var(--color-bg2)', border: '1px solid var(--color-border)' }}
+              style={{ fontFamily: 'var(--font-mono)', background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}
             >
               https://api.edgey.shop/v1
             </div>
           </div>
           <div className="mb-3">
-            <div className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">Your first key</div>
+            <div className="text-[9px] font-semibold text-muted uppercase mb-1" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.14em' }}>Your first key</div>
             <div
               onClick={() => firstKey && copyText(firstKey)}
               className="px-3 py-2 rounded-lg text-[11px] cursor-pointer break-all transition-all duration-150 hover:border-accent"
-              style={{ fontFamily: 'var(--font-mono)', background: 'var(--color-bg2)', border: '1px solid var(--color-border)' }}
+              style={{ fontFamily: 'var(--font-mono)', background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}
             >
               {firstKey || (keys[0]?.masked ?? '--')}
             </div>
           </div>
-          <p className="text-[10.5px] text-muted leading-relaxed mt-3">Compatible with OpenAI and Anthropic SDKs. Click to copy.</p>
+          <p className="text-[10px] text-muted leading-relaxed mt-3">Compatible with OpenAI and Anthropic SDKs. Click to copy.</p>
         </div>
       </div>
 
@@ -149,7 +157,7 @@ export default function Keys() {
           <div className="rounded-2xl p-7 w-full max-w-[380px]" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border2)', boxShadow: '0 4px 32px rgba(0,0,0,0.5)', animation: 'modalIn 0.25s cubic-bezier(0.23,1,0.32,1)' }} onClick={e => e.stopPropagation()}>
             <h3 className="text-[16px] font-bold mb-5 tracking-tight">Create API Key</h3>
             <div className="mb-4">
-              <label className="block text-[10.5px] font-semibold text-muted mb-1.5 uppercase tracking-wider">Key name</label>
+              <label className="block text-[9.5px] font-semibold text-muted mb-1.5 uppercase" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.18em' }}>Key name</label>
               <input
                 value={keyName}
                 onChange={e => setKeyName(e.target.value)}
@@ -160,8 +168,8 @@ export default function Keys() {
               />
             </div>
             <div className="flex gap-2.5 justify-end mt-5">
-              <button onClick={() => setModalOpen(false)} className="px-4 py-2 rounded-lg text-[12px] font-semibold" style={{ background: 'var(--color-bg2)', border: '1px solid var(--color-border2)', color: 'var(--color-text)' }}>Cancel</button>
-              <button onClick={createKey} className="px-4 py-2 rounded-lg text-[12px] font-semibold text-white border-none transition-all duration-150 hover:brightness-110" style={{ background: 'linear-gradient(135deg, var(--color-accent), #8b5cf6)', boxShadow: '0 2px 8px rgba(108,92,231,0.25)' }}>Create</button>
+              <button onClick={() => setModalOpen(false)} className="px-4 py-2 rounded-lg text-[12px] font-semibold" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border2)', color: 'var(--color-text)' }}>Cancel</button>
+              <button onClick={createKey} className="px-4 py-2 rounded-lg text-[12px] font-semibold border-none transition-all duration-150 hover:brightness-110" style={{ background: 'var(--color-accent)', color: '#031217' }}>Create</button>
             </div>
           </div>
         </div>

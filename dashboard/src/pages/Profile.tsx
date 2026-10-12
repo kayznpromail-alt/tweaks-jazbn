@@ -41,11 +41,21 @@ export default function Profile() {
   ];
 
   return (
-    <div style={{ animation: 'pageIn 0.35s cubic-bezier(0.23,1,0.32,1)' }}>
+    <div style={{ animation: 'pageIn 0.45s cubic-bezier(0.2,0.8,0.2,1)' }}>
+      <div className="text-[10px] font-semibold uppercase mb-3" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.14em', color: 'var(--color-accent)' }}>
+        WORKSPACE / PROFILE
+      </div>
+
+      <h1 className="font-bold mb-1" style={{ fontSize: 'clamp(28px, 5vw, 38px)', letterSpacing: '-.035em', lineHeight: 1.1 }}>
+        Profile
+      </h1>
+      <p className="text-muted text-[13px] mb-6">Your account details and progress.</p>
+      <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)', marginBottom: 32 }} />
+
       {/* Profile Header */}
-      <div className="rounded-xl p-6 mb-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
+      <div className="rounded-[14px] p-6 mb-5" style={{ background: 'linear-gradient(180deg, var(--color-card), var(--color-bg2))', border: '1px solid var(--color-border)' }}>
         <div className="flex items-center gap-4 mb-5">
-          <div className="w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold text-white shrink-0" style={{ background: 'linear-gradient(135deg, var(--color-accent), #8b5cf6)', boxShadow: '0 3px 12px rgba(108,92,231,0.25)' }}>
+          <div className="w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold shrink-0" style={{ background: 'var(--color-accent)', color: '#031217' }}>
             {initials}
           </div>
           <div>
@@ -54,8 +64,8 @@ export default function Profile() {
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2.5 max-md:grid-cols-1">
-          <InfoField label="Access" value="Active" color="var(--color-green)" />
-          <InfoField label="Token Balance" value={fmtTokens(me.balance)} color="var(--color-accent2)" />
+          <InfoField label="Access" value="Active" color="#4ade80" />
+          <InfoField label="Token Balance" value={fmtTokens(me.balance)} color="var(--color-accent)" />
           <InfoField label="API Keys" value={`${me.keyCount ?? 0} / ${me.maxKeys ?? 6}`} />
           <InfoField label="Total Spent" value={fmtEur(me.paidEur)} />
         </div>
@@ -63,21 +73,20 @@ export default function Profile() {
 
       {/* Model Quotas */}
       {me.modelAccess && me.modelAccess.length > 0 && (
-        <div className="rounded-xl p-6 mb-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
-          <h3 className="text-[13px] font-semibold mb-3">Model Quotas</h3>
+        <div className="rounded-[14px] p-6 mb-5" style={{ background: 'linear-gradient(180deg, var(--color-card), var(--color-bg2))', border: '1px solid var(--color-border)' }}>
+          <div className="text-[9.5px] font-semibold uppercase mb-4" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.18em', color: 'var(--color-muted)' }}>
+            Model quotas
+          </div>
           <div className="grid gap-2.5">
             {me.modelAccess.map(ma => (
-              <div key={ma.model} className="flex items-center gap-3 p-3.5 rounded-lg" style={{ background: 'var(--color-bg2)', border: '1px solid var(--color-border)' }}>
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa' }}>
-                  {ma.model.slice(0, 2).toUpperCase()}
-                </div>
+              <div key={ma.model} className="flex items-center gap-3 p-3.5 rounded-lg" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[12.5px] font-semibold">{ma.model}</div>
-                  <div className="text-[10.5px] text-muted">{fmtTokens(ma.used)} / {fmtTokens(ma.quota)}</div>
+                  <div className="text-[12px] font-semibold">{ma.model}</div>
+                  <div className="text-[10px] text-muted" style={{ fontFamily: 'var(--font-mono)' }}>{fmtTokens(ma.used)} / {fmtTokens(ma.quota)}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[14px] font-bold" style={{ color: ma.remaining > 0 ? 'var(--color-accent2)' : 'var(--color-red)' }}>{fmtTokens(ma.remaining)}</div>
-                  <div className="text-[10px] text-muted">left</div>
+                  <div className="text-[14px] font-bold" style={{ color: ma.remaining > 0 ? 'var(--color-accent)' : 'var(--color-red)' }}>{fmtTokens(ma.remaining)}</div>
+                  <div className="text-[9px] text-muted uppercase" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.1em' }}>left</div>
                 </div>
               </div>
             ))}
@@ -86,15 +95,17 @@ export default function Profile() {
       )}
 
       {/* Getting Started */}
-      <div className="rounded-xl p-6 mb-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
-        <h3 className="text-[13px] font-semibold mb-3">Getting Started</h3>
+      <div className="rounded-[14px] p-6 mb-5" style={{ background: 'linear-gradient(180deg, var(--color-card), var(--color-bg2))', border: '1px solid var(--color-border)' }}>
+        <div className="text-[9.5px] font-semibold uppercase mb-4" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.18em', color: 'var(--color-muted)' }}>
+          Getting started
+        </div>
         <ul className="list-none">
           {checks.map((c, i) => (
             <li key={i} className="flex items-center gap-2.5 py-2.5 text-[12.5px]" style={{ borderBottom: i < checks.length - 1 ? '1px solid var(--color-border)' : 'none' }}>
               <span
                 className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
                 style={c.done
-                  ? { background: 'rgba(52,211,153,0.12)', color: 'var(--color-green)' }
+                  ? { background: 'rgba(74,222,128,0.12)', color: '#4ade80' }
                   : { background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)' }
                 }
               >
@@ -107,11 +118,11 @@ export default function Profile() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
-        <StatCard icon={<Activity size={18} />} label="Requests (24h)" value={fmtNum(me.requests24h)} iconBg="rgba(99,102,241,0.12)" iconColor="#818cf8" />
-        <StatCard icon={<CheckCircle size={18} />} label="Success Rate (24h)" value={me.requests24h ? fmtPct(me.successful24h, me.requests24h) : '--'} iconBg="rgba(52,211,153,0.12)" iconColor="#34d399" accent="var(--color-green)" />
-        <StatCard icon={<TrendingUp size={18} />} label="Requests (90d)" value={fmtNum(me.requests90d)} iconBg="rgba(251,191,36,0.12)" iconColor="#fbbf24" />
-        <StatCard icon={<Coins size={18} />} label="Token Balance" value={fmtTokens(me.balance)} iconBg="rgba(167,139,250,0.12)" iconColor="#a78bfa" accent="var(--color-accent2)" />
+      <div className="grid grid-cols-2 gap-5 max-md:grid-cols-1">
+        <StatCard label="Requests (24h)" value={fmtNum(me.requests24h)} />
+        <StatCard label="Success rate (24h)" value={me.requests24h ? fmtPct(me.successful24h, me.requests24h) : '--'} accent />
+        <StatCard label="Requests (90d)" value={fmtNum(me.requests90d)} />
+        <StatCard label="Token balance" value={fmtTokens(me.balance)} accent />
       </div>
     </div>
   );
@@ -119,22 +130,29 @@ export default function Profile() {
 
 function InfoField({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="p-3.5 rounded-lg" style={{ background: 'var(--color-bg2)', border: '1px solid var(--color-border)' }}>
-      <div className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-1">{label}</div>
+    <div className="p-3.5 rounded-lg" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
+      <div className="text-[9px] font-semibold text-muted uppercase mb-1" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.14em' }}>{label}</div>
       <div className="text-[14px] font-semibold" style={{ color }}>{value}</div>
     </div>
   );
 }
 
-function StatCard({ icon, label, value, accent, iconBg, iconColor }: { icon: React.ReactNode; label: string; value: string; accent?: string; iconBg?: string; iconColor?: string }) {
+function StatCard({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className="rounded-xl px-5 py-5 flex items-center gap-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
-      <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: iconBg || 'var(--color-accent-surface)', color: iconColor || 'var(--color-accent2)' }}>
-        {icon}
+    <div className="rounded-[14px] p-6" style={{ background: 'linear-gradient(180deg, var(--color-card), var(--color-bg2))', border: '1px solid var(--color-border)' }}>
+      <div className="text-[9.5px] font-semibold uppercase mb-3" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.18em', color: 'var(--color-muted)' }}>
+        {label}
       </div>
-      <div>
-        <div className="text-[11.5px] font-medium text-muted mb-1.5">{label}</div>
-        <div className="text-[24px] font-bold tracking-tight leading-none" style={{ color: accent }}>{value}</div>
+      <div
+        className="text-[28px] font-semibold leading-none"
+        style={accent ? {
+          letterSpacing: '-.03em',
+          background: 'linear-gradient(90deg, var(--color-text), var(--color-accent))',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+        } : { letterSpacing: '-.03em' }}
+      >
+        {value}
       </div>
     </div>
   );
