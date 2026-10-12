@@ -43,7 +43,7 @@ export default function Profile() {
   return (
     <div style={{ animation: 'pageIn 0.35s cubic-bezier(0.23,1,0.32,1)' }}>
       {/* Profile Header */}
-      <div className="rounded-xl p-6 mb-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+      <div className="rounded-xl p-6 mb-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
         <div className="flex items-center gap-4 mb-5">
           <div className="w-14 h-14 rounded-xl flex items-center justify-center text-xl font-bold text-white shrink-0" style={{ background: 'linear-gradient(135deg, var(--color-accent), #8b5cf6)', boxShadow: '0 3px 12px rgba(108,92,231,0.25)' }}>
             {initials}
@@ -63,12 +63,12 @@ export default function Profile() {
 
       {/* Model Quotas */}
       {me.modelAccess && me.modelAccess.length > 0 && (
-        <div className="rounded-xl p-6 mb-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+        <div className="rounded-xl p-6 mb-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
           <h3 className="text-[13px] font-semibold mb-3">Model Quotas</h3>
           <div className="grid gap-2.5">
             {me.modelAccess.map(ma => (
               <div key={ma.model} className="flex items-center gap-3 p-3.5 rounded-lg" style={{ background: 'var(--color-bg2)', border: '1px solid var(--color-border)' }}>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: 'var(--color-accent-surface)', color: 'var(--color-accent2)' }}>
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa' }}>
                   {ma.model.slice(0, 2).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -86,7 +86,7 @@ export default function Profile() {
       )}
 
       {/* Getting Started */}
-      <div className="rounded-xl p-6 mb-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+      <div className="rounded-xl p-6 mb-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
         <h3 className="text-[13px] font-semibold mb-3">Getting Started</h3>
         <ul className="list-none">
           {checks.map((c, i) => (
@@ -94,7 +94,7 @@ export default function Profile() {
               <span
                 className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
                 style={c.done
-                  ? { background: 'var(--color-green-bg)', color: 'var(--color-green)' }
+                  ? { background: 'rgba(52,211,153,0.12)', color: 'var(--color-green)' }
                   : { background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border)' }
                 }
               >
@@ -107,11 +107,11 @@ export default function Profile() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 max-md:grid-cols-1">
-        <StatCard icon={<Activity size={15} />} label="Requests (24h)" value={fmtNum(me.requests24h)} />
-        <StatCard icon={<CheckCircle size={15} />} label="Success Rate (24h)" value={me.requests24h ? fmtPct(me.successful24h, me.requests24h) : '--'} accent="var(--color-green)" />
-        <StatCard icon={<TrendingUp size={15} />} label="Requests (90d)" value={fmtNum(me.requests90d)} />
-        <StatCard icon={<Coins size={15} />} label="Token Balance" value={fmtTokens(me.balance)} accent="var(--color-accent2)" />
+      <div className="grid grid-cols-2 gap-4 max-md:grid-cols-1">
+        <StatCard icon={<Activity size={18} />} label="Requests (24h)" value={fmtNum(me.requests24h)} iconBg="rgba(99,102,241,0.12)" iconColor="#818cf8" />
+        <StatCard icon={<CheckCircle size={18} />} label="Success Rate (24h)" value={me.requests24h ? fmtPct(me.successful24h, me.requests24h) : '--'} iconBg="rgba(52,211,153,0.12)" iconColor="#34d399" accent="var(--color-green)" />
+        <StatCard icon={<TrendingUp size={18} />} label="Requests (90d)" value={fmtNum(me.requests90d)} iconBg="rgba(251,191,36,0.12)" iconColor="#fbbf24" />
+        <StatCard icon={<Coins size={18} />} label="Token Balance" value={fmtTokens(me.balance)} iconBg="rgba(167,139,250,0.12)" iconColor="#a78bfa" accent="var(--color-accent2)" />
       </div>
     </div>
   );
@@ -126,15 +126,15 @@ function InfoField({ label, value, color }: { label: string; value: string; colo
   );
 }
 
-function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent?: string }) {
+function StatCard({ icon, label, value, accent, iconBg, iconColor }: { icon: React.ReactNode; label: string; value: string; accent?: string; iconBg?: string; iconColor?: string }) {
   return (
-    <div className="rounded-xl px-5 py-4 flex items-start gap-3.5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ background: 'var(--color-accent-surface)', color: 'var(--color-accent2)' }}>
+    <div className="rounded-xl px-5 py-5 flex items-center gap-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
+      <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: iconBg || 'var(--color-accent-surface)', color: iconColor || 'var(--color-accent2)' }}>
         {icon}
       </div>
       <div>
-        <div className="text-[11px] font-medium text-muted mb-1">{label}</div>
-        <div className="text-[22px] font-bold tracking-tight leading-none" style={{ color: accent }}>{value}</div>
+        <div className="text-[11.5px] font-medium text-muted mb-1.5">{label}</div>
+        <div className="text-[24px] font-bold tracking-tight leading-none" style={{ color: accent }}>{value}</div>
       </div>
     </div>
   );

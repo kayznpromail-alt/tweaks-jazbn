@@ -52,7 +52,7 @@ export default function Requests() {
         </select>
       </div>
 
-      <div className="rounded-xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+      <div className="rounded-xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
         {rows.length === 0 ? (
           <div className="text-center py-10 text-muted text-[12px]">No requests found.</div>
         ) : (

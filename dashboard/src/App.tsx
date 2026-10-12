@@ -24,6 +24,7 @@ export default function App() {
   const [authed, setAuthed] = useState(!!getToken());
   const [page, setPage] = useState<PageId>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   const handleAuth = useCallback(() => setAuthed(true), []);
 
@@ -54,8 +55,22 @@ export default function App() {
       >
         <Menu size={18} />
       </button>
-      <Sidebar page={page} onNavigate={setPage} onLogout={handleLogout} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <main className="ml-[220px] max-md:ml-0 min-h-screen px-8 pt-6 pb-10 max-md:px-4 max-md:pt-14">
+      <Sidebar
+        page={page}
+        onNavigate={setPage}
+        onLogout={handleLogout}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        collapsed={collapsed}
+        onToggleCollapse={() => setCollapsed(!collapsed)}
+      />
+      <main
+        className="max-md:ml-0 min-h-screen px-8 pt-6 pb-10 max-md:px-4 max-md:pt-14"
+        style={{
+          marginLeft: collapsed ? 68 : 240,
+          transition: 'margin-left 0.25s cubic-bezier(0.4,0,0.2,1)',
+        }}
+      >
         <PageComponent />
       </main>
     </>
