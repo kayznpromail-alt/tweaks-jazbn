@@ -24,51 +24,51 @@ export default function Sidebar({ page, onNavigate, onLogout, open, onClose }: P
   return (
     <nav
       className={cn(
-        'fixed top-0 left-0 bottom-0 w-60 flex flex-col z-10 transition-transform duration-300',
+        'fixed top-0 left-0 bottom-0 w-[220px] flex flex-col z-10 transition-transform duration-300',
         'max-md:-translate-x-full max-md:data-open:translate-x-0',
       )}
       data-open={open || undefined}
       style={{
-        background: 'var(--color-card)',
+        background: 'var(--color-bg)',
         borderRight: '1px solid var(--color-border)',
       }}
     >
-      <div className="px-6 py-5 flex items-center gap-2.5 text-[15px] font-bold tracking-tight" style={{ borderBottom: '1px solid var(--color-border)' }}>
+      <div className="px-5 py-5 flex items-center gap-2.5">
         <div
-          className="w-[30px] h-[30px] rounded-[9px] flex items-center justify-center text-[13px] font-bold text-white shrink-0"
-          style={{ background: 'linear-gradient(135deg, var(--color-accent), #a78bfa)', boxShadow: '0 2px 8px rgba(108,92,231,0.35)' }}
+          className="w-[28px] h-[28px] rounded-[8px] flex items-center justify-center text-[12px] font-bold text-white shrink-0"
+          style={{ background: 'linear-gradient(135deg, var(--color-accent), #a78bfa)', boxShadow: '0 2px 8px rgba(108,92,231,0.3)' }}
         >
           e
         </div>
-        edgey
+        <span className="text-[14px] font-semibold tracking-tight">edgey</span>
       </div>
 
-      <div className="flex-1 px-2 py-2.5 overflow-y-auto">
+      <div className="flex-1 px-2.5 py-1 overflow-y-auto">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.08em] px-3 pt-3 pb-2" style={{ color: 'var(--color-muted2)' }}>
+          Workspace
+        </div>
         {NAV.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => { onNavigate(id); onClose(); }}
             className={cn(
-              'relative flex items-center gap-[11px] w-full px-4 py-2.5 my-px text-[13.5px] font-medium rounded-lg transition-all duration-200 border-none',
+              'relative flex items-center gap-2.5 w-full px-3 py-[9px] my-[1px] text-[13px] font-medium rounded-[9px] transition-all duration-150 border-none',
               page === id ? 'text-text' : 'text-muted hover:text-text2 hover:bg-white/[0.03]',
             )}
-            style={page === id ? { background: 'var(--color-accent-surface)' } : {}}
+            style={page === id ? { background: 'var(--color-accent-surface)', color: 'var(--color-accent2)' } : {}}
           >
-            {page === id && (
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[18px] rounded-r-[3px]" style={{ background: 'var(--color-accent)' }} />
-            )}
-            <Icon size={18} className="shrink-0" style={{ opacity: page === id ? 1 : 0.7 }} />
+            <Icon size={16} className="shrink-0" style={{ opacity: page === id ? 1 : 0.55 }} />
             {label}
           </button>
         ))}
       </div>
 
-      <div className="px-4 py-3.5" style={{ borderTop: '1px solid var(--color-border)' }}>
+      <div className="px-3 py-3" style={{ borderTop: '1px solid var(--color-border)' }}>
         <button
           onClick={onLogout}
-          className="flex items-center gap-2.5 w-full px-2 py-2 text-[13px] text-muted rounded-lg border-none bg-transparent transition-all duration-150 hover:text-red hover:bg-red-bg"
+          className="flex items-center gap-2 w-full px-3 py-2 text-[12.5px] text-muted rounded-[9px] border-none bg-transparent transition-all duration-150 hover:text-red hover:bg-red-bg"
         >
-          <LogOut size={18} />
+          <LogOut size={15} />
           Sign Out
         </button>
       </div>
