@@ -55,7 +55,7 @@ export default function App() {
         <Menu size={18} />
       </button>
       <Sidebar page={page} onNavigate={setPage} onLogout={handleLogout} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <main className="ml-60 max-md:ml-0 min-h-screen px-9 pt-7 pb-12 max-md:px-4 max-md:pt-14">
+      <main className="ml-[220px] max-md:ml-0 min-h-screen px-8 pt-6 pb-10 max-md:px-4 max-md:pt-14">
         <PageComponent />
       </main>
     </>

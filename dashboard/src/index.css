@@ -1,22 +1,22 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #07080d;
-  --color-bg2: #0c0d14;
-  --color-card: #11131c;
-  --color-card2: #161825;
-  --color-card3: #1a1d2b;
-  --color-border: rgba(255,255,255,0.06);
+  --color-bg: #08090f;
+  --color-bg2: #0d0e16;
+  --color-card: #12141e;
+  --color-card2: #171a26;
+  --color-card3: #1c1f2e;
+  --color-border: rgba(255,255,255,0.055);
   --color-border2: rgba(255,255,255,0.08);
   --color-accent: #6c5ce7;
   --color-accent2: #a78bfa;
   --color-accent-glow: rgba(108,92,231,0.25);
-  --color-accent-surface: rgba(108,92,231,0.08);
+  --color-accent-surface: rgba(108,92,231,0.07);
   --color-accent-surface2: rgba(108,92,231,0.14);
-  --color-text: #eeeef0;
-  --color-text2: #c5c6d0;
-  --color-muted: #6b6d7b;
-  --color-muted2: #4a4c58;
+  --color-text: #ededf0;
+  --color-text2: #bfc0cc;
+  --color-muted: #626472;
+  --color-muted2: #444652;
   --color-red: #f87171;
   --color-red-bg: rgba(248,113,113,0.1);
   --color-green: #34d399;
@@ -49,7 +49,7 @@ input, select, textarea {
   background: var(--color-bg2);
   color: var(--color-text);
   border: 1px solid var(--color-border2);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 10px 14px;
   outline: none;
   width: 100%;
@@ -62,15 +62,15 @@ input:focus, select:focus {
 input::placeholder { color: var(--color-muted2); }
 ::selection { background: var(--color-accent); color: #fff; }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.14); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.12); }
 
 select option { background-color: var(--color-card); color: var(--color-text); }
 
 @keyframes pageIn {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @keyframes authIn {
@@ -84,4 +84,8 @@ select option { background-color: var(--color-card); color: var(--color-text); }
 @keyframes statusPulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
+}
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
 }
