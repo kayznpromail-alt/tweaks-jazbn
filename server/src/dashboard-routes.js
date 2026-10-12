@@ -16,6 +16,6 @@ export function dashboardRoutes() {
       },
     }),
   );
-  dashboard.get('/', (c) => c.html(html));
+  dashboard.get('/*', (c) => c.html(html));
   return dashboard;
 }
