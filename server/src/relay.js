@@ -97,11 +97,11 @@ export async function relay({ cfg, kind, path, body, incoming, onDone, upstreamK
   let res;
   try {
     res = await doFetch();
-    // Retry on 429 / 503 / 529 up to 2 times with backoff.
-    for (let attempt = 0; attempt < 2 && (res.status === 429 || res.status === 503 || res.status === 529); attempt++) {
+    // Retry on 429 / 503 / 529 up to 4 times with exponential backoff.
+    for (let attempt = 0; attempt < 4 && (res.status === 429 || res.status === 503 || res.status === 529); attempt++) {
       const after = Number(res.headers.get('retry-after')) || 0;
-      const delay = Math.max(after * 1000, (attempt + 1) * 1500);
-      await new Promise((r) => setTimeout(r, Math.min(delay, 8000)));
+      const delay = Math.max(after * 1000, (attempt + 1) * 2000);
+      await new Promise((r) => setTimeout(r, Math.min(delay, 15000)));
       try { res = await doFetch(); } catch { break; }
     }
   } catch {
