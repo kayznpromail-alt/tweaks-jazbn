@@ -482,7 +482,7 @@ export function createApp({ cfg, db, clock = now }) {
               clock() - started,
               clock(),
             );
-            if (charged > 0) q.charge.run(charged, key.account_id);
+            if (charged > 0 && !isRestricted(body.model)) q.charge.run(charged, key.account_id);
             if (total > 0 && isRestricted(body.model)) q.chargeModelUsage.run(total, key.account_id, body.model);
           });
         },

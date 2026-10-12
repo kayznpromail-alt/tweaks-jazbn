@@ -28,7 +28,7 @@ export const CATALOG = {
     { name: 'Google', badge: 'G', models: [{ id: 'gemini-3.7-flash', rate: 2 }, { id: 'gemini-3.8-flash', rate: 2 }, { id: 'gemini-3.5-flash', rate: 2 }, { id: 'gemini-3.6-flash', rate: 2 }] },
     { name: 'xAI', badge: 'X', models: [{ id: 'grok-4.6', rate: 0.5 }, { id: 'grok-4.5', rate: 0.5 }] },
     { name: 'Chinese', badge: '中', models: [{ id: 'qwen3.8-max', rate: 2.5 }, { id: 'kimi-k3', rate: 2.5 }, { id: 'hy4-preview', rate: 1 }, { id: 'glm-5.3', rate: 1.5 }, { id: 'qwen3.8-flash', rate: 0.7 }, { id: 'glm-5.3-flash', rate: 0.3 }, { id: 'deepseek-v4-pro', rate: 0.5 }, { id: 'deepseek-v4-flash', rate: 0.1 }, { id: 'glm-5.2', rate: 1.5 }, { id: 'minimax-m3', rate: 0.3 }, { id: 'kimi-k2.7-code', rate: 0.9 }, { id: 'mimo-v2.5-pro', rate: 0.3 }, { id: 'mimo-v2.5', rate: 0.05 }] },
-    { name: 'Edgey', badge: 'E', models: [{ id: 'edgeybeast', rate: 12 }] },
+    { name: 'Edgey', badge: 'E', models: [{ id: 'edgeybeast', rate: 4 }] },
     { name: 'Other', badge: '··', models: [{ id: 'gpt-6-sol', rate: 3 }, { id: 'gpt-6-luna', rate: 0.38 }, { id: 'claude-fable-5-1', rate: 8 }, { id: 'grok-4.7', rate: 0.5 }, { id: 'deepseek-v4.1-flash', rate: 0.1 }] },
   ] as Provider[],
   packs: [
