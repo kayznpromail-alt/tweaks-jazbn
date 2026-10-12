@@ -426,13 +426,15 @@ async function renderAccount(el, id) {
     const mc = h('div', { class: 'card' });
     mc.append(h('h3', {}, 'Model access'));
     const tbl = h('table');
-    tbl.append(h('thead', {}, h('tr', {}, h('th', {}, 'Model'), h('th', {}, 'Quota'), h('th', {}, 'Used'), h('th', {}, 'Key'), h('th', {}, ''))));
+    tbl.append(h('thead', {}, h('tr', {}, h('th', {}, 'Model'), h('th', {}, 'Quota'), h('th', {}, 'Used'), h('th', {}, 'Remaining'), h('th', {}, 'Key'), h('th', {}, ''))));
     const tbody = h('tbody');
     for (const m of a.modelAccess) {
+      const remaining = Math.max(0, m.quota - m.used);
       tbody.append(h('tr', {},
         h('td', { class: 'mono' }, m.model === 'opus-private' ? 'opus-private (Opus 5 JB)' : m.model),
         h('td', {}, fmtTokens(m.quota)),
         h('td', {}, fmtTokens(m.used)),
+        h('td', { style: remaining > 0 ? 'color:#00cec9' : 'color:#ff7675' }, fmtTokens(remaining)),
         h('td', {}, m.hasUpstreamKey ? h('span', { class: 'badge badge-green' }, 'Yes') : '—'),
         h('td', {}, h('button', { class: 'btn btn-danger btn-sm', onclick: async () => {
           await api('/accounts/' + id + '/models/' + m.model, { method: 'DELETE' });
