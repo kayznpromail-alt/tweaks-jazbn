@@ -65,10 +65,10 @@ export default function Keys() {
         </button>
       </div>
 
-      <div className="flex gap-3 max-md:flex-col">
+      <div className="flex gap-4 max-md:flex-col">
         <div className="flex-1 min-w-0">
           {revealed && (
-            <div className="rounded-xl p-5 mb-3 text-center" style={{ background: 'var(--color-accent-surface)', border: '1px solid rgba(108,92,231,0.15)' }}>
+            <div className="rounded-xl p-5 mb-3 text-center" style={{ background: 'var(--color-accent-surface)', border: '1px solid rgba(108,92,231,0.15)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
               <p className="text-[12px] text-text2 mb-2">Your new API key:</p>
               <code className="text-[12px] text-accent2 break-all" style={{ fontFamily: 'var(--font-mono)' }}>{revealed}</code>
               <p className="text-[11px] text-yellow mt-2 font-medium">Save this key now - you won't see it again!</p>
@@ -81,8 +81,8 @@ export default function Keys() {
           {keys.map(k => (
             <div
               key={k.id}
-              className="flex items-center justify-between px-4 py-3.5 rounded-xl mb-2 transition-all duration-150 hover:bg-card2"
-              style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}
+              className="flex items-center justify-between px-4 py-3.5 rounded-xl mb-2.5 transition-all duration-150 hover:bg-card2"
+              style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}
             >
               <div className="flex-1 min-w-0">
                 <div className="text-[13px] font-semibold mb-0.5">{k.name}</div>
@@ -116,7 +116,7 @@ export default function Keys() {
           ))}
         </div>
 
-        <div className="w-[280px] max-md:w-full shrink-0 rounded-xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+        <div className="w-[280px] max-md:w-full shrink-0 rounded-xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
           <h4 className="text-[12px] font-semibold mb-3 flex items-center gap-2">
             <Link size={14} className="text-accent2" /> Connect your app
           </h4>

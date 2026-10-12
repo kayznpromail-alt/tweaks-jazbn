@@ -54,19 +54,19 @@ export default function Wallet() {
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 mb-5 max-md:grid-cols-1">
-        <StatCard icon={<Coins size={15} />} label="Available Balance" value={fmtTokens(balance)} accent="var(--color-accent2)" />
-        <StatCard icon={<Activity size={15} />} label="Requests (24h)" value={fmtNum(requests24h)} />
-        <StatCard icon={<KeyRound size={15} />} label="Active API Keys" value={keyCount != null ? String(keyCount) : '--'} />
+      <div className="grid grid-cols-3 gap-4 mb-6 max-md:grid-cols-1">
+        <StatCard icon={<Coins size={18} />} label="Available Balance" value={fmtTokens(balance)} iconBg="rgba(167,139,250,0.12)" iconColor="#a78bfa" accent="var(--color-accent2)" />
+        <StatCard icon={<Activity size={18} />} label="Requests (24h)" value={fmtNum(requests24h)} iconBg="rgba(99,102,241,0.12)" iconColor="#818cf8" />
+        <StatCard icon={<KeyRound size={18} />} label="Active API Keys" value={keyCount != null ? String(keyCount) : '--'} iconBg="rgba(251,191,36,0.12)" iconColor="#fbbf24" />
       </div>
 
       {modelAccess.length > 0 && (
-        <div className="rounded-xl p-5 mb-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+        <div className="rounded-xl p-5 mb-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
           <h3 className="text-[13px] font-semibold mb-3.5">Model Quotas</h3>
           <div className="grid gap-2.5">
             {modelAccess.map(ma => (
               <div key={ma.model} className="flex items-center gap-3.5 p-3.5 rounded-lg" style={{ background: 'var(--color-bg2)', border: '1px solid var(--color-border)' }}>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: 'var(--color-accent-surface)', color: 'var(--color-accent2)' }}>
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-bold shrink-0" style={{ background: 'rgba(167,139,250,0.1)', color: '#a78bfa' }}>
                   {ma.model.slice(0, 2).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -74,11 +74,11 @@ export default function Wallet() {
                   <div className="text-[10.5px] text-muted">{fmtTokens(ma.used)} used of {fmtTokens(ma.quota)}</div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-24 h-[5px] rounded-full overflow-hidden" style={{ background: 'var(--color-bg)' }}>
+                  <div className="w-24 h-[5px] rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
                     <div className="h-full rounded-full transition-all duration-300" style={{ width: `${Math.min(100, (ma.used / ma.quota) * 100)}%`, background: ma.remaining > 0 ? 'var(--color-accent)' : 'var(--color-red)' }} />
                   </div>
                   <div className="text-right min-w-[60px]">
-                    <div className="text-[13px] font-bold" style={{ color: ma.remaining > 0 ? 'var(--color-accent2)' : 'var(--color-red)' }}>{fmtTokens(ma.remaining)}</div>
+                    <div className="text-[14px] font-bold" style={{ color: ma.remaining > 0 ? 'var(--color-accent2)' : 'var(--color-red)' }}>{fmtTokens(ma.remaining)}</div>
                   </div>
                 </div>
               </div>
@@ -87,7 +87,7 @@ export default function Wallet() {
         </div>
       )}
 
-      <div className="rounded-xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
+      <div className="rounded-xl p-5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-[13px] font-semibold">Activity</h3>
           <div className="flex gap-0.5 rounded-lg p-[3px]" style={{ background: 'var(--color-bg2)' }}>
@@ -115,14 +115,14 @@ export default function Wallet() {
               <thead><tr>{['ID', 'Amount', 'Tokens', 'Method', 'Status', 'Date'].map(h => <th key={h} className="text-left px-3 py-2 text-muted font-medium text-[10.5px] uppercase tracking-wider whitespace-nowrap" style={{ borderBottom: '1px solid var(--color-border)' }}>{h}</th>)}</tr></thead>
               <tbody>
                 {filtered.map(p => (
-                  <tr key={p.id} className="hover:bg-white/[0.015] transition-colors">
+                  <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="px-3 py-2.5 text-muted whitespace-nowrap" style={{ borderBottom: '1px solid var(--color-border)' }}>#{p.id}</td>
                     <td className="px-3 py-2.5 font-medium whitespace-nowrap" style={{ borderBottom: '1px solid var(--color-border)' }}>{fmtEur(p.amount_eur)}</td>
                     <td className="px-3 py-2.5 whitespace-nowrap" style={{ borderBottom: '1px solid var(--color-border)' }}>{fmtTokens(p.tokens)}</td>
                     <td className="px-3 py-2.5 text-muted whitespace-nowrap" style={{ borderBottom: '1px solid var(--color-border)' }}>{p.note || p.provider}</td>
                     <td className="px-3 py-2.5 whitespace-nowrap" style={{ borderBottom: '1px solid var(--color-border)' }}>
                       <span className="inline-flex items-center gap-1.5">
-                        <span className="w-[6px] h-[6px] rounded-full" style={{ background: p.status === 'credited' ? 'var(--color-green)' : p.status === 'pending' ? 'var(--color-yellow)' : 'var(--color-red)' }} />
+                        <span className="w-[7px] h-[7px] rounded-full" style={{ background: p.status === 'credited' ? 'var(--color-green)' : p.status === 'pending' ? 'var(--color-yellow)' : 'var(--color-red)', boxShadow: p.status === 'credited' ? '0 0 6px rgba(52,211,153,0.4)' : p.status === 'pending' ? '0 0 6px rgba(251,191,36,0.4)' : '0 0 6px rgba(248,113,113,0.4)' }} />
                         <span className="text-[11px] capitalize">{p.status}</span>
                       </span>
                     </td>
@@ -140,15 +140,15 @@ export default function Wallet() {
   );
 }
 
-function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent?: string }) {
+function StatCard({ icon, label, value, accent, iconBg, iconColor }: { icon: React.ReactNode; label: string; value: string; accent?: string; iconBg?: string; iconColor?: string }) {
   return (
-    <div className="rounded-xl px-5 py-4 flex items-start gap-3.5" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)' }}>
-      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" style={{ background: 'var(--color-accent-surface)', color: 'var(--color-accent2)' }}>
+    <div className="rounded-xl px-5 py-5 flex items-center gap-4" style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}>
+      <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: iconBg || 'var(--color-accent-surface)', color: iconColor || 'var(--color-accent2)' }}>
         {icon}
       </div>
       <div>
-        <div className="text-[11px] font-medium text-muted mb-1">{label}</div>
-        <div className="text-[22px] font-bold tracking-tight leading-none" style={{ color: accent }}>{value}</div>
+        <div className="text-[11.5px] font-medium text-muted mb-1.5">{label}</div>
+        <div className="text-[24px] font-bold tracking-tight leading-none" style={{ color: accent }}>{value}</div>
       </div>
     </div>
   );
