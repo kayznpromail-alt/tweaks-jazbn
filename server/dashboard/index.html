@@ -104,39 +104,87 @@ input::placeholder{color:var(--muted2)}
 
 /* ── Auth ────────────────────────────────────────────────────── */
 .auth-wrap{
-  display:flex;align-items:center;justify-content:center;min-height:100vh;
-  background:radial-gradient(ellipse at 50% 30%,rgba(108,92,231,.08),transparent 60%);
+  position:relative;display:flex;align-items:center;justify-content:center;
+  min-height:100vh;overflow:hidden;background:var(--bg);
+}
+#auth-canvas{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0}
+.auth-blur{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);z-index:1;
 }
 .auth-box{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:var(--radius-lg);padding:40px;
+  position:relative;z-index:2;
+  background:rgba(255,255,255,.07);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:20px;padding:44px 40px;
   width:100%;max-width:400px;
-  box-shadow:var(--shadow-lg);
-  animation:authIn .4s var(--transition);
+  box-shadow:0 8px 32px rgba(0,0,0,.4),0 0 80px rgba(108,92,231,.08);
+  animation:authIn .5s var(--transition);
 }
-@keyframes authIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
-.auth-box h2{font-size:22px;font-weight:700;text-align:center;margin-bottom:6px;letter-spacing:-.3px}
+@keyframes authIn{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
+.auth-box h2{font-size:26px;font-weight:700;text-align:center;margin-bottom:4px;letter-spacing:-.4px;color:#fff}
 .auth-box h2 .logo-inline{
   background:linear-gradient(135deg,var(--accent),var(--accent2));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
-.auth-box .sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:26px}
-.auth-box .field{margin-bottom:16px}
-.auth-box .field label{
-  display:block;font-size:11.5px;font-weight:600;
-  color:var(--muted);margin-bottom:6px;
-  text-transform:uppercase;letter-spacing:.6px;
+.auth-box .sub{text-align:center;color:rgba(255,255,255,.4);font-size:13.5px;margin-bottom:30px}
+.auth-field{position:relative;margin-bottom:28px}
+.auth-field input{
+  width:100%;padding:12px 0 10px;
+  background:transparent;border:none;
+  border-bottom:2px solid rgba(255,255,255,.12);
+  color:#fff;font-size:14px;font-family:inherit;
+  outline:none;transition:border-color .3s var(--transition);
+  border-radius:0;
 }
-.auth-box .err{color:var(--red);font-size:13px;text-align:center;margin-bottom:12px;min-height:18px}
-.auth-box .switch{text-align:center;margin-top:18px;font-size:13px;color:var(--muted)}
-.auth-box .switch a{cursor:pointer;font-weight:500}
+.auth-field input:focus{border-bottom-color:var(--accent)}
+.auth-field input::placeholder{color:transparent}
+.auth-field label{
+  position:absolute;top:12px;left:0;
+  font-size:14px;color:rgba(255,255,255,.35);font-weight:500;
+  pointer-events:none;
+  transition:all .3s var(--transition);
+  display:flex;align-items:center;gap:7px;
+  transform-origin:0 0;
+}
+.auth-field label svg{opacity:.5;flex-shrink:0}
+.auth-field input:focus ~ label,
+.auth-field input:not(:placeholder-shown) ~ label{
+  top:-10px;font-size:11px;letter-spacing:.3px;color:var(--accent2);
+}
+.auth-field input:focus ~ label svg{opacity:1}
+.auth-box .err{color:var(--red);font-size:13px;text-align:center;margin-bottom:14px;min-height:18px}
+.auth-box .switch{text-align:center;margin-top:20px;font-size:13px;color:rgba(255,255,255,.4)}
+.auth-box .switch a{cursor:pointer;font-weight:600;color:var(--accent2);transition:color .15s}
+.auth-box .switch a:hover{color:#c4b5fd}
 .auth-box .or-line{
-  text-align:center;margin:18px 0;font-size:12px;color:var(--muted2);
-  display:flex;align-items:center;gap:12px;
+  text-align:center;margin:22px 0;font-size:11px;color:rgba(255,255,255,.25);
+  display:flex;align-items:center;gap:14px;
+  text-transform:uppercase;letter-spacing:1px;font-weight:600;
 }
 .auth-box .or-line::before,.auth-box .or-line::after{
-  content:'';flex:1;height:1px;background:var(--border);
+  content:'';flex:1;height:1px;background:rgba(255,255,255,.08);
 }
+.btn-auth{
+  width:100%;padding:13px 24px;border-radius:12px;border:none;
+  font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .25s var(--transition);
+}
+.btn-auth-p{
+  background:linear-gradient(135deg,var(--accent),#8b5cf6);color:#fff;
+  box-shadow:0 4px 16px rgba(108,92,231,.35);
+}
+.btn-auth-p:hover{box-shadow:0 6px 24px rgba(108,92,231,.5);transform:translateY(-1px)}
+.btn-auth-p:active{transform:translateY(0)}
+.btn-auth-p svg{transition:transform .25s var(--transition)}
+.btn-auth-p:hover svg{transform:translateX(4px)}
+.btn-auth-s{
+  background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);
+  border:1px solid rgba(255,255,255,.1);
+}
+.btn-auth-s:hover{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.15)}
 
 /* ── Stats ───────────────────────────────────────────────────── */
 .stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:26px}
@@ -280,6 +328,10 @@ canvas{width:100%;border-radius:var(--radius-sm)}
 .setup-status{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:99px;font-size:11.5px;font-weight:600;background:var(--green-bg);color:var(--green);flex-shrink:0}
 .setup-status::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--green);animation:statusPulse 2s ease-in-out infinite}
 @keyframes statusPulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes blurIn{from{opacity:0;filter:blur(10px)}to{opacity:1;filter:blur(0px)}}
+@keyframes blurInUp{from{opacity:0;filter:blur(8px);transform:translateY(6px)}to{opacity:1;filter:blur(0px);transform:translateY(0)}}
+.blur-word{display:inline-block;opacity:0;animation:blurIn .7s var(--transition) forwards}
+.blur-up{opacity:0;animation:blurInUp .6s var(--transition) forwards}
 .setup-key-bar{
   display:flex;align-items:center;gap:12px;
   padding:12px 16px;margin-bottom:20px;
@@ -617,23 +669,40 @@ canvas{width:100%;border-radius:var(--radius-sm)}
 
 <!-- Auth -->
 <div id="auth-view" class="auth-wrap">
+  <canvas id="auth-canvas"></canvas>
+  <div class="auth-blur"></div>
   <div class="auth-box">
     <h2><span class="logo-inline">edgey</span> dashboard</h2>
-    <p class="sub">Sign in to manage your API keys and usage</p>
+    <p class="sub" id="auth-sub">Sign in to manage your API keys and usage</p>
     <div id="auth-err" class="err"></div>
     <div id="login-form">
-      <div class="field"><label>Username</label><input id="login-user" type="text" placeholder="Enter your username" autocomplete="username"></div>
-      <div class="field"><label>Password</label><input id="login-pass" type="password" placeholder="Enter your password" autocomplete="current-password"></div>
-      <button class="btn btn-p btn-full" onclick="doLogin()">Sign In</button>
+      <div class="auth-field">
+        <input id="login-user" type="text" placeholder=" " autocomplete="username">
+        <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Username</label>
+      </div>
+      <div class="auth-field">
+        <input id="login-pass" type="password" placeholder=" " autocomplete="current-password">
+        <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Password</label>
+      </div>
+      <button class="btn-auth btn-auth-p" onclick="doLogin()">Sign In <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
       <div class="switch">Don't have an account? <a onclick="showRegister()">Register</a></div>
       <div class="or-line">or</div>
-      <div class="field"><label>Edgey ID (legacy)</label><input id="login-number" type="text" placeholder="1234-5678-9012-3456"></div>
-      <button class="btn btn-s btn-full" onclick="doLoginNumber()">Sign In with ID</button>
+      <div class="auth-field">
+        <input id="login-number" type="text" placeholder=" ">
+        <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>Edgey ID (legacy)</label>
+      </div>
+      <button class="btn-auth btn-auth-s" onclick="doLoginNumber()">Sign In with ID</button>
     </div>
     <div id="register-form" style="display:none">
-      <div class="field"><label>Username</label><input id="reg-user" type="text" placeholder="Choose a username" autocomplete="username"></div>
-      <div class="field"><label>Password</label><input id="reg-pass" type="password" placeholder="Min 6 characters" autocomplete="new-password"></div>
-      <button class="btn btn-p btn-full" onclick="doRegister()">Create Account</button>
+      <div class="auth-field">
+        <input id="reg-user" type="text" placeholder=" " autocomplete="username">
+        <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Username</label>
+      </div>
+      <div class="auth-field">
+        <input id="reg-pass" type="password" placeholder=" " autocomplete="new-password">
+        <label><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Password</label>
+      </div>
+      <button class="btn-auth btn-auth-p" onclick="doRegister()">Create Account <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
       <div class="switch">Already have an account? <a onclick="showLogin()">Sign In</a></div>
     </div>
   </div>
@@ -1204,11 +1273,13 @@ function showLogin() {
   document.getElementById('login-form').style.display='';
   document.getElementById('register-form').style.display='none';
   document.getElementById('auth-err').textContent='';
+  document.getElementById('auth-sub').textContent='Sign in to manage your API keys and usage';
 }
 function showRegister() {
   document.getElementById('login-form').style.display='none';
   document.getElementById('register-form').style.display='';
   document.getElementById('auth-err').textContent='';
+  document.getElementById('auth-sub').textContent='Create an account to get started';
 }
 async function doLogin() {
   const u = document.getElementById('login-user').value.trim();
@@ -1726,6 +1797,78 @@ document.addEventListener('click', e => {
   const dd = document.querySelector('.coin-select');
   if (dd && !dd.contains(e.target)) document.getElementById('coin-dd-opts').classList.remove('open');
 });
+
+// WebGL smokey background
+function initSmokeyBg() {
+  const canvas = document.getElementById('auth-canvas');
+  if (!canvas) return;
+  const gl = canvas.getContext('webgl');
+  if (!gl) return;
+  function resize() {
+    canvas.width = canvas.clientWidth * (window.devicePixelRatio || 1);
+    canvas.height = canvas.clientHeight * (window.devicePixelRatio || 1);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  const vs = `attribute vec2 a_position;void main(){gl_Position=vec4(a_position,0,1);}`;
+  const fs = `precision mediump float;
+uniform vec2 iResolution;uniform float iTime;uniform vec2 iMouse;uniform vec3 u_color;
+void main(){
+  vec2 uv=gl_FragCoord.xy/iResolution;
+  vec2 c=(2.0*gl_FragCoord.xy-iResolution.xy)/min(iResolution.x,iResolution.y);
+  float t=iTime*0.5;
+  vec2 m=iMouse/iResolution;
+  vec2 r=2.0*m-1.0;
+  vec2 d=c;
+  for(float i=1.0;i<8.0;i++){
+    d.x+=0.5/i*cos(i*2.0*d.y+t+r.x*3.1415);
+    d.y+=0.5/i*cos(i*2.0*d.x+t+r.y*3.1415);
+  }
+  float w=abs(sin(d.x+d.y+t));
+  float g=smoothstep(0.9,0.2,w);
+  gl_FragColor=vec4(u_color*g,1.0);
+}`;
+  function compile(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+  const prog = gl.createProgram();
+  gl.attachShader(prog, compile(gl.VERTEX_SHADER, vs));
+  gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, fs));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+  const aPos = gl.getAttribLocation(prog, 'a_position');
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+  const uRes = gl.getUniformLocation(prog, 'iResolution');
+  const uTime = gl.getUniformLocation(prog, 'iTime');
+  const uMouse = gl.getUniformLocation(prog, 'iMouse');
+  const uColor = gl.getUniformLocation(prog, 'u_color');
+  let mx = canvas.width * 0.5, my = canvas.height * 0.5;
+  canvas.addEventListener('mousemove', e => {
+    const r = canvas.getBoundingClientRect();
+    mx = (e.clientX - r.left) * (canvas.width / r.width);
+    my = (canvas.height) - (e.clientY - r.top) * (canvas.height / r.height);
+  });
+  const start = performance.now();
+  (function loop() {
+    if (document.getElementById('auth-view').style.display === 'none') return;
+    resize();
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.uniform1f(uTime, (performance.now() - start) / 1000);
+    gl.uniform2f(uMouse, mx, my);
+    gl.uniform3f(uColor, 0.424, 0.361, 0.906);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(loop);
+  })();
+}
+initSmokeyBg();
 </script>
 </body>
 </html>
