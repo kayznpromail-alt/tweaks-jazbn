@@ -7,3 +7,4 @@ server/data/
 deploy/.env
 deploy/data/
 deploy/caddy/
+server/dashboard/assets/
