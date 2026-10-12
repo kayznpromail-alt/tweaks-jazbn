@@ -430,7 +430,7 @@ async function renderAccount(el, id) {
     const tbody = h('tbody');
     for (const m of a.modelAccess) {
       tbody.append(h('tr', {},
-        h('td', { class: 'mono' }, m.model),
+        h('td', { class: 'mono' }, m.model === 'opus-private' ? 'opus-private (Opus 5 JB)' : m.model),
         h('td', {}, fmtTokens(m.quota)),
         h('td', {}, fmtTokens(m.used)),
         h('td', {}, m.hasUpstreamKey ? h('span', { class: 'badge badge-green' }, 'Yes') : '—'),
@@ -630,9 +630,13 @@ function showModelAccessModal(id) {
   const bg = h('div', { class: 'modal-bg', onclick: e => { if (e.target === bg) bg.remove(); } });
   const modal = h('div', { class: 'modal' });
   modal.append(h('h3', {}, 'Grant model access'));
+  const presets = h('div', { style: 'display:flex;gap:6px;margin-bottom:8px' });
+  for (const [label, val] of [['edgeybeast', 'edgeybeast'], ['Opus 5 JB', 'opus-private']]) {
+    presets.append(h('button', { class: 'btn btn-outline btn-sm', onclick: () => { $('#ma-model').value = val; } }, label));
+  }
   modal.append(
     h('div', { style: 'display:flex;flex-direction:column;gap:10px' },
-      h('div', { class: 'field' }, h('label', {}, 'Model ID'), h('input', { id: 'ma-model', placeholder: 'e.g. edgeybeast' })),
+      h('div', { class: 'field' }, h('label', {}, 'Model ID'), presets, h('input', { id: 'ma-model', placeholder: 'e.g. edgeybeast or opus-private' })),
       h('div', { class: 'field' }, h('label', {}, 'Upstream key (optional)'), h('input', { id: 'ma-key', placeholder: 'customer\'s own upstream key' })),
     ),
   );
