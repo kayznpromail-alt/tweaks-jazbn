@@ -10,13 +10,10 @@ const year = new Date().getFullYear();
 const modelCount = providers.reduce((sum, p) => sum + p.models.length, 0);
 const providerCount = providers.length;
 
-const features = [
-  { icon: 'grid' as const, title: 'Your models. One place.', desc: 'Explore the model catalog and choose the right fit for your next project.', badges: ['GPT', 'Claude', 'Gemini', 'Grok'] },
-  { icon: 'key' as const, title: 'Keys that work your way.', desc: 'Keep projects separate with API keys, model access and individual limits.', lines: ['Production', 'Side project', 'Local dev'] },
-  { icon: 'activity' as const, title: 'See where your usage goes.', desc: 'Follow your requests, token usage and costs from your workspace.' },
-  { icon: 'terminal' as const, title: 'Made for your workflow.', desc: 'Find connection details and setup instructions for your clients and CLI tools.' },
-  { icon: 'code' as const, title: 'Keep building.', desc: 'From your idea to the first lines of code. Drop-in OpenAI-compatible endpoint.' },
-  { icon: 'search' as const, title: 'Follow every step.', desc: 'A small walkthrough: spot an issue, change a line, and run it again.' },
+const steps = [
+  { num: '01', title: 'Account', desc: 'Create an account or sign in with your access number.', btn: 'Create account', action: 'register' },
+  { num: '02', title: 'Access', desc: 'Check model access and rates, top up your wallet.', btn: 'Explore workspace', href: '/overview' },
+  { num: '03', title: 'Workflow', desc: 'Create an API key, follow setup instructions for your tools.', btn: 'Open setup', href: '/setup' },
 ];
 ---
 <Shell title="Your AI Workspace">
@@ -47,12 +44,6 @@ const features = [
 
     <!-- Hero -->
     <section class="ln-hero">
-      <div class="ln-orbs">
-        <div class="ln-orb ln-orb--1"></div>
-        <div class="ln-orb ln-orb--2"></div>
-        <div class="ln-orb ln-orb--3"></div>
-      </div>
-      <div class="ln-particles" id="particles"></div>
       <div class="ln-container">
         <div class="ln-hero-badge">
           <span class="ln-dot"></span>
@@ -60,7 +51,7 @@ const features = [
         </div>
         <h1 class="ln-hero-title">
           More models.<br />
-          <span class="ln-hero-fade">One workspace.</span>
+          <span class="ln-hero-accent">One workspace.</span>
         </h1>
         <p class="ln-hero-sub">
           Connect to AI models through one API.<br />
@@ -68,16 +59,16 @@ const features = [
         </p>
 
         <div class="ln-provider-strip">
-          <span class="ln-provider"><span class="ln-prov-icon ln-prov-icon--gpt">
+          <span class="ln-provider"><span class="ln-prov-icon">
             <img src="/icons/openai.svg" width="18" height="18" alt="OpenAI" />
           </span>OpenAI</span>
-          <span class="ln-provider"><span class="ln-prov-icon ln-prov-icon--claude">
+          <span class="ln-provider"><span class="ln-prov-icon">
             <img src="/icons/claude.svg" width="18" height="18" alt="Claude" />
           </span>Claude</span>
-          <span class="ln-provider ln-prov--highlight"><span class="ln-prov-icon ln-prov-icon--edgey">
+          <span class="ln-provider ln-prov--hl"><span class="ln-prov-icon ln-prov-icon--edgey">
             <Icon name="terminal" size={16} />
           </span>edgey</span>
-          <span class="ln-provider"><span class="ln-prov-icon ln-prov-icon--grok">
+          <span class="ln-provider"><span class="ln-prov-icon">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 3l7.5 9L3 21h2l6.5-7.8L18 21h3l-8-9.5L20.5 3h-2L12 10.3 6 3H3z"/></svg>
           </span>Grok</span>
         </div>
@@ -98,30 +89,12 @@ const features = [
     </section>
 
     <!-- Model Activity -->
-    <section class="ln-section" id="models">
+    <section class="ln-section" id="pricing-section">
       <div class="ln-container">
         <h2 class="ln-section-title">
           Find your rhythm.<br />
-          <span class="ln-fade">Build with your favorites.</span>
+          <span class="ln-accent">Build with your favorites.</span>
         </h2>
-        <p class="ln-section-sub">A closer look at how your model usage comes together.</p>
-
-        <div class="ln-counters">
-          <div class="ln-counter">
-            <span class="ln-counter-val" data-count={modelCount}>0</span>
-            <span class="ln-counter-label">Models</span>
-          </div>
-          <div class="ln-counter-sep"></div>
-          <div class="ln-counter">
-            <span class="ln-counter-val" data-count={providerCount}>0</span>
-            <span class="ln-counter-label">Providers</span>
-          </div>
-          <div class="ln-counter-sep"></div>
-          <div class="ln-counter">
-            <span class="ln-counter-val" data-count="99.9" data-suffix="%">0%</span>
-            <span class="ln-counter-label">Uptime</span>
-          </div>
-        </div>
 
         <div class="ln-activity-card">
           <div class="ln-activity-head">
@@ -135,94 +108,46 @@ const features = [
             <a href="/overview" class="ln-btn ln-btn--sm">Open workspace <Icon name="arrowUpRight" size={12} /></a>
           </div>
 
-          <div class="ln-prov-cards">
-            <div class="ln-prov-card">
-              <div class="ln-radar">
-                <div class="ln-radar-ring"></div>
-                <div class="ln-radar-ring ln-radar-ring--2"></div>
-                <div class="ln-radar-ring ln-radar-ring--3"></div>
-                <div class="ln-radar-sweep"></div>
-                <div class="ln-radar-ticks">
-                  {Array.from({length: 12}).map((_, i) => <span class="ln-tick" style={`--i:${i}`}></span>)}
-                </div>
-                <div class="ln-radar-icon">
-                  <img src="/icons/openai.svg" width="28" height="28" alt="OpenAI" />
-                </div>
-                <div class="ln-radar-blips">
-                  <span class="ln-blip" style="--angle:35deg;--dist:38px"></span>
-                  <span class="ln-blip" style="--angle:160deg;--dist:42px"></span>
-                  <span class="ln-blip ln-blip--fade" style="--angle:280deg;--dist:35px"></span>
-                </div>
-              </div>
-              <p class="ln-prov-card-name">OpenAI</p>
-              <p class="ln-prov-card-sub">GPT · General purpose</p>
-              <span class="ln-prov-card-stat"><Icon name="activity" size={12} /> 6 models</span>
+          <div class="ln-activity-rows">
+            <div class="ln-activity-row">
+              <span class="ln-activity-dot ln-activity-dot--green"></span>
+              <span class="ln-activity-name">OpenAI</span>
+              <span class="ln-activity-count">80 requests</span>
+              <span class="ln-activity-pct">8%</span>
             </div>
-
-            <div class="ln-prov-card">
-              <div class="ln-radar ln-radar--purple">
-                <div class="ln-radar-ring ln-radar-ring--purple"></div>
-                <div class="ln-radar-ring ln-radar-ring--2 ln-radar-ring--purple"></div>
-                <div class="ln-radar-ring ln-radar-ring--3 ln-radar-ring--purple"></div>
-                <div class="ln-radar-sweep ln-radar-sweep--purple"></div>
-                <div class="ln-radar-ticks ln-radar-ticks--purple">
-                  {Array.from({length: 12}).map((_, i) => <span class="ln-tick" style={`--i:${i}`}></span>)}
-                </div>
-                <div class="ln-radar-icon ln-radar-icon--purple">
-                  <img src="/icons/claude.svg" width="26" height="26" alt="Claude" />
-                </div>
-                <div class="ln-radar-blips">
-                  <span class="ln-blip ln-blip--purple" style="--angle:70deg;--dist:40px"></span>
-                  <span class="ln-blip ln-blip--purple" style="--angle:210deg;--dist:36px"></span>
-                </div>
-              </div>
-              <p class="ln-prov-card-name">Anthropic</p>
-              <p class="ln-prov-card-sub">Claude · Reasoning</p>
-              <span class="ln-prov-card-stat"><Icon name="activity" size={12} /> 8 models</span>
+            <div class="ln-activity-row">
+              <span class="ln-activity-dot ln-activity-dot--purple"></span>
+              <span class="ln-activity-name">Claude</span>
+              <span class="ln-activity-count">50 requests</span>
+              <span class="ln-activity-pct">5%</span>
             </div>
-
-            <div class="ln-prov-card">
-              <div class="ln-radar ln-radar--cyan">
-                <div class="ln-radar-ring ln-radar-ring--cyan"></div>
-                <div class="ln-radar-ring ln-radar-ring--2 ln-radar-ring--cyan"></div>
-                <div class="ln-radar-ring ln-radar-ring--3 ln-radar-ring--cyan"></div>
-                <div class="ln-radar-sweep ln-radar-sweep--cyan"></div>
-                <div class="ln-radar-ticks ln-radar-ticks--cyan">
-                  {Array.from({length: 12}).map((_, i) => <span class="ln-tick" style={`--i:${i}`}></span>)}
-                </div>
-                <div class="ln-radar-icon ln-radar-icon--cyan">
-                  <Icon name="terminal" size={26} />
-                </div>
-                <div class="ln-radar-blips">
-                  <span class="ln-blip ln-blip--cyan" style="--angle:120deg;--dist:44px"></span>
-                  <span class="ln-blip ln-blip--cyan ln-blip--fade" style="--angle:300deg;--dist:38px"></span>
-                </div>
-              </div>
-              <p class="ln-prov-card-name">edgey</p>
-              <p class="ln-prov-card-sub">Premium · Beast mode</p>
-              <span class="ln-prov-card-stat"><Icon name="shield" size={12} /> Exclusive</span>
+            <div class="ln-activity-row ln-activity-row--hl">
+              <span class="ln-activity-dot ln-activity-dot--cyan"></span>
+              <span class="ln-activity-name">edgey</span>
+              <span class="ln-activity-count">870 requests</span>
+              <span class="ln-activity-pct">87%</span>
             </div>
           </div>
 
           <div class="ln-share-bar">
             <div class="ln-share-header">
               <span>Request share</span>
-              <span class="ln-share-total">{modelCount} models total</span>
+              <span class="ln-share-total">1,000 total</span>
             </div>
             <div class="ln-bar-track">
-              <div class="ln-bar-seg ln-bar-seg--green" style="width:16%"></div>
-              <div class="ln-bar-seg ln-bar-seg--purple" style="width:20%"></div>
-              <div class="ln-bar-seg ln-bar-seg--cyan" style="width:64%"></div>
+              <div class="ln-bar-seg ln-bar-seg--green" style="width:8%"></div>
+              <div class="ln-bar-seg ln-bar-seg--purple" style="width:5%"></div>
+              <div class="ln-bar-seg ln-bar-seg--cyan" style="width:87%"></div>
             </div>
             <div class="ln-share-legend">
-              <span><i class="ln-leg-dot ln-leg-dot--green"></i> GPT 16%</span>
-              <span><i class="ln-leg-dot ln-leg-dot--purple"></i> Claude 20%</span>
-              <span><i class="ln-leg-dot ln-leg-dot--cyan"></i> All others 64%</span>
+              <span><i class="ln-leg-dot ln-leg-dot--green"></i> OpenAI 8%</span>
+              <span><i class="ln-leg-dot ln-leg-dot--purple"></i> Claude 5%</span>
+              <span><i class="ln-leg-dot ln-leg-dot--cyan"></i> edgey 87%</span>
             </div>
           </div>
         </div>
 
-        <p class="ln-section-note">Animated preview with example usage. Your actual models and activity appear in the workspace.</p>
+        <p class="ln-note">Animated preview with example usage. Your actual models and activity appear in the workspace.</p>
       </div>
     </section>
 
@@ -230,58 +155,121 @@ const features = [
     <section class="ln-section" id="features">
       <div class="ln-container">
         <div class="ln-divider"></div>
-        <p class="ln-section-eyebrow">NOTHING IN YOUR WAY.</p>
-        <h2 class="ln-section-title ln-section-title--sm">
-          From your first API key to your next project.<br />
-          <span class="ln-fade">A workspace that keeps the details together.</span>
+        <h2 class="ln-section-title">
+          Everything in reach.<br />
+          <span class="ln-accent">Nothing in your way.</span>
         </h2>
 
-        <div class="ln-feat-grid">
-          {features.map((f, idx) => (
-            <article class="ln-feat">
-              <div class="ln-feat-icon"><Icon name={f.icon} size={18} /></div>
-              <h3>{f.title}</h3>
-              <p>{f.desc}</p>
-              {idx === 0 && (
-                <div class="ln-feat-preview">
-                  <div class="ln-feat-badges">
-                    {f.badges?.map(b => <span class="ln-feat-badge">{b}</span>)}
-                  </div>
+        <div class="ln-showcase-grid">
+          <!-- Models -->
+          <div class="ln-showcase">
+            <div class="ln-showcase-label"><Icon name="grid" size={14} /> Models</div>
+            <div class="ln-showcase-preview">
+              <div class="ln-model-logos">
+                <span class="ln-model-logo"><img src="/icons/openai.svg" width="24" height="24" alt="OpenAI" /></span>
+                <span class="ln-model-logo"><img src="/icons/claude.svg" width="22" height="22" alt="Claude" /></span>
+                <span class="ln-model-logo ln-model-logo--hl"><Icon name="terminal" size={20} /></span>
+                <span class="ln-model-logo"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 3l7.5 9L3 21h2l6.5-7.8L18 21h3l-8-9.5L20.5 3h-2L12 10.3 6 3H3z"/></svg></span>
+              </div>
+              <p class="ln-showcase-desc">A catalog of {modelCount} models from {providerCount} providers. Choose the right fit for your project.</p>
+            </div>
+          </div>
+
+          <!-- Keys -->
+          <div class="ln-showcase">
+            <div class="ln-showcase-label"><Icon name="key" size={14} /> Keys</div>
+            <div class="ln-showcase-preview">
+              <div class="ln-key-rows">
+                <div class="ln-key-row">
+                  <span class="ln-key-dot ln-key-dot--on"></span>
+                  <span class="ln-key-name">Production</span>
+                  <span class="ln-key-mask">sk_edgey_…</span>
+                  <span class="ln-key-status ln-key-status--active">Active</span>
                 </div>
-              )}
-              {idx === 1 && (
-                <div class="ln-feat-preview">
-                  <div class="ln-feat-keys">
-                    {f.lines?.map((l, li) => (
-                      <div class={`ln-feat-key-row${li === 0 ? ' ln-feat-key-row--active' : ''}`}>
-                        <span class="ln-feat-key-dot"></span>
-                        <span>{l}</span>
-                        <span class="ln-feat-key-badge">sk_edgey_…</span>
-                      </div>
-                    ))}
-                  </div>
+                <div class="ln-key-row">
+                  <span class="ln-key-dot ln-key-dot--on"></span>
+                  <span class="ln-key-name">Side project</span>
+                  <span class="ln-key-mask">sk_edgey_…</span>
+                  <span class="ln-key-status ln-key-status--active">Active</span>
                 </div>
-              )}
-              {idx === 2 && (
-                <div class="ln-feat-preview">
-                  <div class="ln-feat-bars">
-                    <div class="ln-feat-bar" style="--w:85%;--delay:0s"></div>
-                    <div class="ln-feat-bar" style="--w:60%;--delay:0.15s"></div>
-                    <div class="ln-feat-bar" style="--w:40%;--delay:0.3s"></div>
-                    <div class="ln-feat-bar" style="--w:72%;--delay:0.45s"></div>
-                  </div>
+                <div class="ln-key-row">
+                  <span class="ln-key-dot"></span>
+                  <span class="ln-key-name">Local development</span>
+                  <span class="ln-key-mask">sk_edgey_…</span>
+                  <span class="ln-key-status ln-key-status--paused">Paused</span>
                 </div>
-              )}
-              {idx === 4 && (
-                <div class="ln-feat-preview">
-                  <div class="ln-feat-code-mini">
-                    <div class="ln-feat-code-tab">main.py</div>
-                    <code><span class="c-kw">import</span> openai</code>
-                  </div>
+              </div>
+              <p class="ln-showcase-desc">Keys can have separate model access and limits.</p>
+            </div>
+          </div>
+
+          <!-- Usage -->
+          <div class="ln-showcase">
+            <div class="ln-showcase-label"><Icon name="activity" size={14} /> Usage</div>
+            <div class="ln-showcase-preview">
+              <div class="ln-usage-chart">
+                <div class="ln-usage-bars">
+                  <div class="ln-usage-bar" style="--h:60%"><span class="ln-usage-day">Mon</span></div>
+                  <div class="ln-usage-bar" style="--h:85%"><span class="ln-usage-day">Tue</span></div>
+                  <div class="ln-usage-bar" style="--h:45%"><span class="ln-usage-day">Wed</span></div>
+                  <div class="ln-usage-bar" style="--h:90%"><span class="ln-usage-day">Thu</span></div>
+                  <div class="ln-usage-bar" style="--h:70%"><span class="ln-usage-day">Fri</span></div>
+                  <div class="ln-usage-bar" style="--h:30%"><span class="ln-usage-day">Sat</span></div>
+                  <div class="ln-usage-bar" style="--h:50%"><span class="ln-usage-day">Sun</span></div>
                 </div>
-              )}
-            </article>
-          ))}
+              </div>
+              <p class="ln-showcase-desc">Follow your requests, token usage and costs from your workspace.</p>
+            </div>
+          </div>
+
+          <!-- Setup -->
+          <div class="ln-showcase">
+            <div class="ln-showcase-label"><Icon name="terminal" size={14} /> Setup</div>
+            <div class="ln-showcase-preview">
+              <div class="ln-setup-code">
+                <code><span class="c-kw">from</span> openai <span class="c-kw">import</span> OpenAI</code>
+                <code>client = OpenAI(</code>
+                <code>  <span class="c-key">base_url</span>=<span class="c-str">"https://api.edgey.shop/v1"</span></code>
+                <code>)</code>
+              </div>
+              <p class="ln-showcase-desc">Drop-in OpenAI-compatible endpoint. Same SDK, same format.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Keep building -->
+    <section class="ln-section">
+      <div class="ln-container">
+        <div class="ln-divider"></div>
+        <h2 class="ln-section-title ln-section-title--sm">Keep building.</h2>
+        <p class="ln-section-sub">When one provider fails, your workflow doesn't have to stop.</p>
+
+        <div class="ln-compare">
+          <div class="ln-compare-panel ln-compare-panel--fail">
+            <div class="ln-compare-head">
+              <span class="ln-compare-dot ln-compare-dot--red"></span>
+              <span>Other API</span>
+            </div>
+            <div class="ln-compare-body">
+              <p class="ln-compare-error">Can't respond.</p>
+              <p class="ln-compare-hint">The model is currently unavailable. Please try again later.</p>
+            </div>
+          </div>
+          <div class="ln-compare-panel ln-compare-panel--ok">
+            <div class="ln-compare-head">
+              <span class="ln-compare-dot ln-compare-dot--green"></span>
+              <span>edgey</span>
+            </div>
+            <div class="ln-compare-body">
+              <code class="ln-compare-code"><span class="c-kw">#include</span> <span class="c-str">&lt;iostream&gt;</span>
+<span class="c-kw">int</span> main() {"{"}
+  std::cout &lt;&lt; <span class="c-str">"Hello, world!"</span>;
+  <span class="c-kw">return</span> <span class="c-num">0</span>;
+{"}"}</code>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -290,10 +278,10 @@ const features = [
     <section class="ln-section" id="how">
       <div class="ln-container">
         <div class="ln-divider"></div>
-        <p class="ln-section-eyebrow">DROP-IN COMPATIBLE.</p>
+        <p class="ln-eyebrow">DROP-IN COMPATIBLE.</p>
         <h2 class="ln-section-title ln-section-title--sm">
           One line changed.<br />
-          <span class="ln-fade">Every model unlocked.</span>
+          <span class="ln-accent">Every model unlocked.</span>
         </h2>
         <p class="ln-section-sub">Same OpenAI SDK. Same format. Just point the base URL to edgey and use any model in the catalog.</p>
 
@@ -323,13 +311,39 @@ response = client.chat.completions.create(
       </div>
     </section>
 
+    <!-- Getting started -->
+    <section class="ln-section">
+      <div class="ln-container">
+        <div class="ln-divider"></div>
+        <h2 class="ln-section-title ln-section-title--sm">
+          A simple way to<br />
+          <span class="ln-accent">get started.</span>
+        </h2>
+
+        <div class="ln-steps">
+          {steps.map((s) => (
+            <div class="ln-step">
+              <span class="ln-step-num">{s.num}</span>
+              <h3>{s.title}</h3>
+              <p>{s.desc}</p>
+              {s.action === 'register' ? (
+                <button class="ln-btn ln-btn--sm" data-open-signin>{s.btn} <Icon name="arrowRight" size={12} /></button>
+              ) : (
+                <a href={s.href} class="ln-btn ln-btn--sm">{s.btn} <Icon name="arrowRight" size={12} /></a>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
     <!-- FAQ -->
     <section class="ln-section" id="faq">
       <div class="ln-container ln-container--narrow">
         <div class="ln-divider"></div>
         <FAQ
           client:load
-          title="Questions? Covered."
+          title="Good questions. Clear answers."
           subtitle="FREQUENTLY ASKED"
           categories={{
             "pricing": "Pricing",
@@ -368,7 +382,7 @@ response = client.chat.completions.create(
     <section class="ln-section">
       <div class="ln-container">
         <div class="ln-divider"></div>
-        <p class="ln-section-eyebrow">LESS FRICTION. MORE BUILDING.</p>
+        <p class="ln-eyebrow">LESS FRICTION. MORE BUILDING.</p>
         <h2 class="ln-cta-title">Make room for<br />your next idea.</h2>
         <div class="ln-cta-actions">
           <button class="ln-btn ln-btn--primary ln-btn--lg" data-open-signin>
@@ -389,7 +403,7 @@ response = client.chat.completions.create(
               <span class="ln-brand-name">edgey<span class="acc">.shop</span></span>
             </a>
             <p>Your AI models, API keys<br />and usage in one place.</p>
-            <p class="ln-footer-copy">© {year} cli.edgey.shop</p>
+            <p class="ln-footer-copy">&copy; {year} cli.edgey.shop</p>
           </div>
 
           <div class="ln-footer-col">
@@ -418,7 +432,7 @@ response = client.chat.completions.create(
     <!-- Sign-in dialog -->
     <dialog class="ln-dialog" id="signinDialog">
       <div class="ln-dialog-backdrop" data-close-signin></div>
-      <div class="ln-dialog-panel ln-dialog-panel--modern">
+      <div class="ln-dialog-panel">
         <button class="ln-dialog-close" data-close-signin aria-label="Close"><Icon name="x" size={18} /></button>
         <SignIn1 client:load apiBase={API_ROOT} discordUrl={DISCORD_URL} openRegistration={true} />
       </div>
@@ -427,84 +441,33 @@ response = client.chat.completions.create(
 </Shell>
 
 <script>
-  // Sticky nav shadow
   const nav = document.getElementById('lnNav');
   if (nav) {
     const observer = new IntersectionObserver(([e]) => nav.classList.toggle('scrolled', !e.isIntersecting), { threshold: [1], rootMargin: '-1px 0px 0px 0px' });
     observer.observe(nav);
   }
 
-  // Dialog open/close (sign-in form is handled by the React component)
   const dialog = document.getElementById('signinDialog') as HTMLDialogElement | null;
-  const openBtns = document.querySelectorAll<HTMLElement>('[data-open-signin]');
-  const openRegBtns = document.querySelectorAll<HTMLElement>('[data-open-signin-register]');
-  const closeBtns = document.querySelectorAll<HTMLElement>('[data-close-signin]');
+  document.querySelectorAll<HTMLElement>('[data-open-signin],[data-open-signin-register]').forEach(b =>
+    b.addEventListener('click', (e) => { e.preventDefault(); dialog?.showModal(); })
+  );
+  document.querySelectorAll<HTMLElement>('[data-close-signin]').forEach(b =>
+    b.addEventListener('click', () => dialog?.close())
+  );
+  if (location.hash === '#register') dialog?.showModal();
 
-  const openDialog = () => { if (dialog) dialog.showModal(); };
-  openBtns.forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); openDialog(); }));
-  openRegBtns.forEach(b => b.addEventListener('click', (e) => { e.preventDefault(); openDialog(); }));
-  closeBtns.forEach(b => b.addEventListener('click', () => dialog?.close()));
-
-  if (location.hash === '#register') openDialog();
-
-  // Smooth scroll for anchor links
   document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach(a => {
     a.addEventListener('click', (e) => {
       const target = document.querySelector(a.getAttribute('href')!);
       if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
     });
   });
-
-  // Animated counters
-  const counters = document.querySelectorAll<HTMLElement>('[data-count]');
-  const animateCounter = (el: HTMLElement) => {
-    const target = parseFloat(el.dataset.count!);
-    const suffix = el.dataset.suffix ?? '';
-    const isFloat = String(target).includes('.');
-    const duration = 1800;
-    const start = performance.now();
-    const step = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const current = eased * target;
-      el.textContent = (isFloat ? current.toFixed(1) : Math.round(current).toString()) + suffix;
-      if (progress < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  };
-  const counterObserver = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        animateCounter(e.target as HTMLElement);
-        counterObserver.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.5 });
-  counters.forEach(c => counterObserver.observe(c));
-
-  // Particles
-  const particlesEl = document.getElementById('particles');
-  if (particlesEl) {
-    for (let i = 0; i < 30; i++) {
-      const dot = document.createElement('span');
-      dot.className = 'ln-particle';
-      dot.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*5}s;animation-duration:${4+Math.random()*4}s;`;
-      particlesEl.appendChild(dot);
-    }
-  }
 </script>
 
 <style>
-  /* ─── Layout ─── */
   .landing { min-height: 100svh; position: relative; overflow-x: hidden; }
 
-  /* ─── Starfield ─── */
-  .ln-starfield {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-  }
+  .ln-starfield { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
   .landing > *:not(.ln-starfield) { position: relative; z-index: 1; }
 
   .ln-container { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
@@ -512,17 +475,11 @@ response = client.chat.completions.create(
 
   /* ─── Nav ─── */
   .ln-nav {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    height: 64px;
-    display: flex;
-    align-items: center;
+    position: sticky; top: 0; z-index: 50;
+    height: 64px; display: flex; align-items: center;
     background: rgb(5 8 11 / 0.8);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid transparent;
-    transition: border-color 0.2s;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid transparent; transition: border-color 0.2s;
   }
   .ln-nav.scrolled { border-color: var(--border); }
   .ln-nav .ln-container { display: flex; align-items: center; justify-content: space-between; width: 100%; }
@@ -551,56 +508,11 @@ response = client.chat.completions.create(
   .ln-btn--ghost { background: transparent; border-color: var(--border-2); }
   .ln-btn--lg { height: 46px; padding: 0 22px; font-size: 14px; }
   .ln-btn--sm { height: 34px; padding: 0 14px; font-size: 12px; }
-  .ln-btn--full { width: 100%; height: 46px; }
   .ln-link { color: var(--fg); font-weight: 600; background: none; border: 0; cursor: pointer; font: inherit; transition: color 0.15s; }
   .ln-link:hover { color: var(--accent); }
 
-  /* ─── Background Effects ─── */
-  .ln-orbs {
-    position: absolute; top: 0; left: 0; right: 0; height: 100vh;
-    overflow: hidden; pointer-events: none; z-index: 0;
-  }
-  .ln-orb {
-    position: absolute; border-radius: 50%;
-    filter: blur(100px); opacity: 0.15;
-    animation: orb-float 20s ease-in-out infinite;
-  }
-  .ln-orb--1 {
-    width: 500px; height: 500px; top: -10%; left: -10%;
-    background: radial-gradient(circle, var(--accent), transparent 70%);
-  }
-  .ln-orb--2 {
-    width: 400px; height: 400px; top: 20%; right: -8%;
-    background: radial-gradient(circle, rgb(168 85 247), transparent 70%);
-    animation-delay: -7s; animation-duration: 25s;
-  }
-  .ln-orb--3 {
-    width: 350px; height: 350px; top: 50%; left: 30%;
-    background: radial-gradient(circle, rgb(74 222 128), transparent 70%);
-    animation-delay: -14s; animation-duration: 22s;
-  }
-  @keyframes orb-float {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    33% { transform: translate(30px, -20px) scale(1.05); }
-    66% { transform: translate(-20px, 15px) scale(0.95); }
-  }
-  .ln-particles {
-    position: absolute; top: 0; left: 0; right: 0; height: 100vh;
-    overflow: hidden; pointer-events: none; z-index: 0;
-  }
-  :global(.ln-particle) {
-    position: absolute;
-    width: 2px; height: 2px; border-radius: 50%;
-    background: var(--accent); opacity: 0;
-    animation: particle-drift ease-in-out infinite;
-  }
-  @keyframes particle-drift {
-    0%, 100% { opacity: 0; transform: translateY(0); }
-    50% { opacity: 0.4; transform: translateY(-20px); }
-  }
-
   /* ─── Hero ─── */
-  .ln-hero { padding: 100px 0 80px; text-align: center; position: relative; z-index: 1; }
+  .ln-hero { padding: 100px 0 80px; text-align: center; }
   .ln-hero-badge {
     display: inline-flex; align-items: center; gap: 10px;
     padding: 8px 18px; border-radius: 999px;
@@ -613,43 +525,31 @@ response = client.chat.completions.create(
     font-size: clamp(48px, 8vw, 82px);
     font-weight: 700; line-height: 1.04; letter-spacing: -0.045em;
   }
-  .ln-hero-fade, .ln-fade { color: var(--accent); }
-  .ln-hero-sub {
-    margin-top: 22px;
-    font-size: 16px; line-height: 1.65; color: var(--muted);
-  }
+  .ln-hero-accent, .ln-accent { color: var(--accent); }
+  .ln-hero-sub { margin-top: 22px; font-size: 16px; line-height: 1.65; color: var(--muted); }
 
-  /* Provider strip */
   .ln-provider-strip {
     display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;
     margin-top: 40px; padding: 16px 0;
   }
-  .ln-provider {
-    display: flex; align-items: center; gap: 10px;
-    font-size: 14px; font-weight: 500; color: var(--muted);
-  }
-  .ln-prov--highlight { color: var(--fg); position: relative; }
-  .ln-prov--highlight::before {
+  .ln-provider { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; color: var(--muted); }
+  .ln-prov--hl { color: var(--fg); position: relative; }
+  .ln-prov--hl::before {
     content: ''; position: absolute; inset: -6px -14px; border-radius: 8px;
     border: 1px dashed var(--accent-line);
   }
   .ln-prov-icon {
     display: grid; place-items: center;
     width: 32px; height: 32px; border-radius: 8px;
-    background: var(--surface-2); border: 1px solid var(--border);
-    color: var(--muted);
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
   }
   .ln-prov-icon--edgey { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-line); }
-
   .ln-hero-actions { display: flex; justify-content: center; gap: 12px; margin-top: 40px; }
-  .ln-hero-already {
-    margin-top: 20px;
-    font-size: 13px; color: var(--muted);
-  }
+  .ln-hero-already { margin-top: 20px; font-size: 13px; color: var(--muted); }
 
   /* ─── Sections ─── */
   .ln-section { padding: 60px 0; }
-  .ln-section-eyebrow {
+  .ln-eyebrow {
     font-family: var(--mono); font-size: 10px; letter-spacing: 0.25em; color: var(--muted);
     text-align: center; margin-bottom: 16px;
   }
@@ -659,14 +559,8 @@ response = client.chat.completions.create(
     font-weight: 700; line-height: 1.08; letter-spacing: -0.04em;
   }
   .ln-section-title--sm { font-size: clamp(28px, 4vw, 42px); }
-  .ln-section-sub {
-    text-align: center; margin-top: 14px;
-    font-size: 15px; color: var(--muted);
-  }
-  .ln-section-note {
-    text-align: center; margin-top: 20px;
-    font-size: 12px; color: #3d4c55; font-style: italic;
-  }
+  .ln-section-sub { text-align: center; margin-top: 14px; font-size: 15px; color: var(--muted); }
+  .ln-note { text-align: center; margin-top: 20px; font-size: 12px; color: #3d4c55; font-style: italic; }
   .ln-divider {
     width: 100%; height: 1px; margin-bottom: 48px;
     background: linear-gradient(90deg, transparent, var(--border), transparent);
@@ -683,116 +577,29 @@ response = client.chat.completions.create(
   .ln-activity-info { display: flex; align-items: center; gap: 12px; }
   .ln-activity-title { font-size: 15px; font-weight: 600; }
   .ln-activity-meta { font-size: 12px; color: var(--muted); }
-  .ln-prov-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
-  .ln-prov-card {
-    display: flex; flex-direction: column; align-items: center;
-    padding: 32px 16px 24px; border-radius: 14px;
-    background: var(--surface); border: 1px solid var(--border);
-    transition: border-color 0.2s, transform 0.2s;
-  }
-  .ln-prov-card:hover { border-color: var(--accent-line); transform: translateY(-2px); }
-  .ln-prov-card-name { margin-top: 18px; font-size: 15px; font-weight: 600; }
-  .ln-prov-card-sub { margin-top: 4px; font-size: 12px; color: var(--muted); }
-  .ln-prov-card-stat {
-    display: flex; align-items: center; gap: 6px;
-    margin-top: 16px; padding: 5px 12px; border-radius: 999px;
-    font-size: 11px; font-weight: 500; color: var(--muted);
-    background: var(--surface-2); border: 1px solid var(--border);
-  }
 
-  /* ─── Counters ─── */
-  .ln-counters {
-    display: flex; justify-content: center; align-items: center; gap: 32px;
-    margin-top: 40px; margin-bottom: -8px;
+  .ln-activity-rows { margin-top: 24px; display: flex; flex-direction: column; gap: 2px; }
+  .ln-activity-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; border-radius: 10px;
+    font-size: 13px;
+    transition: background 0.15s;
   }
-  .ln-counter { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .ln-counter-val {
-    font-size: clamp(36px, 5vw, 52px); font-weight: 700;
-    letter-spacing: -0.03em; color: var(--fg);
-    font-variant-numeric: tabular-nums;
-  }
-  .ln-counter-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; }
-  .ln-counter-sep { width: 1px; height: 40px; background: var(--border); }
+  .ln-activity-row:hover { background: var(--surface-2); }
+  .ln-activity-row--hl { background: rgb(34 211 238 / 0.04); }
+  .ln-activity-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .ln-activity-dot--green { background: rgb(74 222 128); }
+  .ln-activity-dot--purple { background: rgb(168 85 247); }
+  .ln-activity-dot--cyan { background: var(--accent); box-shadow: 0 0 8px rgb(34 211 238 / 0.4); }
+  .ln-activity-name { font-weight: 600; min-width: 80px; }
+  .ln-activity-count { color: var(--muted); flex: 1; }
+  .ln-activity-pct { font-family: var(--mono); font-size: 12px; color: var(--muted); }
 
-  /* Radar animation */
-  .ln-radar { position: relative; width: 110px; height: 110px; }
-  .ln-radar-ring {
-    position: absolute; inset: 0; border-radius: 50%;
-    border: 1.5px solid rgb(74 222 128 / 0.3);
-    animation: radar-pulse 3s ease-out infinite;
-  }
-  .ln-radar-ring--2 { animation-delay: 1.5s; }
-  .ln-radar-ring--3 { animation-delay: 0.75s; opacity: 0.5; }
-  .ln-radar-ring--purple { border-color: rgb(168 85 247 / 0.3); }
-  .ln-radar-ring--cyan { border-color: rgb(34 211 238 / 0.3); }
-  .ln-radar-icon {
-    position: absolute; inset: 0;
-    display: grid; place-items: center;
-    color: rgb(74 222 128);
-  }
-  .ln-radar-icon--purple { color: rgb(168 85 247); }
-  .ln-radar-icon--cyan { color: var(--accent); }
-  @keyframes radar-pulse {
-    0% { transform: scale(0.6); opacity: 1; }
-    100% { transform: scale(1.3); opacity: 0; }
-  }
-
-  /* Radar sweep */
-  .ln-radar-sweep {
-    position: absolute; inset: 0;
-    border-radius: 50%;
-    background: conic-gradient(from 0deg, transparent 0deg, rgb(74 222 128 / 0.12) 40deg, transparent 80deg);
-    animation: sweep-spin 4s linear infinite;
-  }
-  .ln-radar-sweep--purple { background: conic-gradient(from 0deg, transparent 0deg, rgb(168 85 247 / 0.12) 40deg, transparent 80deg); }
-  .ln-radar-sweep--cyan { background: conic-gradient(from 0deg, transparent 0deg, rgb(34 211 238 / 0.12) 40deg, transparent 80deg); }
-  @keyframes sweep-spin { to { transform: rotate(360deg); } }
-
-  /* Radar ticks */
-  .ln-radar-ticks {
-    position: absolute; inset: 0;
-  }
-  .ln-tick {
-    position: absolute; left: 50%; top: 50%;
-    width: 2px; height: 6px; border-radius: 1px;
-    background: rgb(74 222 128 / 0.4);
-    transform-origin: center -43px;
-    transform: translateX(-50%) rotate(calc(var(--i) * 30deg));
-    animation: tick-blink 3s ease-in-out infinite;
-    animation-delay: calc(var(--i) * 0.25s);
-  }
-  .ln-radar-ticks--purple .ln-tick { background: rgb(168 85 247 / 0.4); }
-  .ln-radar-ticks--cyan .ln-tick { background: rgb(34 211 238 / 0.4); }
-  @keyframes tick-blink {
-    0%, 100% { opacity: 0.3; }
-    50% { opacity: 1; }
-  }
-
-  /* Radar blips */
-  .ln-radar-blips { position: absolute; inset: 0; }
-  .ln-blip {
-    position: absolute;
-    left: calc(50% + cos(var(--angle)) * var(--dist));
-    top: calc(50% + sin(var(--angle)) * var(--dist));
-    width: 5px; height: 5px; border-radius: 50%;
-    background: rgb(74 222 128); box-shadow: 0 0 8px rgb(74 222 128 / 0.6);
-    transform: translate(-50%, -50%);
-    animation: blip-glow 2s ease-in-out infinite;
-  }
-  .ln-blip--purple { background: rgb(168 85 247); box-shadow: 0 0 8px rgb(168 85 247 / 0.6); }
-  .ln-blip--cyan { background: var(--accent); box-shadow: 0 0 8px rgb(34 211 238 / 0.6); }
-  .ln-blip--fade { animation-delay: 1s; opacity: 0.6; }
-  @keyframes blip-glow {
-    0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(0.8); }
-    50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-  }
-
-  /* Share bar */
   .ln-share-bar { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
   .ln-share-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 10px; }
   .ln-share-total { color: var(--muted); }
   .ln-bar-track { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: var(--surface); }
-  .ln-bar-seg { height: 100%; transition: width 0.6s ease; }
+  .ln-bar-seg { height: 100%; }
   .ln-bar-seg--green { background: rgb(74 222 128); }
   .ln-bar-seg--purple { background: rgb(168 85 247); }
   .ln-bar-seg--cyan { background: var(--accent); }
@@ -802,75 +609,124 @@ response = client.chat.completions.create(
   .ln-leg-dot--purple { background: rgb(168 85 247); }
   .ln-leg-dot--cyan { background: var(--accent); }
 
-  /* ─── Features Grid ─── */
-  .ln-feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 48px; }
-  .ln-feat {
+  /* ─── Feature Showcases ─── */
+  .ln-showcase-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 48px; }
+  .ln-showcase {
     padding: 24px; border-radius: 14px;
     background: linear-gradient(180deg, var(--surface-2), var(--surface));
     border: 1px solid var(--border);
     transition: border-color 0.2s, transform 0.2s;
   }
-  .ln-feat:hover { border-color: var(--accent-line); transform: translateY(-3px); }
-  .ln-feat-icon {
+  .ln-showcase:hover { border-color: var(--accent-line); transform: translateY(-3px); }
+  .ln-showcase-label {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 600; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .ln-showcase-preview { margin-top: 20px; }
+  .ln-showcase-desc { margin-top: 16px; font-size: 13px; line-height: 1.6; color: var(--muted); }
+
+  /* Models showcase */
+  .ln-model-logos { display: flex; gap: 12px; }
+  .ln-model-logo {
     display: grid; place-items: center;
-    width: 36px; height: 36px; border-radius: 10px;
-    background: var(--accent-soft); border: 1px solid var(--accent-line);
-    color: var(--accent);
-  }
-  .ln-feat h3 { margin-top: 18px; font-size: 15px; font-weight: 600; }
-  .ln-feat p { margin-top: 8px; font-size: 13px; line-height: 1.6; color: var(--muted); }
-  .ln-feat-preview { margin-top: 16px; }
-
-  .ln-feat-badges { display: flex; gap: 6px; flex-wrap: wrap; }
-  .ln-feat-badge {
-    padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
-    background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
-    transition: all 0.2s;
-  }
-  .ln-feat:hover .ln-feat-badge { border-color: var(--accent-line); color: var(--accent); }
-
-  .ln-feat-keys { display: flex; flex-direction: column; gap: 6px; }
-  .ln-feat-key-row {
-    display: flex; align-items: center; gap: 8px;
-    padding: 6px 10px; border-radius: 6px; font-size: 11px;
+    width: 48px; height: 48px; border-radius: 12px;
     background: var(--surface); border: 1px solid var(--border);
     color: var(--muted); transition: all 0.2s;
   }
-  .ln-feat-key-row--active { border-color: var(--accent-line); color: var(--fg); }
-  .ln-feat-key-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--border-2);
+  .ln-model-logo--hl { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
+  .ln-showcase:hover .ln-model-logo { border-color: var(--border-2); }
+  .ln-showcase:hover .ln-model-logo--hl { border-color: var(--accent-line); }
+
+  /* Keys showcase */
+  .ln-key-rows { display: flex; flex-direction: column; gap: 6px; }
+  .ln-key-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; border-radius: 8px;
+    font-size: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    transition: border-color 0.2s;
   }
-  .ln-feat-key-row--active .ln-feat-key-dot { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
-  .ln-feat-key-badge {
-    margin-left: auto; font-family: var(--mono); font-size: 9px;
-    padding: 2px 6px; border-radius: 4px; background: var(--surface-2); color: var(--muted);
+  .ln-key-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-2); flex: none; }
+  .ln-key-dot--on { background: rgb(74 222 128); box-shadow: 0 0 6px rgb(74 222 128 / 0.4); }
+  .ln-key-name { font-weight: 500; }
+  .ln-key-mask { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--muted); }
+  .ln-key-status { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 8px; border-radius: 4px; }
+  .ln-key-status--active { color: rgb(74 222 128); background: rgb(74 222 128 / 0.1); }
+  .ln-key-status--paused { color: var(--muted); background: var(--surface-2); }
+
+  /* Usage showcase */
+  .ln-usage-chart { padding: 8px 0; }
+  .ln-usage-bars { display: flex; align-items: flex-end; gap: 8px; height: 80px; }
+  .ln-usage-bar {
+    flex: 1; height: var(--h); border-radius: 4px 4px 0 0;
+    background: linear-gradient(180deg, var(--accent), rgb(34 211 238 / 0.3));
+    display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+    position: relative;
+  }
+  .ln-usage-day {
+    position: absolute; bottom: -20px;
+    font-size: 9px; font-family: var(--mono); color: var(--muted);
   }
 
-  .ln-feat-bars { display: flex; flex-direction: column; gap: 6px; }
-  .ln-feat-bar {
-    height: 6px; border-radius: 3px;
-    background: linear-gradient(90deg, var(--accent), rgb(168 85 247));
-    width: 0; animation: bar-fill 1.5s ease forwards;
-    animation-delay: var(--delay);
+  /* Setup showcase */
+  .ln-setup-code {
+    padding: 14px 16px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    font-family: var(--mono); font-size: 11px; line-height: 1.7;
   }
-  .ln-feat:hover .ln-feat-bar { animation: bar-fill 1s ease forwards; animation-delay: var(--delay); }
-  @keyframes bar-fill { to { width: var(--w); } }
+  .ln-setup-code code { display: block; white-space: pre; }
 
-  .ln-feat-code-mini {
-    border-radius: 8px; overflow: hidden;
-    border: 1px solid var(--border); background: var(--surface);
+  /* ─── Comparison ─── */
+  .ln-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 40px; max-width: 800px; margin-left: auto; margin-right: auto; }
+  .ln-compare-panel {
+    border-radius: 14px; overflow: hidden;
+    border: 1px solid var(--border);
+    background: linear-gradient(180deg, var(--surface-2), var(--surface));
   }
-  .ln-feat-code-tab {
-    padding: 5px 10px; font-size: 10px; font-family: var(--mono);
-    color: var(--muted); background: var(--surface-2); border-bottom: 1px solid var(--border);
+  .ln-compare-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 18px;
+    font-size: 13px; font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
   }
-  .ln-feat-code-mini code {
-    display: block; padding: 8px 10px;
-    font-size: 11px; font-family: var(--mono); color: var(--fg);
-  }
+  .ln-compare-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .ln-compare-dot--red { background: rgb(248 113 113); }
+  .ln-compare-dot--green { background: rgb(74 222 128); box-shadow: 0 0 6px rgb(74 222 128 / 0.4); }
+  .ln-compare-body { padding: 24px 18px; min-height: 120px; }
+  .ln-compare-error { font-size: 15px; font-weight: 600; color: rgb(248 113 113); }
+  .ln-compare-hint { margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .ln-compare-code { display: block; font-family: var(--mono); font-size: 12px; line-height: 1.7; white-space: pre; color: var(--fg); }
+  .ln-compare-panel--fail { opacity: 0.7; }
+  .ln-compare-panel--ok { border-color: var(--accent-line); }
 
-  /* ─── Code Card ─── */
+  /* ─── Steps ─── */
+  .ln-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 48px; }
+  .ln-step {
+    padding: 28px 24px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, var(--surface-2), var(--surface));
+    border: 1px solid var(--border);
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .ln-step:hover { border-color: var(--accent-line); transform: translateY(-3px); }
+  .ln-step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: 10px;
+    font-family: var(--mono); font-size: 13px; font-weight: 700;
+    color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line);
+  }
+  .ln-step h3 { margin-top: 18px; font-size: 16px; font-weight: 600; }
+  .ln-step p { margin-top: 8px; font-size: 13px; line-height: 1.6; color: var(--muted); }
+  .ln-step .ln-btn { margin-top: 20px; }
+
+  /* ─── Code ─── */
+  .c-kw { color: rgb(168 85 247); }
+  .c-str { color: rgb(74 222 128); }
+  .c-key { color: var(--accent); }
+  .c-num { color: rgb(251 191 36); }
+
   .ln-code-card {
     margin-top: 40px; max-width: 640px; margin-left: auto; margin-right: auto;
     border-radius: 14px; overflow: hidden;
@@ -890,35 +746,9 @@ response = client.chat.completions.create(
     overflow-x: auto; color: var(--fg);
   }
   .ln-code-body code { white-space: pre; }
-  .c-kw { color: rgb(168 85 247); }
-  .c-str { color: rgb(74 222 128); }
-  .c-key { color: var(--accent); }
-  .c-num { color: rgb(251 191 36); }
 
   /* ─── FAQ ─── */
-  .ln-faq-list { margin-top: 40px; }
-  .ln-faq {
-    border-bottom: 1px solid var(--border);
-  }
-  .ln-faq summary {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 18px 0;
-    font-size: 14px; font-weight: 500; cursor: pointer;
-    list-style: none; color: var(--fg);
-    transition: color 0.15s;
-  }
-  .ln-faq summary::-webkit-details-marker { display: none; }
-  .ln-faq summary:hover { color: var(--accent); }
-  .ln-faq summary svg { flex: none; color: var(--muted); transition: transform 0.2s; }
-  .ln-faq[open] summary svg { transform: rotate(45deg); }
-  .ln-faq-body { padding: 0 0 18px; }
-  .ln-faq-body p { font-size: 13px; line-height: 1.65; color: var(--muted); }
-  .ln-faq-body code { padding: 2px 6px; border-radius: 4px; background: var(--surface-2); font-size: 12px; color: var(--accent); }
-  .ln-faq-body a { color: var(--accent); }
-  .ln-faq-more {
-    margin-top: 28px; text-align: center;
-    font-size: 13px; color: var(--muted);
-  }
+  .ln-faq-more { margin-top: 28px; text-align: center; font-size: 13px; color: var(--muted); }
   .ln-faq-more a { color: var(--fg); font-weight: 500; }
   .ln-faq-more a:hover { color: var(--accent); }
 
@@ -939,22 +769,17 @@ response = client.chat.completions.create(
   .ln-footer-col a { display: block; padding: 4px 0; font-size: 13px; color: var(--muted); transition: color 0.15s; }
   .ln-footer-col a:hover { color: var(--fg); }
 
-  /* ─── Sign-in Dialog ─── */
+  /* ─── Dialog ─── */
   .ln-dialog { border: 0; background: transparent; max-width: 100vw; max-height: 100vh; padding: 0; }
   .ln-dialog::backdrop { background: rgb(0 0 0 / 0.6); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
   .ln-dialog-backdrop { position: fixed; inset: 0; }
-  .ln-dialog-panel--modern {
+  .ln-dialog-panel {
     position: relative; z-index: 1;
     width: min(420px, calc(100vw - 32px));
-    padding: 0;
-    border-radius: 24px;
-    background: transparent;
-    border: none;
+    border-radius: 24px; background: transparent; border: none;
     animation: dialog-in 0.25s ease;
   }
-  @keyframes dialog-in {
-    from { opacity: 0; transform: translateY(16px) scale(0.97); }
-  }
+  @keyframes dialog-in { from { opacity: 0; transform: translateY(16px) scale(0.97); } }
   .ln-dialog-close {
     position: absolute; top: 16px; right: 16px; z-index: 10;
     display: grid; place-items: center;
@@ -965,18 +790,17 @@ response = client.chat.completions.create(
 
   /* ─── Responsive ─── */
   @media (max-width: 900px) {
-    .ln-prov-cards { grid-template-columns: 1fr; }
-    .ln-feat-grid { grid-template-columns: 1fr 1fr; }
+    .ln-showcase-grid { grid-template-columns: 1fr; }
+    .ln-steps { grid-template-columns: 1fr; }
+    .ln-compare { grid-template-columns: 1fr; }
     .ln-footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
   }
   @media (max-width: 640px) {
     .ln-hero { padding: 72px 0 56px; }
     .ln-hero-actions { flex-direction: column; align-items: center; }
     .ln-links { display: none; }
-    .ln-feat-grid { grid-template-columns: 1fr; }
     .ln-footer-grid { grid-template-columns: 1fr; }
     .ln-provider-strip { gap: 16px; }
     .ln-share-legend { flex-wrap: wrap; gap: 12px; }
-    .ln-counters { gap: 20px; }
   }
 </style>
