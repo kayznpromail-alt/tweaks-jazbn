@@ -436,11 +436,18 @@ async function renderAccount(el, id) {
         h('td', {}, fmtTokens(m.used)),
         h('td', { style: remaining > 0 ? 'color:#00cec9' : 'color:#ff7675' }, fmtTokens(remaining)),
         h('td', {}, m.hasUpstreamKey ? h('span', { class: 'badge badge-green' }, 'Yes') : '—'),
-        h('td', {}, h('button', { class: 'btn btn-danger btn-sm', onclick: async () => {
-          await api('/accounts/' + id + '/models/' + m.model, { method: 'DELETE' });
-          toast('Revoked ' + m.model, 'success');
-          renderPage();
-        } }, 'Revoke')),
+        h('td', { style: 'display:flex;gap:4px' },
+          h('button', { class: 'btn btn-outline btn-sm', onclick: async () => {
+            await api('/accounts/' + id + '/models/' + m.model + '/reset', { method: 'POST' });
+            toast('Usage reset for ' + m.model, 'success');
+            renderPage();
+          } }, 'Reset'),
+          h('button', { class: 'btn btn-danger btn-sm', onclick: async () => {
+            await api('/accounts/' + id + '/models/' + m.model, { method: 'DELETE' });
+            toast('Revoked ' + m.model, 'success');
+            renderPage();
+          } }, 'Revoke'),
+        ),
       ));
     }
     tbl.append(tbody);

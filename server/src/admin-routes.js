@@ -394,6 +394,13 @@ export function adminRoutes({ cfg, db, clock = now, cli }) {
     return c.json({ ok: true }, 201);
   });
 
+  admin.post('/accounts/:id/models/:model/reset', (c) => {
+    const a = account(Number(c.req.param('id')));
+    if (!a) return c.json({ error: 'not_found' }, 404);
+    db.prepare('UPDATE model_access SET used = 0 WHERE account_id = ? AND model = ?').run(a.id, c.req.param('model'));
+    return c.json({ ok: true });
+  });
+
   admin.delete('/accounts/:id/models/:model', (c) => {
     const a = account(Number(c.req.param('id')));
     if (!a) return c.json({ error: 'not_found' }, 404);
