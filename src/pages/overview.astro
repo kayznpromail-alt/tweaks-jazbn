@@ -1,95 +1,266 @@
 ---
 import Base from '../layouts/Base.astro';
 import Icon from '../components/Icon.astro';
-import ModelRates from '../components/ModelRates.astro';
-import { DISCORD_URL } from '../data/site';
+import { providers } from '../data/site';
 import TopUp from '../components/TopUp.astro';
 ---
-<Base crumb="OVERVIEW" heading="Welcome back." sub="Your tokens, keys, and usage in one place.">
-  <div class="top-grid">
-    <section class="card pad wallet">
-      <div class="card-head">
-        <p class="card-title">Tokens available</p>
-        <button class="icon-btn" aria-label="Top up" data-topup-open><Icon name="arrowDownLeft" /></button>
+<Base crumb="OVERVIEW" heading="API overview" sub="Monitor your requests, spending and models.">
+  <div class="stat-grid">
+    <section class="card stat-card">
+      <div class="stat-head">
+        <p class="stat-label">Requests (24h)</p>
+        <span class="stat-info" title="Total API requests in the last 24 hours"><Icon name="info" size={14} /></span>
       </div>
-      <p class="figure"><span data-cli="available">–</span><span class="tag">tokens</span></p>
-      <button class="btn primary wide" data-topup-open>Top up <Icon name="plus" size={14} /></button>
+      <p class="stat-value" data-s="reqs">&ndash;</p>
+      <div class="stat-foot">
+        <span class="delta" data-s="reqs-d"></span>
+        <span class="vs">vs previous 24h</span>
+        <span class="mini-bar"><i data-s="reqs-bar"></i></span>
+      </div>
     </section>
-
-    <section class="card pad">
-      <div class="card-head">
-        <p class="card-title">Usage</p>
-        <a href="/activity" class="icon-btn" aria-label="Usage details"><Icon name="activity" /></a>
+    <section class="card stat-card">
+      <div class="stat-head">
+        <p class="stat-label">Success Rate</p>
+        <span class="stat-info" title="Percentage of successful responses (2xx)"><Icon name="info" size={14} /></span>
       </div>
-      <div class="req">
-        <p class="figure"><span data-cli="used">0</span><span class="tag" data-usage-tag>used</span></p>
-        <div class="succ"><p class="dash" data-cli="limit">–</p><p class="tag" data-limit-tag>limit</p></div>
+      <p class="stat-value" data-s="rate">&ndash;</p>
+      <div class="stat-foot">
+        <span class="delta" data-s="rate-d"></span>
+        <span class="vs">vs previous 24h</span>
+        <span class="mini-bar"><i data-s="rate-bar"></i></span>
       </div>
-      <div class="bar"><i data-cli-bar></i></div>
-      <p class="card-sub small" data-usage-sub><span data-cli="requests">–</span> requests left · <span data-cli="percent"></span></p>
     </section>
-
-    <section class="card pad">
-      <div class="card-head">
-        <p class="card-title" data-key-title>Your CLI key</p>
-        <a href="/api" class="icon-btn" aria-label="Keys"><Icon name="key" /></a>
+    <section class="card stat-card">
+      <div class="stat-head">
+        <p class="stat-label">p95 latency</p>
+        <span class="stat-info" title="95th percentile response time"><Icon name="info" size={14} /></span>
       </div>
-      <div class="state" data-cli-state="none"><i></i><span data-cli="status">Not linked</span></div>
-      <a href="/api" class="key-row">
-        <code data-cli="masked">No CLI key yet</code>
-        <Icon name="chevronRight" size={14} />
-      </a>
-      <p class="card-sub small" data-key-sub>Plan <span data-cli="plan">–</span> · expires <span data-cli="expires">–</span></p>
+      <p class="stat-value" data-s="p95">&ndash;</p>
+      <div class="stat-foot">
+        <span class="delta" data-s="p95-d"></span>
+        <span class="vs">vs previous 24h</span>
+        <span class="mini-bar"><i data-s="p95-bar"></i></span>
+      </div>
     </section>
   </div>
 
-  <a href={DISCORD_URL} class="card pad discord">
-    <span class="icon-btn big"><Icon name="discord" size={20} /></span>
-    <span class="grow">
-      <span class="card-title">Discord community</span>
-      <span class="card-sub">Service news, model updates, and promo codes.</span>
-    </span>
-    <span class="btn">Open <Icon name="arrowUpRight" size={13} /></span>
-  </a>
+  <div class="mid-grid">
+    <section class="card chart-card">
+      <div class="chart-head">
+        <div>
+          <p class="card-title">Tokens spent</p>
+          <p class="card-sub" data-chart-sub>Last 24 Hours &middot; Hourly</p>
+        </div>
+        <div class="chart-tools">
+          <span class="legend"><i class="dot"></i> Wallet tokens</span>
+          <div class="range-tabs">
+            <button class="active" data-range="24h">24h</button>
+            <button data-range="7d">7d</button>
+            <button data-range="30d">30d</button>
+          </div>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-y" data-chart-y></div>
+        <div class="chart-canvas">
+          <div class="grid-lines"><span></span><span></span><span></span><span></span></div>
+          <div class="bars" data-chart-bars></div>
+        </div>
+      </div>
+      <div class="chart-x" data-chart-x></div>
+    </section>
 
-  <div class="gap"><ModelRates /></div>
+    <section class="card rates-card">
+      <div class="rates-head">
+        <p class="card-title">How tokens are charged</p>
+        <a href="/models" class="icon-btn" aria-label="Details"><Icon name="sliders" size={14} /></a>
+      </div>
+      <div class="prov-list">
+        {providers.map((p, i) => (
+          <a href="/models" class:list={['prov-row', { hl: i === 0 }]}>
+            <span class="badge">{p.badge}</span>
+            <span class="pname">{p.name}</span>
+            <span class="pcount">{p.models.length}</span>
+            <Icon name="arrowUpRight" size={12} class="parr" />
+          </a>
+        ))}
+      </div>
+      <p class="rates-note">20M tokens = $1 &middot; Model multipliers apply.</p>
+      <a href="/models" class="btn dbtn"><Icon name="info" size={13} /> Details</a>
+    </section>
+  </div>
+
+  <section class="card req-card">
+    <div class="req-head">
+      <p class="card-title">Recent requests</p>
+      <a href="/activity" class="view-all">View all <Icon name="arrowUpRight" size={12} /></a>
+    </div>
+    <table class="rtable" data-rtable>
+      <thead><tr><th>Request</th><th>Model</th><th>Tokens</th><th>Spent</th><th>Latency</th></tr></thead>
+      <tbody data-rbody></tbody>
+    </table>
+    <div class="req-empty" data-rempty>
+      <span class="icon-btn"><Icon name="activity" /></span>
+      <p class="card-title">No requests yet</p>
+      <p class="card-sub">Start using the API to see activity here.</p>
+    </div>
+  </section>
+
   <TopUp />
 </Base>
 
 <script>
   import { API_ENABLED, ApiError, api, fmt } from '../lib/api';
+  import { providers } from '../data/site';
   import { fillCli, type Cli } from '../lib/cli';
 
+  const compact = (n: number | null | undefined) => {
+    if (n == null) return '0';
+    const a = Math.abs(n);
+    return a >= 1e9 ? `${+(n / 1e9).toFixed(2)}B` : a >= 1e6 ? `${+(n / 1e6).toFixed(1)}M` : a >= 1e3 ? `${+(n / 1e3).toFixed(1)}K` : String(Math.round(n));
+  };
+
+  const modelProvider = (id: string) => {
+    for (const p of providers) if (p.models.some((m) => m.id === id)) return p;
+    return null;
+  };
+
   if (API_ENABLED) {
-    type Me = { cli: Cli; balance: number; keyCount: number; maxKeys: number; firstKey: string | null; requests24h: number; successful24h: number };
-    api<Me>('/me').then((me) => {
-      const { cli } = me;
-      fillCli(cli);
-      const set = (sel: string, text: string) => document.querySelectorAll<HTMLElement>(sel).forEach((el) => (el.textContent = text));
-      // Accounts without a CLI key use edgey API keys and the edgey balance.
-      if (!cli) {
-        set('[data-cli="available"]', fmt(me.balance));
-        set('[data-cli="used"]', fmt(me.requests24h));
-        set('[data-usage-tag]', 'requests · 24h');
-        set('[data-cli="limit"]', fmt(me.successful24h));
-        set('[data-limit-tag]', 'successful');
-        set('[data-usage-sub]', 'Details on the Activity page.');
-        const ratio = me.requests24h ? Math.round((me.successful24h / me.requests24h) * 100) : 0;
-        document.querySelectorAll<HTMLElement>('[data-cli-bar]').forEach((el) => (el.style.width = `${ratio}%`));
-        set('[data-key-title]', 'Your API keys');
-        set('[data-cli="status"]', `${me.keyCount} / ${me.maxKeys} keys`);
-        document.querySelectorAll<HTMLElement>('[data-cli-state]').forEach((el) => (el.dataset.cliState = me.keyCount ? 'active' : 'none'));
-        set('[data-cli="masked"]', me.firstKey ?? 'No API key yet');
-        set('[data-key-sub]', 'Your keys and how to connect them are on the API page.');
-      }
-      // Top-up dialog: tokens currently available.
+    const el = (s: string) => document.querySelector<HTMLElement>(s);
+    const set = (s: string, t: string) => { const e = el(`[data-s="${s}"]`); if (e) e.textContent = t; };
+
+    type Me = {
+      balance: number; requests24h: number; successful24h: number;
+      prevRequests24h: number; prevSuccessful24h: number;
+      p95_24h: number | null; prevP95_24h: number | null;
+      cli: Cli;
+    };
+
+    Promise.all([
+      api<Me>('/me'),
+      api<any>('/usage?range=24h'),
+      api<any>('/requests'),
+    ]).then(([me, usage, reqs]) => {
+      // Fill CLI data for TopUp dialog.
+      if (me.cli) fillCli(me.cli);
+      const available = me.cli?.account?.available ?? me.balance;
       const cur = document.querySelector<HTMLElement>('[data-cur]');
-      const available = cli ? (cli.account?.available ?? 0) : me.balance;
-      if (cur) {
-        cur.dataset.cur = String(available);
-        cur.textContent = `${fmt(available)} tokens`;
+      if (cur) { cur.dataset.cur = String(available); cur.textContent = `${compact(available)} tokens`; }
+
+      // ---- Stat cards ----
+      set('reqs', fmt(me.requests24h));
+      const rate = me.requests24h > 0 ? (me.successful24h / me.requests24h) * 100 : 0;
+      set('rate', `${rate.toFixed(1)}%`);
+      set('p95', me.p95_24h != null ? `${(me.p95_24h / 1000).toFixed(2)}s` : '0s');
+
+      // Deltas
+      const pctDelta = (cur: number, prev: number) => {
+        if (!prev) return { text: cur > 0 ? 'new' : '–', positive: true };
+        const pct = ((cur - prev) / prev) * 100;
+        return { text: `${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%`, positive: pct >= 0 };
+      };
+
+      const dReqs = pctDelta(me.requests24h, me.prevRequests24h);
+      const dEl = el('[data-s="reqs-d"]');
+      if (dEl) { dEl.textContent = `↗ ${dReqs.text}`; dEl.classList.add(dReqs.positive ? 'up' : 'dn'); }
+
+      const prevRate = me.prevRequests24h > 0 ? (me.prevSuccessful24h / me.prevRequests24h) * 100 : 0;
+      const rateDiff = rate - prevRate;
+      const rEl = el('[data-s="rate-d"]');
+      if (rEl) {
+        rEl.textContent = `↗ ${rateDiff >= 0 ? '+' : ''}${rateDiff.toFixed(1)} pp`;
+        rEl.classList.add(rateDiff >= 0 ? 'up' : 'dn');
+      }
+
+      if (me.p95_24h != null) {
+        const p95Diff = me.p95_24h - (me.prevP95_24h ?? 0);
+        const pEl = el('[data-s="p95-d"]');
+        if (pEl) {
+          pEl.textContent = `↗ ${p95Diff >= 0 ? '+' : ''}${fmt(p95Diff)} ms`;
+          pEl.classList.add(p95Diff <= 0 ? 'up' : 'dn');
+        }
+      }
+
+      // Mini bars
+      const rBar = el('[data-s="reqs-bar"]');
+      if (rBar) {
+        const max = Math.max(me.requests24h, me.prevRequests24h || 1);
+        rBar.style.width = `${(me.requests24h / max) * 100}%`;
+      }
+      const sBar = el('[data-s="rate-bar"]');
+      if (sBar) sBar.style.width = `${rate}%`;
+      const pBar = el('[data-s="p95-bar"]');
+      if (pBar && me.p95_24h != null) {
+        const max = Math.max(me.p95_24h, me.prevP95_24h ?? 0, 1);
+        pBar.style.width = `${(me.p95_24h / max) * 100}%`;
+      }
+
+      // ---- Chart ----
+      loadChart(usage);
+
+      // ---- Recent requests ----
+      const tbody = el('[data-rbody]');
+      const empty = el('[data-rempty]');
+      const table = el('[data-rtable]');
+      if (reqs.requests.length && tbody && table && empty) {
+        empty.style.display = 'none';
+        const maxDur = Math.max(1, ...reqs.requests.map((r: any) => r.duration_ms || 0));
+        tbody.innerHTML = reqs.requests.slice(0, 8).map((r: any) => {
+          const p = modelProvider(r.model);
+          const badge = p ? `<span class="mbadge">${p.badge}</span>` : '';
+          const dur = r.duration_ms != null ? (r.duration_ms / 1000).toFixed(2) : '–';
+          const durPct = r.duration_ms != null ? Math.round((r.duration_ms / maxDur) * 100) : 0;
+          const formula = `ceil(${fmt(r.input_tokens)} + ${fmt(r.output_tokens)}) × ${r.rate})`;
+          return `<tr>
+            <td class="rid">${r.id.toString(16).padStart(12, '0').slice(0, 24)}</td>
+            <td class="rmodel">${badge} ${r.model}</td>
+            <td class="rtokens"><strong>${fmt(r.total_tokens)}</strong><br><small>input ${fmt(r.input_tokens)}<br>output ${fmt(r.output_tokens)}</small></td>
+            <td class="rspent"><small>${formula}</small><br><span class="charged">= ${fmt(r.charged)} <small>tokens</small></span></td>
+            <td class="rlatency"><span>${dur}s</span><span class="lat-bar"><i style="width:${durPct}%"></i></span></td>
+          </tr>`;
+        }).join('');
+      } else if (table) {
+        table.style.display = 'none';
       }
     });
+
+    // Range tabs
+    document.querySelectorAll<HTMLButtonElement>('[data-range]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        document.querySelector('.range-tabs .active')?.classList.remove('active');
+        btn.classList.add('active');
+        const r = btn.dataset.range!;
+        const sub = el('[data-chart-sub]');
+        if (sub) sub.textContent = r === '24h' ? 'Last 24 Hours · Hourly' : r === '7d' ? 'Last 7 Days · Daily' : 'Last 30 Days · Daily';
+        const d = await api<any>(`/usage?range=${r}`);
+        loadChart(d);
+      });
+    });
+
+    function loadChart(d: any) {
+      const yEl = el('[data-chart-y]');
+      const barsEl = el('[data-chart-bars]');
+      const xEl = el('[data-chart-x]');
+      if (!yEl || !barsEl || !xEl) return;
+      const { buckets, peak } = d;
+      const steps = 4;
+      yEl.innerHTML = Array.from({ length: steps + 1 }, (_, i) =>
+        `<span>${compact(peak * (1 - i / steps))}</span>`,
+      ).join('');
+      barsEl.innerHTML = buckets.map((b: any) => {
+        const pct = peak > 0 ? (b.tokens / peak) * 100 : 0;
+        return `<div class="cbar" style="height:${pct}%" title="${compact(b.tokens)} tokens"></div>`;
+      }).join('');
+      const step = Math.max(1, Math.ceil(buckets.length / 8));
+      xEl.innerHTML = buckets.map((b: any, i: number) => {
+        const dt = new Date(b.start);
+        const show = i % step === 0;
+        const label = d.range === '24h'
+          ? `${dt.getHours().toString().padStart(2, '0')}:00`
+          : dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        return `<span>${show ? label : ''}</span>`;
+      }).join('');
+    }
 
     // Crypto top-up through NOWPayments (hosted invoice).
     (window as any).edgeyTopup = async (pack: number, coin: string, say: (t: string) => void) => {
@@ -104,84 +275,87 @@ import TopUp from '../components/TopUp.astro';
   }
 </script>
 
-
 <style>
-  .pad { padding: 24px; }
-  .top-grid {
-    display: grid;
-    grid-template-columns: 1.3fr 1fr 1.1fr;
-    gap: 20px;
-  }
-  .figure {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    font-size: 44px;
-    font-weight: 600;
-    letter-spacing: -0.04em;
-    margin: 28px 0 22px;
-    line-height: 1;
-  }
-  .wallet .figure { background: linear-gradient(90deg, var(--fg), var(--accent)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .wallet .figure .tag { -webkit-text-fill-color: var(--muted); letter-spacing: 0.12em; }
-  .wide { width: 100%; height: 44px; }
-  .req { display: flex; justify-content: space-between; align-items: flex-end; }
-  .succ { text-align: right; margin-bottom: 22px; }
-  .dash { font-size: 18px; font-weight: 600; }
-  .small { font-size: 10.5px; }
-  .bar { height: 6px; margin: -8px 0 12px; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
-  .bar i { display: block; height: 100%; width: 0; border-radius: 6px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
-  .state { display: inline-flex; align-items: center; gap: 8px; margin: 26px 0 16px; font-size: 13px; font-weight: 600; }
-  .state i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
-  .state[data-cli-state='active'] i { background: #4ade80; box-shadow: 0 0 10px #4ade80; }
-  .state[data-cli-state='exhausted'] i, .state[data-cli-state='paused'] i { background: #fbbf24; }
-  .state[data-cli-state='expired'] i { background: #f87171; }
-  .keys-count {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin: 26px 0 18px;
-  }
-  .keys-count .n { font-size: 36px; font-weight: 600; line-height: 1; color: var(--accent); }
-  .keys-count .k { font-size: 11px; font-weight: 600; }
-  .keys-count :global(.go) { margin-left: auto; color: var(--muted); }
-  .keys-count:hover :global(.go) { color: var(--accent); }
-  .key-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 14px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    font-size: 11px;
-    transition: border-color 0.15s;
-  }
-  .key-row:hover { border-color: var(--accent-line); }
-  .key-row.empty { border-style: dashed; color: var(--muted); }
-  .key-row.empty:hover { color: var(--accent); }
-  .discord {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-top: 20px;
-    transition: border-color 0.15s;
-  }
-  .discord:hover { border-color: var(--accent-line); }
-  .discord .grow { flex: 1; display: flex; flex-direction: column; }
-  .icon-btn.big { width: 44px; height: 44px; color: var(--accent); }
-  .bottom-grid {
-    display: grid;
-    grid-template-columns: 1.6fr 1fr;
-    gap: 20px;
-    margin-top: 20px;
-    align-items: start;
-  }
-  .gap { margin-top: 20px; }
+  /* Stat cards */
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .stat-card { padding: 24px; }
+  .stat-head { display: flex; justify-content: space-between; align-items: center; }
+  .stat-label { font-size: 12px; font-weight: 500; color: var(--muted); }
+  .stat-info { color: var(--muted); opacity: 0.4; }
+  .stat-value { font-size: 40px; font-weight: 700; letter-spacing: -0.04em; line-height: 1; margin: 20px 0 18px; }
+  .stat-foot { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+  .delta { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11px; }
+  .delta.up { background: rgba(74, 222, 128, 0.12); color: #4ade80; }
+  .delta.dn { background: rgba(248, 113, 113, 0.12); color: #f87171; }
+  .vs { color: var(--muted); font-size: 10.5px; }
+  .mini-bar { flex: 1; height: 4px; border-radius: 4px; background: var(--surface-2); margin-left: auto; max-width: 80px; overflow: hidden; }
+  .mini-bar i { display: block; height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.8s ease; }
+
+  /* Chart + Sidebar */
+  .mid-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; margin-top: 20px; align-items: start; }
+  .chart-card { display: flex; flex-direction: column; }
+  .chart-head { display: flex; justify-content: space-between; align-items: flex-start; padding: 24px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
+  .chart-tools { display: flex; align-items: center; gap: 16px; }
+  .legend { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+  .legend .dot { width: 8px; height: 8px; border-radius: 2px; background: var(--accent); }
+  .range-tabs { display: flex; border: 1px solid var(--border-2); border-radius: 8px; overflow: hidden; }
+  .range-tabs button { padding: 6px 14px; font-size: 11px; font-weight: 600; background: none; border: none; color: var(--muted); cursor: pointer; transition: all 0.15s; }
+  .range-tabs button:hover { color: var(--fg); }
+  .range-tabs button.active { background: var(--surface-2); color: var(--fg); }
+  .chart-wrap { display: flex; height: 240px; padding: 16px 24px 0; }
+  .chart-y { width: 40px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end; padding-right: 10px; font-size: 10px; color: var(--muted); font-family: var(--mono); }
+  .chart-canvas { flex: 1; position: relative; }
+  .grid-lines { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
+  .grid-lines span { border-bottom: 1px dashed var(--border); }
+  .bars { position: absolute; inset: 0; display: flex; align-items: flex-end; gap: 3px; padding: 0 4px; }
+  .cbar { flex: 1; min-width: 0; border-radius: 3px 3px 0 0; background: linear-gradient(180deg, var(--accent), rgba(34, 211, 238, 0.3)); transition: height 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .chart-x { display: flex; padding: 6px 24px 20px; margin-left: 40px; font-size: 10px; color: var(--muted); font-family: var(--mono); }
+  .chart-x span { flex: 1; text-align: center; }
+
+  /* Rates sidebar */
+  .rates-card { display: flex; flex-direction: column; }
+  .rates-head { display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 1px solid var(--border); }
+  .prov-list { padding: 12px; display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border-2) transparent; }
+  .prov-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; transition: border-color 0.15s; }
+  .prov-row:hover, .prov-row.hl { border-color: var(--accent-line); }
+  .prov-row .badge { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; font-family: var(--mono); font-size: 10px; color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line); }
+  .prov-row .pcount { font-family: var(--mono); font-size: 10px; padding: 1px 6px; border-radius: 4px; border: 1px solid var(--border-2); color: var(--muted); }
+  .prov-row :global(.parr) { margin-left: auto; color: var(--muted); transition: color 0.15s; }
+  .prov-row:hover :global(.parr) { color: var(--accent); }
+  .rates-note { padding: 12px 16px 0; font-size: 10.5px; color: var(--muted); }
+  .dbtn { margin: 12px 16px 16px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+  /* Recent requests */
+  .req-card { margin-top: 20px; }
+  .req-head { display: flex; justify-content: space-between; align-items: center; padding: 24px; border-bottom: 1px solid var(--border); }
+  .view-all { font-size: 12px; color: var(--accent); display: inline-flex; align-items: center; gap: 4px; font-weight: 500; }
+  .view-all:hover { text-decoration: underline; }
+  .rtable { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .rtable th { text-align: left; padding: 12px 20px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); border-bottom: 1px solid var(--border); }
+  .rtable td { padding: 16px 20px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .rtable tr:last-child td { border-bottom: none; }
+  .rtable tr:hover td { background: var(--surface); }
+  .rid { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .rmodel { font-weight: 600; white-space: nowrap; }
+  :global(.mbadge) { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 4px; font-size: 8px; color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line); vertical-align: middle; margin-right: 6px; font-family: var(--mono); }
+  .rtokens :global(strong) { font-size: 13px; }
+  .rtokens :global(small) { color: var(--muted); font-size: 10px; line-height: 1.5; }
+  .rspent :global(small) { color: var(--muted); font-size: 10px; }
+  :global(.charged) { color: var(--accent); font-weight: 600; font-size: 12px; }
+  :global(.charged small) { color: var(--accent); }
+  .rlatency { white-space: nowrap; }
+  .rlatency :global(span:first-child) { font-weight: 600; }
+  :global(.lat-bar) { display: inline-block; width: 80px; height: 6px; border-radius: 6px; background: var(--surface-2); margin-left: 10px; vertical-align: middle; overflow: hidden; }
+  :global(.lat-bar i) { display: block; height: 100%; border-radius: 6px; background: var(--accent); }
+  .req-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 48px 16px; text-align: center; }
+  .req-empty .icon-btn { width: 40px; height: 40px; margin-bottom: 6px; color: var(--accent); }
+
   @media (max-width: 1000px) {
-    .top-grid, .bottom-grid { grid-template-columns: 1fr; }
+    .stat-grid { grid-template-columns: 1fr; }
+    .mid-grid { grid-template-columns: 1fr; }
   }
-  @media (max-width: 560px) {
-    .discord { flex-wrap: wrap; }
+  @media (max-width: 640px) {
+    .rtable th:nth-child(4), .rtable td:nth-child(4),
+    .rtable th:nth-child(5), .rtable td:nth-child(5) { display: none; }
   }
 </style>
