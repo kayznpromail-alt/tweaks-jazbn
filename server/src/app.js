@@ -399,17 +399,30 @@ export function createApp({ cfg, db, clock = now }) {
   app.get('/v1/cli-capabilities', apiAuth('openai'), async (c) => {
     const key = c.get('key');
     const caps = await getDawvqCapabilities(cfg);
-    const modes = [];
+    const privateModes = [];
     const access = db.prepare('SELECT model FROM model_access WHERE account_id = ?').all(key.account_id);
     const hasOpusPrivate = access.some((r) => r.model === 'opus-private');
     if (hasOpusPrivate && caps) {
-      const opusEntry = Array.isArray(caps.modes)
-        ? caps.modes.find((m) => m.id === 'opus-private')
-        : null;
-      if (opusEntry) modes.push(opusEntry);
-      else if (caps['opus-private']) modes.push({ id: 'opus-private', revision: caps['opus-private'] });
+      const src = Array.isArray(caps.privateModes) ? caps.privateModes
+        : Array.isArray(caps.modes) ? caps.modes : [];
+      const opusEntry = src.find((m) => m.id === 'opus-private');
+      if (opusEntry) {
+        privateModes.push({
+          id: opusEntry.id,
+          revision: opusEntry.revision,
+          overheadTokens: opusEntry.overheadTokens ?? 4096,
+          models: opusEntry.models ?? ['claude-opus-5'],
+        });
+      } else if (caps['opus-private']) {
+        privateModes.push({
+          id: 'opus-private',
+          revision: caps['opus-private'],
+          overheadTokens: 4096,
+          models: ['claude-opus-5'],
+        });
+      }
     }
-    return c.json({ modes, capabilities: modes.map((m) => m.id) });
+    return c.json({ privateModes });
   });
 
   // Balance of the key's account, in the same shape as the upstream provider's /v1/account,
