@@ -97,6 +97,16 @@ export function createApp({ cfg, db, clock = now }) {
       `SELECT COUNT(*) AS n, SUM(CASE WHEN status BETWEEN 200 AND 299 THEN 1 ELSE 0 END) AS ok
        FROM usage WHERE account_id = ? AND created_at >= ?`,
     ),
+    countBetween: db.prepare(
+      `SELECT COUNT(*) AS n, SUM(CASE WHEN status BETWEEN 200 AND 299 THEN 1 ELSE 0 END) AS ok
+       FROM usage WHERE account_id = ? AND created_at >= ? AND created_at < ?`,
+    ),
+    durationsSince: db.prepare(
+      'SELECT duration_ms FROM usage WHERE account_id = ? AND created_at >= ? AND duration_ms IS NOT NULL ORDER BY duration_ms',
+    ),
+    durationsBetween: db.prepare(
+      'SELECT duration_ms FROM usage WHERE account_id = ? AND created_at >= ? AND created_at < ? AND duration_ms IS NOT NULL ORDER BY duration_ms',
+    ),
     payments: db.prepare(
       'SELECT id, provider, amount_eur, tokens, status, note, created_at FROM payments WHERE account_id = ? ORDER BY id DESC LIMIT 100',
     ),
@@ -208,6 +218,11 @@ export function createApp({ cfg, db, clock = now }) {
     const t = clock();
     const day = q.countSince.get(a.id, t - DAY);
     const quarter = q.countSince.get(a.id, t - 90 * DAY);
+    const prevDay = q.countBetween.get(a.id, t - 2 * DAY, t - DAY);
+    const durations = q.durationsSince.all(a.id, t - DAY);
+    const p95 = durations.length > 0 ? durations[Math.floor(durations.length * 0.95)].duration_ms : null;
+    const prevDurations = q.durationsBetween.all(a.id, t - 2 * DAY, t - DAY);
+    const prevP95 = prevDurations.length > 0 ? prevDurations[Math.floor(prevDurations.length * 0.95)].duration_ms : null;
     const keys = q.keys.all(a.id);
     return c.json({
       balance: a.balance,
@@ -218,6 +233,10 @@ export function createApp({ cfg, db, clock = now }) {
       firstKey: keys[0]?.masked ?? null,
       requests24h: day.n,
       successful24h: day.ok ?? 0,
+      prevRequests24h: prevDay.n,
+      prevSuccessful24h: prevDay.ok ?? 0,
+      p95_24h: p95,
+      prevP95_24h: prevP95,
       requests90d: quarter.n,
       // CLI key linked by the admin: plan, status and usage read from the provider.
       cli: await cli.status(a.id),
@@ -429,7 +448,7 @@ export function createApp({ cfg, db, clock = now }) {
         const access = q.modelAccess.get(key.account_id, body.model);
         if (!access)
           return c.json(errorBody(kind, 403, 'access_denied', `Model "${body.model}" requires a separate subscription. Contact us to get access.`), 403);
-        if (access.used >= access.quota)
+        if (access.quota > 0 && access.used >= access.quota)
           return c.json(errorBody(kind, 403, 'quota_exceeded', `Your ${body.model} subscription quota is used up (${(access.quota / 1e6).toFixed(0)}M tokens). Renew your subscription to continue.`), 403);
         if (access.upstream_key_sealed)
           customerUpstreamKey = openSecret(cfg.pepper, access.upstream_key_sealed);
