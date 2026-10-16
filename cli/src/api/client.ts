@@ -172,7 +172,7 @@ export class GatewayClient implements Gateway {
     this.#baseUrl = normalizeBaseUrl(baseUrl);
     const target = new URL(this.#baseUrl);
     const local = target.hostname === "localhost" || target.hostname === "localhost." || target.hostname === "[::1]" || /^127(?:\.\d{1,3}){3}$/.test(target.hostname);
-    if (this.#baseUrl !== "https://api.eminencehw.com/v1" && !local) throw new ApiError("invalid_base_url");
+    if (this.#baseUrl !== "https://gw.eminencehw.com/v1" && !local) throw new ApiError("invalid_base_url");
     if (typeof apiKey !== "string" || !apiKey.trim() || /[^\x21-\x7e]/.test(apiKey.trim())) {
       throw new ApiError("invalid_key");
     }
@@ -225,7 +225,7 @@ export class GatewayClient implements Gateway {
         if (!models.has(model.id)) {
           const levels = parseEfforts(model.reasoning_efforts)
             ?? (this.effortCatalog?.baseUrl === this.#baseUrl ? this.effortCatalog.models.find((item) => item.id === model.id)?.levels : undefined)
-            ?? (this.#baseUrl === "https://api.eminencehw.com/v1" ? edgeyEfforts(model.id) : undefined);
+            ?? (this.#baseUrl === "https://gw.eminencehw.com/v1" ? edgeyEfforts(model.id) : undefined);
           models.set(model.id, {
             id: model.id,
             ...(parseModelMetadata(model.edgey_capabilities) ? { capabilities: parseModelMetadata(model.edgey_capabilities) } : {}),

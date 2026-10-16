@@ -11,7 +11,7 @@ function Fail([string]$message) {
   exit 1
 }
 
-$api = 'https://api.eminencehw.com'
+$api = 'https://gw.eminencehw.com'
 $platform = 'win32-x64'
 
 # 1. Check the CLI key before downloading anything.

@@ -69,7 +69,7 @@ const faqs = [
   { q: 'Can I use my existing account?', a: 'Yes. Sign in with your 16-digit access number. If you already have credits, they\'ll be waiting for you in your workspace.' },
   { q: 'Which models can I use?', a: 'GPT (including GPT-6), Claude (Opus, Sonnet, Haiku, Fable), Gemini, Grok, Deepseek, Qwen, and more. Check the model catalog for the full list and rates.' },
   { q: 'How do top-ups work?', a: 'You buy token packs with crypto (BTC, ETH, LTC, USDT, SOL) via NOWPayments. Your balance is shared across all your API keys. Each model has a rate multiplier.' },
-  { q: 'Where are connection instructions?', a: 'In the Setup page. Point any OpenAI SDK at https://api.eminencehw.com/v1 with your sk_edgey_ key. Same format, same streaming, same function calling.' },
+  { q: 'Where are connection instructions?', a: 'In the Setup page. Point any OpenAI SDK at https://gw.eminencehw.com/v1 with your sk_edgey_ key. Same format, same streaming, same function calling.' },
   { q: 'How do I contact support?', a: 'Join our Discord server. The support team can help with payments, account access, and API issues. Never share your access number or API key publicly.' },
 ];
 ---
@@ -306,14 +306,14 @@ const faqs = [
                 <div class="ln-snip-panes">
                   <pre class="ln-snip-pane is-on"><code><span style="--l:0"><span class="c-kw">from</span> openai <span class="c-kw">import</span> OpenAI</span>
 <span style="--l:1">client = OpenAI(</span>
-<span style="--l:2">  <span class="c-key">base_url</span>=<span class="c-str">"https://api.eminencehw.com/v1"</span>,</span>
+<span style="--l:2">  <span class="c-key">base_url</span>=<span class="c-str">"https://gw.eminencehw.com/v1"</span>,</span>
 <span style="--l:3">  <span class="c-key">api_key</span>=<span class="c-str">"sk_edgey_..."</span>,</span>
 <span style="--l:4">)</span></code></pre>
-                  <pre class="ln-snip-pane"><code><span style="--l:0">curl https://api.eminencehw.com/v1/chat/completions \</span>
+                  <pre class="ln-snip-pane"><code><span style="--l:0">curl https://gw.eminencehw.com/v1/chat/completions \</span>
 <span style="--l:1">  -H <span class="c-str">"Authorization: Bearer $KEY"</span> \</span>
 <span style="--l:2">  -d <span class="c-str">'{"{"}"model": "gpt-6-astra",</span></span>
 <span style="--l:3"><span class="c-str">       "messages": [...]{"}"}'</span></span></code></pre>
-                  <pre class="ln-snip-pane"><code><span style="--l:0"><span class="c-kw">export</span> <span class="c-key">ANTHROPIC_BASE_URL</span>=<span class="c-str">"https://api.eminencehw.com"</span></span>
+                  <pre class="ln-snip-pane"><code><span style="--l:0"><span class="c-kw">export</span> <span class="c-key">ANTHROPIC_BASE_URL</span>=<span class="c-str">"https://gw.eminencehw.com"</span></span>
 <span style="--l:1"><span class="c-kw">export</span> <span class="c-key">ANTHROPIC_API_KEY</span>=<span class="c-str">"sk_edgey_..."</span></span>
 <span style="--l:2"><span class="c-kw">export</span> <span class="c-key">ANTHROPIC_MODEL</span>=<span class="c-str">"claude-opus-5"</span></span>
 <span style="--l:3">claude</span></code></pre>
@@ -399,7 +399,7 @@ const faqs = [
                 )}
                 {i === 2 && (
                   <div class="ln-step-demo ln-step-demo--term" aria-hidden="true">
-                    <span class="ln-term-1"><i>$</i>curl https://api.eminencehw.com/v1/models</span>
+                    <span class="ln-term-1"><i>$</i>curl https://gw.eminencehw.com/v1/models</span>
                     <span class="ln-term-2"><b>200 OK</b> · {modelCount} models ready</span>
                   </div>
                 )}

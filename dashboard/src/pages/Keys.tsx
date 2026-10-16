@@ -131,11 +131,11 @@ export default function Keys() {
           <div className="mb-3">
             <div className="text-[9px] font-semibold text-muted uppercase mb-1" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.14em' }}>Base URL</div>
             <div
-              onClick={() => copyText('https://api.eminencehw.com/v1')}
+              onClick={() => copyText('https://gw.eminencehw.com/v1')}
               className="px-3 py-2 rounded-lg text-[11px] cursor-pointer break-all transition-all duration-150 hover:border-accent"
               style={{ fontFamily: 'var(--font-mono)', background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}
             >
-              https://api.eminencehw.com/v1
+              https://gw.eminencehw.com/v1
             </div>
           </div>
           <div className="mb-3">
