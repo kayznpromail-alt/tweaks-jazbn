@@ -29,6 +29,7 @@ const { title, noindex = false } = Astro.props;
     </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title ? `${title} · cli.edgey.shop` : 'cli.edgey.shop'}</title>
+    <slot name="head" />
   </head>
   <body>
     <Intro />
