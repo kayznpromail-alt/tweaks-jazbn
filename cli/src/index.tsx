@@ -38,7 +38,7 @@ async function main() {
   }
   if (options.values.help) {
     process.stdout.write("local maintenance: --sessions [--project path]; --session id --rename title | --fork | --export new-file\n--diagnostics new-file; --storage --project path; --cleanup preview-digest --project path\nsee CODING_WORKFLOWS.md for scoped permission rules and acceptance limits.\n\n");
-    process.stdout.write("edgey cli\n\nedgey [--project directory]\n\n--project   open a project directory\napi         https://api.edgey.shop/v1\n--version   show version\n--doctor    local runtime and tool availability (no credentials or api calls)\n\nctrl+p: commands · enter: send · shift+enter / ctrl+j: new line\n/messages: message actions · /diagnostics: local support report\nctrl+o: models · ctrl+s: sessions · ctrl+n: new conversation\nctrl+t: cycle supported effort · /effort: choose a level\nesc / ctrl+c: interrupt response · double esc: stop and compose next prompt\nctrl+c: copy selection first; idle does not exit · /quit: save and quit\n");
+    process.stdout.write("edgey cli\n\nedgey [--project directory]\n\n--project   open a project directory\napi         https://gw.edgey.shop/v1\n--version   show version\n--doctor    local runtime and tool availability (no credentials or api calls)\n\nctrl+p: commands · enter: send · shift+enter / ctrl+j: new line\n/messages: message actions · /diagnostics: local support report\nctrl+o: models · ctrl+s: sessions · ctrl+n: new conversation\nctrl+t: cycle supported effort · /effort: choose a level\nesc / ctrl+c: interrupt response · double esc: stop and compose next prompt\nctrl+c: copy selection first; idle does not exit · /quit: save and quit\n");
     return;
   }
   if (options.values.version) { process.stdout.write(`edgey ${CLI_VERSION}\n`); return; }
@@ -103,7 +103,7 @@ async function main() {
     const paths = getPaths();
     const profiles = await loadProfiles(paths.profiles);
     store = new LocalStore(paths.database);
-    store.saveSettings({ ...store.getSettings(), baseUrl: "https://api.edgey.shop/v1" });
+    store.saveSettings({ ...store.getSettings(), baseUrl: "https://gw.edgey.shop/v1" });
     controller = new ChatController({ store, credentials: new SystemCredentials(), profiles,
       effortCatalog: await loadEffortCatalog(join(paths.directory, "reasoning-models.json")),
       agent: { artifactDir: join(paths.directory, "artifacts"), dataDirectory: paths.directory, mode: "review", permissionRules: loadPermissionRules(join(paths.directory, "permissions.json")) },

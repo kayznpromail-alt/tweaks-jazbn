@@ -1,4 +1,4 @@
-# Mettre l'API en ligne (api.edgey.shop)
+# Mettre l'API en ligne (gw.edgey.shop)
 
 Le serveur (`server/`) gère les comptes à 16 chiffres, les clés `sk_edgey_…`, le décompte des tokens
 et relaie les requêtes vers ton fournisseur avec **ta** clé, qui ne quitte jamais le VPS.
@@ -19,7 +19,7 @@ curl -fsSL https://raw.githubusercontent.com/kayznpromail-alt/tweaks-jazbn/main/
 
 Le script installe Docker, télécharge le code dans `/opt/edgey`, demande l'adresse et ta clé du fournisseur (clé invisible à l'écran),
 génère le secret, et démarre tout. Sans domaine prêt, appuie sur Entrée : l'API sera servie en HTTPS sur
-`IP.sslip.io` (par exemple `194.163.138.26.sslip.io`) en attendant `api.edgey.shop`.
+`IP.sslip.io` (par exemple `194.163.138.26.sslip.io`) en attendant `gw.edgey.shop`.
 
 Les commandes du quotidien ci-dessous se lancent alors depuis `/opt/edgey/deploy`.
 
@@ -43,7 +43,7 @@ mkdir -p data && chown 1000:1000 data
 docker compose up -d --build
 ```
 
-Vérifier : `curl https://api.edgey.shop/health` doit répondre `{"ok":true}`.
+Vérifier : `curl https://gw.edgey.shop/health` doit répondre `{"ok":true}`.
 
 ⚠️ Ne change jamais `SECRET_PEPPER` après le lancement : tous les numéros et toutes les clés deviendraient invalides.
 
@@ -89,6 +89,6 @@ Toute la base est dans `deploy/data/edgey.db`. Copie-la régulièrement ailleurs
 1. Crée le compte NOWPayments, ajoute ton wallet de réception.
 2. Dans *Settings → Payments*, génère une **API key** et un **IPN secret**.
 3. Mets-les dans `.env` (`NOWPAYMENTS_API_KEY`, `NOWPAYMENTS_IPN_SECRET`), puis `docker compose up -d --force-recreate api` (sans `--force-recreate`, le serveur garde les anciennes valeurs).
-4. L'URL de callback est déjà envoyée avec chaque paiement : `https://api.edgey.shop/webhooks/nowpayments`.
+4. L'URL de callback est déjà envoyée avec chaque paiement : `https://gw.edgey.shop/webhooks/nowpayments`.
 
 Un paiement n'est crédité qu'une fois, seulement quand NOWPayments le marque `finished` avec une signature valide.

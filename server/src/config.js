@@ -37,7 +37,7 @@ export function loadConfig(env = process.env) {
     // Customers creating their own API keys. Off by default: keys are generated from the admin panel.
     customerKeys: env.CUSTOMER_KEYS === 'true',
     allowedOrigins: list(env.ALLOWED_ORIGINS ?? 'https://cli.edgey.shop'),
-    publicApiUrl: (env.PUBLIC_API_URL ?? 'https://api.edgey.shop').replace(/\/+$/, ''),
+    publicApiUrl: (env.PUBLIC_API_URL ?? 'https://gw.edgey.shop').replace(/\/+$/, ''),
     siteUrl: (env.SITE_URL ?? 'https://cli.edgey.shop').replace(/\/+$/, ''),
     sessionDays: Number(env.SESSION_DAYS ?? 30),
     // Profit split for the admin panel: retail cost at the provider and each partner's share.
