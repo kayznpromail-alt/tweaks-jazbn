@@ -558,10 +558,10 @@ export function createApp({ cfg, db, clock = now }) {
           return c.json(out.body, { status: out.status });
         }
         const respHeaders = { 'content-type': 'application/json' };
-        for (const h of ['x-edgey-mode', 'x-edgey-mode-revision']) {
-          const v = pRes.headers.get(h);
-          if (v) respHeaders[h] = v;
-        }
+        const modeVal = pRes.headers.get('x-dawvq-mode') ?? pRes.headers.get('x-edgey-mode');
+        const revVal = pRes.headers.get('x-dawvq-mode-revision') ?? pRes.headers.get('x-edgey-mode-revision');
+        if (modeVal) respHeaders['x-edgey-mode'] = modeVal;
+        if (revVal) respHeaders['x-edgey-mode-revision'] = revVal;
         return new Response(pText, { status: 200, headers: respHeaders });
       }
 
