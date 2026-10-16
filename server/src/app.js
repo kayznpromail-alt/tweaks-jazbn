@@ -10,7 +10,7 @@ import { cliAccounts } from './cli-account.js';
 import { cliReleaseRoutes } from './cli-release.js';
 import { dashboardRoutes } from './dashboard-routes.js';
 import { panelRoutes } from './panel-routes.js';
-import { errorBody, relay, upstreamModel } from './relay.js';
+import { errorBody, publicError, relay, upstreamModel } from './relay.js';
 import {
   hashSecret,
   hashPassword,
