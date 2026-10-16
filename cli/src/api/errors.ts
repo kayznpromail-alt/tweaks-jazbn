@@ -5,7 +5,7 @@ const messages = {
   jailbreak_not_allowed: "jailbreak access for this model is no longer available. type /jailbreak to disable it and continue.",
   jailbreak_model_mismatch: "jailbreak is not available for this model. type /jailbreak to disable it and continue.",
   jailbreak_revision_changed: "jailbreak instructions changed. type /jailbreak to disable it; enable it again for a new request.",
-  invalid_base_url: "the cli uses https://gw.edgey.shop/v1. other public api addresses are disabled.",
+  invalid_base_url: "the cli uses https://api.edgey.shop/v1. other public api addresses are disabled.",
   invalid_key: "enter a valid api key.",
   invalid_request: "invalid chat request data.",
   unauthorized: "the api key is invalid or expired.",
