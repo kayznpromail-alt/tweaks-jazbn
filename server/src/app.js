@@ -440,12 +440,22 @@ export function createApp({ cfg, db, clock = now }) {
     return c.json(errorBody(kind, 401, 'authentication_error', 'Invalid or disabled API key.'), 401);
   };
 
-  app.get('/v1/models', apiAuth('openai'), (c) =>
-    c.json({
+  app.get('/v1/models', apiAuth('openai'), async (c) => {
+    const key = c.get('key');
+    if (key._partnerKey && cfg.partnerBase) {
+      try {
+        const res = await fetch(`${cfg.partnerBase}/v1/models`, {
+          headers: { authorization: `Bearer ${key._partnerKey}` },
+          signal: AbortSignal.timeout(10_000),
+        });
+        if (res.ok) return c.json(await res.json());
+      } catch {}
+    }
+    return c.json({
       object: 'list',
       data: allModels().map((m) => ({ id: m.id, object: 'model', owned_by: m.provider, rate: m.rate })),
-    }),
-  );
+    });
+  });
 
   // CLI capabilities: tells the client which modes are available (e.g. opus-private for JB).
   app.get('/v1/cli-capabilities', apiAuth('openai'), async (c) => {
