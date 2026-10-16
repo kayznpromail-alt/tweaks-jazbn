@@ -533,19 +533,31 @@ export function createApp({ cfg, db, clock = now }) {
       if (!body || typeof body.model !== 'string')
         return c.json(errorBody(kind, 400, 'invalid_request_error', 'Request body must be JSON with a "model".'), 400);
 
-      // Partner passthrough: use the customer's own partner key, relay via partner endpoint, skip local billing.
-      // Force non-streaming: the partner endpoint may not support stream_options and its SSE format
-      // may differ from what the CLI expects. The CLI handles JSON responses transparently.
+      // Partner passthrough: direct fetch (not relay) to avoid SSE/header issues.
+      // Force non-streaming and always return application/json to the CLI.
       if (key._partnerKey) {
         const upModel = upstreamModel(body.model);
         const { stream: _s, stream_options: _so, ...rest } = body;
         const upBody = { ...rest, model: upModel, stream: false };
         console.log('[partner] relaying %s (stream forced off, model %s → %s)', path, body.model, upModel);
-        const partnerReq = new Request(c.req.raw, { headers: new Headers(c.req.raw.headers) });
-        partnerReq.headers.set('accept', 'application/json');
-        return relay({ cfg, kind, path, body: upBody, incoming: partnerReq, upstreamKey: key._partnerKey, upstreamBase: cfg.partnerBase, onDone: (usage, status) => {
-          console.log('[partner] relay done, status %d, usage %s', status, JSON.stringify(usage));
-        } });
+        let pRes;
+        try {
+          pRes = await fetch(`${cfg.partnerBase}/v1${path}`, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json', accept: 'application/json', authorization: `Bearer ${key._partnerKey}` },
+            body: JSON.stringify(upBody),
+            signal: AbortSignal.timeout(120_000),
+          });
+        } catch {
+          return c.json(errorBody(kind, 502, 'upstream_unavailable', 'The model provider did not respond. Try again.'), 502);
+        }
+        const pText = await pRes.text();
+        console.log('[partner] upstream %d, content-type: %s, body length: %d', pRes.status, pRes.headers.get('content-type'), pText.length);
+        if (!pRes.ok) {
+          const out = publicError(kind, pRes.status, pText, cfg);
+          return c.json(out.body, { status: out.status });
+        }
+        return new Response(pText, { status: 200, headers: { 'content-type': 'application/json' } });
       }
 
       const info = modelInfo(body.model);
