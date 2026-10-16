@@ -98,7 +98,7 @@ function setup(overrides = {}) {
     openRegistration: true,
     customerKeys: true,
     allowedOrigins: ['https://cli.eminencehw.com'],
-    publicApiUrl: 'https://api.eminencehw.com',
+    publicApiUrl: 'https://gw.eminencehw.com',
     siteUrl: 'https://cli.eminencehw.com',
     sessionDays: 30,
     nowpayments: { apiKey: null, ipnSecret: 'ipn-secret', base: 'http://127.0.0.1:1' },

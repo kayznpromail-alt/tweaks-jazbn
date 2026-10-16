@@ -1,6 +1,6 @@
 # API admin (pour brancher ton panel existant)
 
-Base : `https://api.eminencehw.com/admin` (ou `https://IP.sslip.io/admin` avant le domaine).
+Base : `https://gw.eminencehw.com/admin` (ou `https://IP.sslip.io/admin` avant le domaine).
 Chaque requête envoie le jeton admin : `Authorization: Bearer <ADMIN_TOKEN>` (valeur dans `.env` sur le VPS).
 
 ⚠️ Appelle ces routes **depuis le serveur de ton panel**, jamais depuis du JavaScript public : le jeton donne
@@ -40,7 +40,7 @@ Il ne doit jamais être donné au client.
 Exemple (créditer un pack de 65 € au compte 12) :
 
 ```sh
-curl -X POST https://api.eminencehw.com/admin/accounts/12/credit \
+curl -X POST https://gw.eminencehw.com/admin/accounts/12/credit \
   -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" \
   -d '{"packEur":65,"note":"paypal discord"}'
 ```

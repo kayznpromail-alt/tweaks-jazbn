@@ -1,6 +1,6 @@
 import { ApiError } from "./errors";
 
-const defaultBaseUrl = "https://api.eminencehw.com/v1";
+const defaultBaseUrl = "https://gw.eminencehw.com/v1";
 
 export function normalizeBaseUrl(value: string): string {
   if (typeof value !== "string") throw new ApiError("invalid_base_url");
