@@ -177,7 +177,7 @@ export default function Overview() {
 
       {/* Footer */}
       <footer style={{ maxWidth: 1256, margin: '40px auto 0', padding: '0 0 40px', display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 12, fontSize: 11, color: 'var(--color-muted)', borderTop: '1px solid var(--color-border)', paddingTop: 20 }}>
-        <span>cli.edgey.shop</span>
+        <span>cli.eminencehw.com</span>
         <span style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.14em', color: 'var(--color-accent)', fontSize: 9.5, display: 'flex', alignItems: 'center', gap: 8 }}>
           <i style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--color-accent)', boxShadow: '0 0 8px var(--color-accent)', display: 'block' }} />
           ONE WORKSPACE. YOUR AI TOOLS.
@@ -384,7 +384,7 @@ function TopupModal({ onClose, onSuccess }: { onClose: () => void; onSuccess: ()
 
         {/* Modal footer */}
         <div style={{ borderTop: '1px solid var(--color-border)', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', display: 'flex', justifyContent: 'space-between', marginTop: 18, paddingTop: 14, fontSize: 9.5 }}>
-          <span>cli.edgey.shop</span>
+          <span>cli.eminencehw.com</span>
           <span style={{ letterSpacing: '.14em', color: 'var(--color-accent)', display: 'flex', alignItems: 'center', gap: 8 }}>
             <i style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--color-accent)', boxShadow: '0 0 8px var(--color-accent)', display: 'block' }} />
             ONE WALLET. EVERY MODEL.

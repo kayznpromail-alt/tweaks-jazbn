@@ -7,5 +7,5 @@
 - **Deploy**: auto via GitHub Actions on merge to main (SSH + docker compose)
 - **Manual deploy**: `cd /opt/edgey/deploy && git pull && docker compose up -d --build`
 - **Logs**: `cd /opt/edgey/deploy && docker compose logs --tail=50 api`
-- **API**: `https://api.edgey.shop`
-- **Admin panel**: `https://api.edgey.shop/panel` (self-hosted, login with ADMIN_TOKEN)
+- **API**: `https://api.eminencehw.com`
+- **Admin panel**: `https://api.eminencehw.com/panel` (self-hosted, login with ADMIN_TOKEN)

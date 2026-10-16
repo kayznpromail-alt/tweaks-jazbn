@@ -91,8 +91,8 @@ export default function Setup() {
           </div>
           <div className="p-3 mt-auto" style={{ borderTop: '1px solid var(--color-border)' }}>
             <div className="text-[9px] font-semibold text-muted uppercase mb-1.5" style={{ fontFamily: 'var(--font-mono)', letterSpacing: '.14em' }}>Gateway</div>
-            <div onClick={() => copyText('https://api.edgey.shop/v1')} className="flex items-center justify-between gap-1.5 px-2.5 py-2 rounded-lg cursor-pointer text-[10px] break-all transition-all duration-150 hover:border-accent" style={{ fontFamily: 'var(--font-mono)', background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-accent)' }}>
-              api.edgey.shop/v1
+            <div onClick={() => copyText('https://api.eminencehw.com/v1')} className="flex items-center justify-between gap-1.5 px-2.5 py-2 rounded-lg cursor-pointer text-[10px] break-all transition-all duration-150 hover:border-accent" style={{ fontFamily: 'var(--font-mono)', background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-accent)' }}>
+              api.eminencehw.com/v1
               <Copy size={11} className="shrink-0 opacity-50" />
             </div>
           </div>
@@ -166,8 +166,8 @@ function ClaudeCodeSetup({ userKey }: { userKey: string }) {
         <h4 className="text-[13px] font-semibold mb-3">Set your environment</h4>
         <OsTabs tabs={[{ id: 'win', label: 'Windows' }, { id: 'unix', label: 'macOS / Linux' }]}>
           {active => active === 'win'
-            ? <CodeBlock title="PowerShell" code={`${hl('$env:')}ANTHROPIC_BASE_URL = ${hl('"https://api.edgey.shop/v1"')}\n${hl('$env:')}ANTHROPIC_API_KEY = ${hl(`"${userKey}"`)}`} />
-            : <CodeBlock title="Bash / Zsh" code={`${hl('export')} ANTHROPIC_BASE_URL=${hl('"https://api.edgey.shop/v1"')}\n${hl('export')} ANTHROPIC_API_KEY=${hl(`"${userKey}"`)}`} />
+            ? <CodeBlock title="PowerShell" code={`${hl('$env:')}ANTHROPIC_BASE_URL = ${hl('"https://api.eminencehw.com/v1"')}\n${hl('$env:')}ANTHROPIC_API_KEY = ${hl(`"${userKey}"`)}`} />
+            : <CodeBlock title="Bash / Zsh" code={`${hl('export')} ANTHROPIC_BASE_URL=${hl('"https://api.eminencehw.com/v1"')}\n${hl('export')} ANTHROPIC_API_KEY=${hl(`"${userKey}"`)}`} />
           }
         </OsTabs>
       </Step>
@@ -185,15 +185,15 @@ function OpenAISetup({ userKey }: { userKey: string }) {
       <ToolHeader badge="AI" name="OpenAI-compatible API" desc="Use the OpenAI SDK or any compatible client." gradient="linear-gradient(135deg, #059669, #34d399)" />
       <Step num="01">
         <h4 className="text-[13px] font-semibold mb-3">Python (OpenAI SDK)</h4>
-        <CodeBlock title="Python" code={`${hl('from')} openai ${hl('import')} OpenAI\n\nclient = OpenAI(\n    base_url=${hl('"https://api.edgey.shop/v1"')},\n    api_key=${hl(`"${userKey}"`)},\n)\n\nresponse = client.chat.completions.create(\n    model=${hl('"claude-sonnet-5"')},\n    messages=[{${hl('"role"')}: ${hl('"user"')}, ${hl('"content"')}: ${hl('"Hello!"')}}],\n)\nprint(response.choices[0].message.content)`} />
+        <CodeBlock title="Python" code={`${hl('from')} openai ${hl('import')} OpenAI\n\nclient = OpenAI(\n    base_url=${hl('"https://api.eminencehw.com/v1"')},\n    api_key=${hl(`"${userKey}"`)},\n)\n\nresponse = client.chat.completions.create(\n    model=${hl('"claude-sonnet-5"')},\n    messages=[{${hl('"role"')}: ${hl('"user"')}, ${hl('"content"')}: ${hl('"Hello!"')}}],\n)\nprint(response.choices[0].message.content)`} />
       </Step>
       <Step num="02">
         <h4 className="text-[13px] font-semibold mb-3">cURL</h4>
-        <CodeBlock title="Terminal" code={`curl https://api.edgey.shop/v1/chat/completions \\\n  -H ${hl(`"Authorization: Bearer ${userKey}"`)} \\\n  -H ${hl('"Content-Type: application/json"')} \\\n  -d ${hl(`'{\n    "model": "claude-sonnet-5",\n    "messages": [{"role": "user", "content": "Hello!"}]\n  }'`)}`} />
+        <CodeBlock title="Terminal" code={`curl https://api.eminencehw.com/v1/chat/completions \\\n  -H ${hl(`"Authorization: Bearer ${userKey}"`)} \\\n  -H ${hl('"Content-Type: application/json"')} \\\n  -d ${hl(`'{\n    "model": "claude-sonnet-5",\n    "messages": [{"role": "user", "content": "Hello!"}]\n  }'`)}`} />
       </Step>
       <Step num="03">
         <h4 className="text-[13px] font-semibold mb-3">Python (Anthropic SDK)</h4>
-        <CodeBlock title="Python" code={`${hl('import')} anthropic\n\nclient = anthropic.Anthropic(\n    base_url=${hl('"https://api.edgey.shop/v1"')},\n    api_key=${hl(`"${userKey}"`)},\n)\n\nmessage = client.messages.create(\n    model=${hl('"claude-sonnet-5"')},\n    max_tokens=1024,\n    messages=[{${hl('"role"')}: ${hl('"user"')}, ${hl('"content"')}: ${hl('"Hello!"')}}],\n)\nprint(message.content[0].text)`} />
+        <CodeBlock title="Python" code={`${hl('import')} anthropic\n\nclient = anthropic.Anthropic(\n    base_url=${hl('"https://api.eminencehw.com/v1"')},\n    api_key=${hl(`"${userKey}"`)},\n)\n\nmessage = client.messages.create(\n    model=${hl('"claude-sonnet-5"')},\n    max_tokens=1024,\n    messages=[{${hl('"role"')}: ${hl('"user"')}, ${hl('"content"')}: ${hl('"Hello!"')}}],\n)\nprint(message.content[0].text)`} />
       </Step>
     </>
   );
@@ -207,9 +207,9 @@ function EnvVarsSetup({ userKey }: { userKey: string }) {
         <h4 className="text-[13px] font-semibold mb-3">Set your variables</h4>
         <OsTabs tabs={[{ id: 'win', label: 'Windows' }, { id: 'unix', label: 'macOS / Linux' }, { id: 'cmd', label: 'CMD' }]}>
           {active => {
-            if (active === 'win') return <CodeBlock title="PowerShell" code={`${hl('$env:')}OPENAI_BASE_URL = ${hl('"https://api.edgey.shop/v1"')}\n${hl('$env:')}OPENAI_API_KEY = ${hl(`"${userKey}"`)}`} />;
-            if (active === 'unix') return <CodeBlock title="Bash / Zsh" code={`${hl('export')} OPENAI_BASE_URL=${hl('"https://api.edgey.shop/v1"')}\n${hl('export')} OPENAI_API_KEY=${hl(`"${userKey}"`)}`} />;
-            return <CodeBlock title="Command Prompt" code={`${hl('set')} OPENAI_BASE_URL=https://api.edgey.shop/v1\n${hl('set')} OPENAI_API_KEY=${hl(userKey)}`} />;
+            if (active === 'win') return <CodeBlock title="PowerShell" code={`${hl('$env:')}OPENAI_BASE_URL = ${hl('"https://api.eminencehw.com/v1"')}\n${hl('$env:')}OPENAI_API_KEY = ${hl(`"${userKey}"`)}`} />;
+            if (active === 'unix') return <CodeBlock title="Bash / Zsh" code={`${hl('export')} OPENAI_BASE_URL=${hl('"https://api.eminencehw.com/v1"')}\n${hl('export')} OPENAI_API_KEY=${hl(`"${userKey}"`)}`} />;
+            return <CodeBlock title="Command Prompt" code={`${hl('set')} OPENAI_BASE_URL=https://api.eminencehw.com/v1\n${hl('set')} OPENAI_API_KEY=${hl(userKey)}`} />;
           }}
         </OsTabs>
       </Step>
@@ -220,7 +220,7 @@ function EnvVarsSetup({ userKey }: { userKey: string }) {
 function ApiRefSetup() {
   return (
     <>
-      <ToolHeader badge="{}" name="API Reference" desc='All endpoints at api.edgey.shop' gradient="linear-gradient(135deg, #d97706, #fbbf24)" />
+      <ToolHeader badge="{}" name="API Reference" desc='All endpoints at api.eminencehw.com' gradient="linear-gradient(135deg, #d97706, #fbbf24)" />
       <Step num="01">
         <h4 className="text-[13px] font-semibold mb-3">Endpoints</h4>
         <div className="overflow-x-auto">

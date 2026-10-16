@@ -7,7 +7,7 @@ import {spawnSync} from 'node:child_process';
 import {verifyReleaseManifest} from './release-manifest.mjs';
 import {releaseTrustKeys} from './release-trust.mjs';
 const validVersion=/^(0|[1-9]\d{0,5})\.(0|[1-9]\d{0,5})\.(0|[1-9]\d{0,5})$/;
-export const distributionOrigin='https://api.edgey.shop';
+export const distributionOrigin='https://api.eminencehw.com';
 export function compareVersions(a,b){for(let i=0;i<3;i++){const d=Number(a.split('.')[i])-Number(b.split('.')[i]);if(d)return d;}return 0;}
 export function validateManifest(value,platform){
  if(!value||typeof value.version!=='string'||!validVersion.test(value.version)||!value.assets||Array.isArray(value.assets))throw new Error('invalid update manifest');

@@ -1,6 +1,6 @@
 import { createPublicKey, verify } from 'node:crypto';
 const version=/^(0|[1-9]\d{0,5})\.(0|[1-9]\d{0,5})\.(0|[1-9]\d{0,5})$/;
-const origin='https://api.edgey.shop';
+const origin='https://api.eminencehw.com';
 export function canonical(value){
   if(value===null||typeof value!=='object')return JSON.stringify(value);
   if(Array.isArray(value))return '['+value.map(canonical).join(',')+']';

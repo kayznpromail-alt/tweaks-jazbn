@@ -36,9 +36,9 @@ export function loadConfig(env = process.env) {
     openRegistration: env.OPEN_REGISTRATION === 'true',
     // Customers creating their own API keys. Off by default: keys are generated from the admin panel.
     customerKeys: env.CUSTOMER_KEYS === 'true',
-    allowedOrigins: list(env.ALLOWED_ORIGINS ?? 'https://cli.edgey.shop'),
-    publicApiUrl: (env.PUBLIC_API_URL ?? 'https://api.edgey.shop').replace(/\/+$/, ''),
-    siteUrl: (env.SITE_URL ?? 'https://cli.edgey.shop').replace(/\/+$/, ''),
+    allowedOrigins: list(env.ALLOWED_ORIGINS ?? 'https://cli.eminencehw.com'),
+    publicApiUrl: (env.PUBLIC_API_URL ?? 'https://api.eminencehw.com').replace(/\/+$/, ''),
+    siteUrl: (env.SITE_URL ?? 'https://cli.eminencehw.com').replace(/\/+$/, ''),
     sessionDays: Number(env.SESSION_DAYS ?? 30),
     // Profit split for the admin panel: retail cost at the provider and each partner's share.
     earnings: {

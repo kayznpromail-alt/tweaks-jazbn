@@ -347,7 +347,7 @@ export function createApp({ cfg, db, clock = now }) {
         orderId,
         eur: pack.eur,
         coin: coin.id,
-        description: `cli.edgey.shop top-up: ${pack.tokens.toLocaleString('en-US')} tokens`,
+        description: `cli.eminencehw.com top-up: ${pack.tokens.toLocaleString('en-US')} tokens`,
       });
       return c.json({ invoiceUrl: invoice.invoice_url, paymentId: id });
     } catch (err) {
@@ -477,7 +477,7 @@ export function createApp({ cfg, db, clock = now }) {
       }
       if (billed && key.balance < 1000)
         return c.json(
-          errorBody(kind, 402, 'insufficient_balance', 'Your wallet is empty. Top up at cli.edgey.shop.'),
+          errorBody(kind, 402, 'insufficient_balance', 'Your wallet is empty. Top up at cli.eminencehw.com.'),
           402,
         );
 

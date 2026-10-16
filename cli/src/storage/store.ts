@@ -175,7 +175,7 @@ export class LocalStore extends ExecutionStore implements Store {
       if (version === 0) {
         createLegacySchema(database);
       database.query("INSERT INTO settings (id, value) VALUES (1, ?)").run(JSON.stringify({
-        baseUrl: "https://api.edgey.shop/v1", model: null, favorites: [],
+        baseUrl: "https://api.eminencehw.com/v1", model: null, favorites: [],
       } satisfies Settings));
       } else if (version === 1) {
         // Validate without reserializing: legacy JSON bytes, revisions and streaming states stay exact.
