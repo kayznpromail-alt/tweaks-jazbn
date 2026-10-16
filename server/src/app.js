@@ -11,6 +11,7 @@ import { cliReleaseRoutes } from './cli-release.js';
 import { dashboardRoutes } from './dashboard-routes.js';
 import { panelRoutes } from './panel-routes.js';
 import { partnerRelay } from './partner-relay.js';
+import { siteRoutes } from './site-routes.js';
 import { errorBody, relay, upstreamModel } from './relay.js';
 import {
   hashSecret,
@@ -617,7 +618,14 @@ export function createApp({ cfg, db, clock = now }) {
   app.post('/v1/messages', ...proxied('anthropic', '/messages'));
   app.post('/v1/messages/count_tokens', ...proxied('anthropic', '/messages/count_tokens', { billed: false }));
 
-  app.notFound((c) => c.json({ error: 'not_found' }, 404));
+  // Astro landing site — served after API routes so they take priority
+  const { app: landing, notFoundHtml } = siteRoutes();
+  app.route('/', landing);
+
+  app.notFound((c) => {
+    if (notFoundHtml && c.req.header('accept')?.includes('text/html')) return c.html(notFoundHtml, 404);
+    return c.json({ error: 'not_found' }, 404);
+  });
   app.onError((err, c) => {
     console.error(err);
     return c.json({ error: 'internal_error' }, 500);
