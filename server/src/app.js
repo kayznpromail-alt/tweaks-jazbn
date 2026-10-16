@@ -6,7 +6,7 @@ import { creditPayment, now, tx } from './db.js';
 import { createInvoice, verifyIpn } from './nowpayments.js';
 import { createLimiter } from './ratelimit.js';
 import { adminRoutes } from './admin-routes.js';
-import { cliAccounts } from './cli-account.js';
+import { cliAccounts, fetchUpstreamAccount } from './cli-account.js';
 import { cliReleaseRoutes } from './cli-release.js';
 import { dashboardRoutes } from './dashboard-routes.js';
 import { panelRoutes } from './panel-routes.js';
@@ -388,13 +388,39 @@ export function createApp({ cfg, db, clock = now }) {
     return c.req.header('x-api-key') ?? bearer ?? '';
   };
 
+  // Cache validated dawvq keys for 60s to avoid hitting upstream on every request.
+  const _dawvqKeyCache = new Map();
+  const DAWVQ_KEY_TTL = 60_000;
+
   const apiAuth = (kind) => async (c, next) => {
     const key = keyFrom(c);
+    // Try local key first.
     const row = isApiKey(key) ? q.keyByHash.get(hash(key)) : null;
-    if (!row || !row.enabled || row.disabled)
-      return c.json(errorBody(kind, 401, 'authentication_error', 'Invalid or disabled API key.'), 401);
-    c.set('key', row);
-    await next();
+    if (row && row.enabled && !row.disabled) {
+      c.set('key', row);
+      return next();
+    }
+    // Try dawvq upstream validation for non-local keys (skip sk_edgey_ format).
+    if (!isApiKey(key) && key.length >= 8 && key.length <= 4096 && !/\s/.test(key)) {
+      const cacheKey = hash(key);
+      const cached = _dawvqKeyCache.get(cacheKey);
+      if (cached && clock() - cached.at < DAWVQ_KEY_TTL) {
+        c.set('key', { ...cached.row, _dawvqKey: key });
+        return next();
+      }
+      const result = await fetchUpstreamAccount(cfg, key);
+      if (result.ok) {
+        const virtual = {
+          key_id: null, account_id: null, enabled: 1, disabled: 0,
+          masked: key.length > 12 ? `${key.slice(0, 6)}…${key.slice(-4)}` : '••••',
+          balance: Infinity, _dawvqAccount: result.account,
+        };
+        _dawvqKeyCache.set(cacheKey, { row: virtual, at: clock() });
+        c.set('key', { ...virtual, _dawvqKey: key });
+        return next();
+      }
+    }
+    return c.json(errorBody(kind, 401, 'authentication_error', 'Invalid or disabled API key.'), 401);
   };
 
   app.get('/v1/models', apiAuth('openai'), (c) =>
@@ -407,6 +433,14 @@ export function createApp({ cfg, db, clock = now }) {
   // CLI capabilities: tells the client which modes are available (e.g. opus-private for JB).
   app.get('/v1/cli-capabilities', apiAuth('openai'), async (c) => {
     const key = c.get('key');
+    // Dawvq key: proxy capabilities from upstream directly.
+    if (key._dawvqKey) {
+      try {
+        const res = await fetch(`${cfg.upstreamBase}/v1/cli-capabilities`, { headers: { authorization: `Bearer ${key._dawvqKey}` }, signal: AbortSignal.timeout(10_000) });
+        if (res.ok) return c.json(await res.json());
+      } catch {}
+      return c.json({ privateModes: [] });
+    }
     const caps = await getDawvqCapabilities(cfg);
     const privateModes = [];
     const access = db.prepare('SELECT model FROM model_access WHERE account_id = ?').all(key.account_id);
@@ -438,6 +472,8 @@ export function createApp({ cfg, db, clock = now }) {
   // so CLIs that read it show the edgey balance.
   app.get('/v1/account', apiAuth('openai'), (c) => {
     const row = c.get('key');
+    // Dawvq key: return the upstream account info directly.
+    if (row._dawvqAccount) return c.json({ ...row._dawvqAccount, version: 1, unit: 'weighted_provider_units', updatedAt: new Date(clock()).toISOString() });
     const used = db.prepare('SELECT IFNULL(SUM(charged), 0) AS n FROM usage WHERE account_id = ?').get(row.account_id).n;
     const available = Math.max(0, row.balance);
     return c.json({
@@ -462,6 +498,14 @@ export function createApp({ cfg, db, clock = now }) {
       const body = await c.req.json().catch(() => null);
       if (!body || typeof body.model !== 'string')
         return c.json(errorBody(kind, 400, 'invalid_request_error', 'Request body must be JSON with a "model".'), 400);
+
+      // Dawvq passthrough: use the customer's own dawvq key, skip local billing.
+      if (key._dawvqKey) {
+        const upModel = upstreamModel(body.model);
+        const upBody = upModel !== body.model ? { ...body, model: upModel } : body;
+        return relay({ cfg, kind, path, body: upBody, incoming: c.req.raw, upstreamKey: key._dawvqKey, onDone: () => {} });
+      }
+
       const info = modelInfo(body.model);
       if (!info)
         return c.json(errorBody(kind, 404, 'not_found_error', `Model "${body.model}" is not available.`), 404);
