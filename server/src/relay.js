@@ -61,7 +61,7 @@ export function publicError(kind, status, text, cfg) {
  * Forwards a request to the upstream provider with the server's own key, streams the answer back
  * and reports the token usage once it is known (end of body, client disconnect, or error).
  */
-export async function relay({ cfg, kind, path, body, incoming, onDone, upstreamKey }) {
+export async function relay({ cfg, kind, path, body, incoming, onDone, upstreamKey, upstreamBase }) {
   const headers = { 'content-type': 'application/json' };
   for (const h of PASS_HEADERS) {
     const v = incoming.headers.get(h);
@@ -86,8 +86,9 @@ export async function relay({ cfg, kind, path, body, incoming, onDone, upstreamK
     onDone(usage, status);
   };
 
+  const base = upstreamBase ?? cfg.upstreamBase;
   const doFetch = () =>
-    fetch(`${cfg.upstreamBase}/v1${path}`, {
+    fetch(`${base}/v1${path}`, {
       method: 'POST',
       headers,
       body: JSON.stringify(payload),

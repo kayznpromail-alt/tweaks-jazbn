@@ -36,6 +36,7 @@ export function loadConfig(env = process.env) {
     openRegistration: env.OPEN_REGISTRATION === 'true',
     // Customers creating their own API keys. Off by default: keys are generated from the admin panel.
     customerKeys: env.CUSTOMER_KEYS === 'true',
+    partnerBase: (env.PARTNER_API_URL ?? '').replace(/\/+$/, '') || null,
     allowedOrigins: list(env.ALLOWED_ORIGINS ?? 'https://cli.eminencehw.com'),
     publicApiUrl: (env.PUBLIC_API_URL ?? 'https://gw.eminencehw.com').replace(/\/+$/, ''),
     siteUrl: (env.SITE_URL ?? 'https://cli.eminencehw.com').replace(/\/+$/, ''),
