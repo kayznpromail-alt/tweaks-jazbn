@@ -530,7 +530,10 @@ export function createApp({ cfg, db, clock = now }) {
         const upModel = upstreamModel(body.model);
         const { stream: _s, stream_options: _so, ...rest } = body;
         const upBody = { ...rest, model: upModel, stream: false };
-        return relay({ cfg, kind, path, body: upBody, incoming: c.req.raw, upstreamKey: key._partnerKey, upstreamBase: cfg.partnerBase, onDone: () => {} });
+        console.log('[partner] relaying %s (stream forced off, model %s → %s)', path, body.model, upModel);
+        return relay({ cfg, kind, path, body: upBody, incoming: c.req.raw, upstreamKey: key._partnerKey, upstreamBase: cfg.partnerBase, onDone: (usage, status) => {
+          console.log('[partner] relay done, status %d, usage %s', status, JSON.stringify(usage));
+        } });
       }
 
       const info = modelInfo(body.model);
