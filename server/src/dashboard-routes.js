@@ -10,7 +10,7 @@ export function dashboardRoutes() {
   dashboard.use(
     '/assets/*',
     serveStatic({
-      root: '.',
+      root: 'dashboard',
       onFound: (_path, c) => {
         c.header('Cache-Control', 'public, immutable, max-age=31536000');
       },
