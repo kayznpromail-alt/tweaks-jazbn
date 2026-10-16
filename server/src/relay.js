@@ -35,7 +35,7 @@ function scrub(text, cfg) {
       return '';
     }
   })();
-  if (host) out = out.split(host).join('gw.edgey.shop');
+  if (host) out = out.split(host).join('api.edgey.shop');
   for (const name of cfg.upstreamNames ?? []) {
     if (name) out = out.replace(new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), 'edgey');
   }

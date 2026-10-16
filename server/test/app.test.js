@@ -98,7 +98,7 @@ function setup(overrides = {}) {
     openRegistration: true,
     customerKeys: true,
     allowedOrigins: ['https://cli.edgey.shop'],
-    publicApiUrl: 'https://gw.edgey.shop',
+    publicApiUrl: 'https://api.edgey.shop',
     siteUrl: 'https://cli.edgey.shop',
     sessionDays: 30,
     nowpayments: { apiKey: null, ipnSecret: 'ipn-secret', base: 'http://127.0.0.1:1' },

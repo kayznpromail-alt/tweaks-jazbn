@@ -15,7 +15,7 @@ npm run build    # génère dist/
 
 ## API (serveur)
 
-`server/` contient la passerelle `gw.edgey.shop` : comptes à 16 chiffres, clés `sk_edgey_…`,
+`server/` contient la passerelle `api.edgey.shop` : comptes à 16 chiffres, clés `sk_edgey_…`,
 décompte des tokens × multiplicateur, relais vers le fournisseur, NOWPayments.
 Tests : `cd server && npm install && npm test`. Mise en ligne : voir `deploy/DEPLOY.md`.
 `shared/catalog.json` (modèles, packs, cryptos) est lu par le site et par le serveur.
