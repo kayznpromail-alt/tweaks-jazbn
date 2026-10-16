@@ -466,7 +466,7 @@ export function createApp({ cfg, db, clock = now }) {
         if (access.upstream_key_sealed)
           customerUpstreamKey = openSecret(cfg.pepper, access.upstream_key_sealed);
       }
-      if (billed && key.balance <= 0)
+      if (billed && key.balance < 1000)
         return c.json(
           errorBody(kind, 402, 'insufficient_balance', 'Your wallet is empty. Top up at cli.edgey.shop.'),
           402,
