@@ -557,7 +557,12 @@ export function createApp({ cfg, db, clock = now }) {
           const out = publicError(kind, pRes.status, pText, cfg);
           return c.json(out.body, { status: out.status });
         }
-        return new Response(pText, { status: 200, headers: { 'content-type': 'application/json' } });
+        const respHeaders = { 'content-type': 'application/json' };
+        for (const h of ['x-edgey-mode', 'x-edgey-mode-revision']) {
+          const v = pRes.headers.get(h);
+          if (v) respHeaders[h] = v;
+        }
+        return new Response(pText, { status: 200, headers: respHeaders });
       }
 
       const info = modelInfo(body.model);
