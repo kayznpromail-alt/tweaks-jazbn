@@ -38,16 +38,25 @@ const RANGES = {
 let _capabilitiesCache = { data: null, fetchedAt: 0 };
 async function getDawvqCapabilities(cfg) {
   const now = Date.now();
-  if (_capabilitiesCache.data && now - _capabilitiesCache.fetchedAt < 3_600_000) return _capabilitiesCache.data;
+  if (_capabilitiesCache.data && now - _capabilitiesCache.fetchedAt < 3_600_000) {
+    console.log('[caps] using cached capabilities (age %ds)', Math.round((now - _capabilitiesCache.fetchedAt) / 1000));
+    return _capabilitiesCache.data;
+  }
   try {
+    console.log('[caps] fetching upstream capabilities from %s', cfg.upstreamBase);
     const res = await fetch(`${cfg.upstreamBase}/v1/cli-capabilities`, {
       headers: { authorization: `Bearer ${cfg.upstreamKey}` },
     });
-    if (!res.ok) return _capabilitiesCache.data;
+    if (!res.ok) {
+      console.error('[caps] upstream returned %d %s', res.status, res.statusText);
+      return _capabilitiesCache.data;
+    }
     const data = await res.json();
+    console.log('[caps] upstream response: %s', JSON.stringify(data));
     _capabilitiesCache = { data, fetchedAt: now };
     return data;
-  } catch {
+  } catch (err) {
+    console.error('[caps] upstream fetch failed:', err.message);
     return _capabilitiesCache.data;
   }
 }
