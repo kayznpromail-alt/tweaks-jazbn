@@ -11,29 +11,32 @@ const providerCount = providers.length;
 const features = [
   {
     title: 'Every model on tap.',
-    desc: 'Browse the catalog, compare rates, and switch models by changing a single string.',
+    desc: 'GPT, Claude, Gemini, Grok and more behind one endpoint. Switch by changing a single string.',
   },
   {
     title: 'A key for every project.',
-    desc: 'Give each app its own key, budget and model access. Pause any of them in one click.',
+    desc: 'Give each app its own key and budget. Pause one without touching the others.',
   },
   {
     title: 'Spend you can actually read.',
-    desc: 'Requests, tokens and cost per key, broken down day by day.',
+    desc: 'Tokens and cost per key, day by day. No spreadsheet required.',
   },
   {
-    title: 'Fits the tools you use.',
-    desc: 'Copy-paste setup for the OpenAI SDK, curl and the edgey CLI.',
+    title: 'Fits the tools you already use.',
+    desc: 'OpenAI SDK, curl or Claude Code. Copy the snippet, paste it, done.',
   },
   {
     title: 'Keep the momentum.',
-    desc: 'From the idea to the first lines of code, through one OpenAI-compatible endpoint.',
+    desc: 'Ask once and watch the answer stream in, line by line.',
   },
   {
     title: 'Fix it, run it again.',
-    desc: 'Spot the issue, patch one line, rerun. That is the whole loop.',
+    desc: 'Catch the error, patch one line, rerun. Every step, as it happens.',
   },
 ];
+
+// Example usage chart: four bars a day, trending up.
+const usageBars = Array.from({ length: 28 }, (_, i) => Math.max(14, Math.min(96, Math.round(26 + i * 2 + ((i * 37) % 23) - 10))));
 
 const steps = [
   {
@@ -206,102 +209,155 @@ const faqs = [
         </h2>
         <p class="ln-lead">Keys, models, usage and setup guides.<br />Everything you need to go from idea to production, nothing you don't.</p>
 
-        <div class="ln-feat-grid">
-          <!-- 1: Models -->
-          <article class="ln-feat">
+        <div class="ln-feat-grid" data-feats>
+          <!-- 1: Models hub -->
+          <article class="ln-feat" data-feat>
+            <span class="ln-feat-ico"><Icon name="grid" size={16} /></span>
             <h3>{features[0].title}</h3>
             <p>{features[0].desc}</p>
             <div class="ln-feat-vis">
-              <div class="ln-model-row">
-                <span class="ln-model-icon"><span class="ln-mark ln-mark--openai" style="--s:20px"></span></span>
-                <span class="ln-model-icon"><span class="ln-mark ln-mark--claude" style="--s:20px"></span></span>
-                <span class="ln-model-icon ln-model-icon--brand"><Icon name="terminal" size={18} /></span>
-                <span class="ln-model-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 3l7.5 9L3 21h2l6.5-7.8L18 21h3l-8-9.5L20.5 3h-2L12 10.3 6 3H3z"/></svg></span>
+              <div class="ln-hub">
+                <svg class="ln-hub-svg" viewBox="0 0 280 176" aria-hidden="true">
+                  <circle class="ln-hub-orbit" cx="140" cy="88" r="50" />
+                  <path class="ln-hub-line" d="M140 88 L44 34" />
+                  <path class="ln-hub-line" d="M140 88 L236 34" />
+                  <path class="ln-hub-line" d="M140 88 L44 142" />
+                  <path class="ln-hub-line" d="M140 88 L236 142" />
+                </svg>
+                <span class="ln-pkt" style="--path:path('M140 88 L44 34');--d:0s;--c:#10a37f"></span>
+                <span class="ln-pkt" style="--path:path('M140 88 L236 34');--d:0.7s;--c:#d97757"></span>
+                <span class="ln-pkt" style="--path:path('M140 88 L236 142');--d:1.4s;--c:#8ab4f8"></span>
+                <span class="ln-pkt" style="--path:path('M140 88 L44 142');--d:2.1s;--c:#f4f7f8"></span>
+                <span class="ln-hub-node" style="left:44px;top:34px;--d:0s;--c:#10a37f"><span class="ln-mark ln-mark--openai" style="--s:18px"></span><small>OpenAI</small></span>
+                <span class="ln-hub-node" style="left:236px;top:34px;--d:0.7s;--c:#d97757"><span class="ln-mark ln-mark--claude" style="--s:18px"></span><small>Claude</small></span>
+                <span class="ln-hub-node" style="left:236px;top:142px;--d:1.4s;--c:#8ab4f8"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12 2c.5 5.5 4.5 9.5 10 10-5.5.5-9.5 4.5-10 10-.5-5.5-4.5-9.5-10-10 5.5-.5 9.5-4.5 10-10z"/></svg><small>Gemini</small></span>
+                <span class="ln-hub-node" style="left:44px;top:142px;--d:2.1s;--c:#f4f7f8"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M3 3l7.5 9L3 21h2l6.5-7.8L18 21h3l-8-9.5L20.5 3h-2L12 10.3 6 3H3z"/></svg><small>Grok</small></span>
+                <span class="ln-hub-core"><Icon name="terminal" size={20} /></span>
               </div>
             </div>
           </article>
 
           <!-- 2: Keys -->
-          <article class="ln-feat">
+          <article class="ln-feat" data-feat>
+            <span class="ln-feat-ico"><Icon name="key" size={16} /></span>
             <h3>{features[1].title}</h3>
             <p>{features[1].desc}</p>
             <div class="ln-feat-vis">
-              <div class="ln-keys">
-                <div class="ln-key"><span class="ln-key-dot ln-key-dot--on"></span><span>Production</span><span class="dim mono">sk_edgey_…</span><span class="ln-tag ln-tag--green">Active</span></div>
-                <div class="ln-key"><span class="ln-key-dot ln-key-dot--on"></span><span>Side project</span><span class="dim mono">sk_edgey_…</span><span class="ln-tag ln-tag--green">Active</span></div>
-                <div class="ln-key"><span class="ln-key-dot"></span><span>Local dev</span><span class="dim mono">sk_edgey_…</span><span class="ln-tag">Paused</span></div>
+              <div class="ln-keyset">
+                <span class="ln-keyset-sel" aria-hidden="true"></span>
+                <div class="ln-krow">
+                  <span class="ln-krow-ico"><Icon name="key" size={13} /></span>
+                  <span class="ln-krow-main"><b>Production</b><span class="mono">sk_edgey_••3f9a</span></span>
+                  <span class="ln-krow-budget"><i style="--p:72%"></i><small>$36 / $50</small></span>
+                  <span class="ln-switch is-on"></span>
+                </div>
+                <div class="ln-krow">
+                  <span class="ln-krow-ico"><Icon name="key" size={13} /></span>
+                  <span class="ln-krow-main"><b>Side project</b><span class="mono">sk_edgey_••81c2</span></span>
+                  <span class="ln-krow-budget"><i style="--p:38%"></i><small>$7.6 / $20</small></span>
+                  <span class="ln-switch is-on"></span>
+                </div>
+                <div class="ln-krow ln-krow--flip">
+                  <span class="ln-krow-ico"><Icon name="key" size={13} /></span>
+                  <span class="ln-krow-main"><b>Local dev</b><span class="ln-krow-state"><span>Paused</span><span>Live again</span></span></span>
+                  <span class="ln-krow-budget"><i style="--p:12%"></i><small>$1.2 / $10</small></span>
+                  <span class="ln-switch"></span>
+                </div>
               </div>
             </div>
           </article>
 
           <!-- 3: Usage -->
-          <article class="ln-feat">
+          <article class="ln-feat" data-feat>
+            <span class="ln-feat-ico"><Icon name="activity" size={16} /></span>
             <h3>{features[2].title}</h3>
             <p>{features[2].desc}</p>
             <div class="ln-feat-vis">
-              <div class="ln-chart">
-                <div class="ln-chart-bar" style="--h:55%"></div>
-                <div class="ln-chart-bar" style="--h:80%"></div>
-                <div class="ln-chart-bar" style="--h:40%"></div>
-                <div class="ln-chart-bar" style="--h:90%"></div>
-                <div class="ln-chart-bar" style="--h:65%"></div>
-                <div class="ln-chart-bar" style="--h:25%"></div>
-                <div class="ln-chart-bar" style="--h:45%"></div>
+              <div class="ln-usage" data-usage>
+                <div class="ln-usage-top">
+                  <span>Tokens this week</span>
+                  <b class="mono" data-usage-total>0</b>
+                </div>
+                <div class="ln-ubars" data-ubars>
+                  {usageBars.map((h, i) => <span style={`--h:${h}%;--i:${i}`} data-h={h}></span>)}
+                  <div class="ln-utip" data-utip aria-hidden="true"></div>
+                </div>
+                <div class="ln-ubars-x"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
               </div>
-              <div class="ln-chart-labels"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
-              <p class="ln-chart-note">Requests getting…</p>
             </div>
           </article>
 
           <!-- 4: Setup -->
-          <article class="ln-feat">
+          <article class="ln-feat" data-feat>
+            <span class="ln-feat-ico"><Icon name="terminal" size={16} /></span>
             <h3>{features[3].title}</h3>
             <p>{features[3].desc}</p>
             <div class="ln-feat-vis">
-              <div class="ln-setup-tabs">
-                <span class="ln-setup-tab ln-setup-tab--active">openai</span>
-                <span class="ln-setup-tab">curl</span>
-                <span class="ln-setup-tab">edgeycli</span>
-              </div>
-              <div class="ln-setup-code">
-                <code><span class="c-kw">from</span> openai <span class="c-kw">import</span> OpenAI</code>
-                <code>client = OpenAI(</code>
-                <code>  <span class="c-key">base_url</span>=<span class="c-str">"api.edgey.shop/v1"</span></code>
-                <code>)</code>
+              <div class="ln-snip" data-snip>
+                <div class="ln-snip-tabs" role="tablist">
+                  <span class="ln-snip-ind" aria-hidden="true"></span>
+                  <button type="button" class="is-on" data-snip-tab>Python</button>
+                  <button type="button" data-snip-tab>curl</button>
+                  <button type="button" data-snip-tab>Claude Code</button>
+                  <button type="button" class="ln-snip-copy" data-snip-copy aria-label="Copy snippet"><Icon name="copy" size={12} /><Icon name="check" size={12} /></button>
+                </div>
+                <div class="ln-snip-panes">
+                  <pre class="ln-snip-pane is-on"><code><span style="--l:0"><span class="c-kw">from</span> openai <span class="c-kw">import</span> OpenAI</span>
+<span style="--l:1">client = OpenAI(</span>
+<span style="--l:2">  <span class="c-key">base_url</span>=<span class="c-str">"https://api.edgey.shop/v1"</span>,</span>
+<span style="--l:3">  <span class="c-key">api_key</span>=<span class="c-str">"sk_edgey_..."</span>,</span>
+<span style="--l:4">)</span></code></pre>
+                  <pre class="ln-snip-pane"><code><span style="--l:0">curl https://api.edgey.shop/v1/chat/completions \</span>
+<span style="--l:1">  -H <span class="c-str">"Authorization: Bearer $KEY"</span> \</span>
+<span style="--l:2">  -d <span class="c-str">'{"{"}"model": "gpt-6-astra",</span></span>
+<span style="--l:3"><span class="c-str">       "messages": [...]{"}"}'</span></span></code></pre>
+                  <pre class="ln-snip-pane"><code><span style="--l:0"><span class="c-kw">export</span> <span class="c-key">ANTHROPIC_BASE_URL</span>=<span class="c-str">"https://api.edgey.shop"</span></span>
+<span style="--l:1"><span class="c-kw">export</span> <span class="c-key">ANTHROPIC_API_KEY</span>=<span class="c-str">"sk_edgey_..."</span></span>
+<span style="--l:2"><span class="c-kw">export</span> <span class="c-key">ANTHROPIC_MODEL</span>=<span class="c-str">"claude-opus-5"</span></span>
+<span style="--l:3">claude</span></code></pre>
+                </div>
               </div>
             </div>
           </article>
 
-          <!-- 5: Keep building -->
-          <article class="ln-feat">
+          <!-- 5: Streaming -->
+          <article class="ln-feat" data-feat>
+            <span class="ln-feat-ico"><Icon name="chat" size={16} /></span>
             <h3>{features[4].title}</h3>
             <p>{features[4].desc}</p>
             <div class="ln-feat-vis">
-              <div class="ln-chat-compare">
-                <div class="ln-chat ln-chat--fail">
-                  <span class="ln-chat-label">ChatGPT</span>
-                  <p class="ln-chat-msg ln-chat-msg--err">Can't respond.</p>
-                </div>
-                <div class="ln-chat ln-chat--ok">
-                  <span class="ln-chat-label">edgey</span>
-                  <code class="ln-chat-code"><span class="c-kw">#include</span> <span class="c-str">&lt;iostream&gt;</span>
-<span class="c-kw">int</span> main() {"{"} … {"}"}</code>
+              <div class="ln-stream" data-stream>
+                <div class="ln-deny"><span class="ln-deny-x"><Icon name="x" size={11} /></span><span class="ln-deny-who">Other assistants</span><span class="ln-deny-msg">I can't help with that.</span></div>
+                <div class="ln-reply">
+                  <div class="ln-reply-head">
+                    <span class="ln-reply-who"><Icon name="terminal" size={12} /> edgey</span>
+                    <span class="ln-reply-model mono">claude-sonnet-5</span>
+                    <span class="ln-reply-meta mono" data-stream-meta>streaming…</span>
+                  </div>
+                  <pre class="ln-reply-code"><code data-stream-out></code><span class="ln-caret"></span></pre>
                 </div>
               </div>
             </div>
           </article>
 
-          <!-- 6: Debug -->
-          <article class="ln-feat">
+          <!-- 6: Fix loop -->
+          <article class="ln-feat" data-feat>
+            <span class="ln-feat-ico"><Icon name="refresh" size={16} /></span>
             <h3>{features[5].title}</h3>
             <p>{features[5].desc}</p>
             <div class="ln-feat-vis">
-              <div class="ln-debug">
-                <div class="ln-debug-head"><span class="ln-debug-tag">Issue detected</span><span class="dim">1 / 6</span></div>
-                <div class="ln-debug-diff">
-                  <code class="ln-diff-old">- response.<span class="c-key">text</span></code>
-                  <code class="ln-diff-new">+ response.<span class="c-key">output_text</span></code>
+              <div class="ln-fix" data-fix data-step="0">
+                <div class="ln-fix-top">
+                  <span class="ln-fix-status"><i></i><span data-fix-label>Sending request</span></span>
+                  <span class="ln-fix-count mono" data-fix-count>1 / 5</span>
                 </div>
+                <div class="ln-fix-file">
+                  <div class="ln-fix-head"><Icon name="code" size={12} /> client.ts</div>
+                  <code class="ln-fix-line"><em>20</em>const res = await ai.responses.create(q);</code>
+                  <code class="ln-fix-line ln-fix-old"><em>21</em>render(res.text);</code>
+                  <code class="ln-fix-line ln-fix-new"><em>21</em>render(res.output_text);</code>
+                </div>
+                <div class="ln-fix-bar"><i></i></div>
               </div>
             </div>
           </article>
@@ -481,6 +537,170 @@ response = client.chat.completions.create(
       setInterval(() => { if (!hovering && !document.hidden) place((idx + 1) % items.length); }, 2400);
     }
   }
+  // Feature cards: reveal once, animate only while on screen.
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const feats = document.querySelector<HTMLElement>('[data-feats]');
+  if (feats) {
+    feats.classList.add('js');
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        e.target.classList.toggle('is-live', e.isIntersecting);
+        if (e.isIntersecting) e.target.classList.add('is-in');
+      }
+    }, { threshold: 0.2 });
+    feats.querySelectorAll<HTMLElement>('[data-feat]').forEach((el, i) => {
+      el.style.setProperty('--n', String(i % 3));
+      io.observe(el);
+    });
+    feats.addEventListener('pointermove', (e) => {
+      const card = (e.target as HTMLElement).closest<HTMLElement>('[data-feat]');
+      if (!card) return;
+      const r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      card.style.setProperty('--my', `${e.clientY - r.top}px`);
+    });
+  }
+  const isLive = (el: Element) => !!el.closest('.is-live');
+  const every = (ms: number, fn: () => void) => setInterval(() => { if (!document.hidden) fn(); }, ms);
+
+  const usage = document.querySelector<HTMLElement>('[data-usage]');
+  if (usage) {
+    const bars = [...usage.querySelectorAll<HTMLElement>('[data-ubars] > span')];
+    const tip = usage.querySelector<HTMLElement>('[data-utip]')!;
+    const totalEl = usage.querySelector<HTMLElement>('[data-usage-total]')!;
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const tokensOf = (b: HTMLElement) => Number(b.dataset.h) * 6400;
+    const fmt = (n: number) => (n >= 1e6 ? `${(n / 1e6).toFixed(2)}M` : `${Math.round(n / 1e3)}k`);
+    let total = bars.reduce((sum, b) => sum + tokensOf(b), 0);
+    let counted = false;
+    let at = bars.length - 1;
+    const show = (i: number) => {
+      bars.forEach((b, k) => b.classList.toggle('is-on', k === i));
+      const b = bars[i];
+      const t = tokensOf(b);
+      tip.innerHTML = `<b>${days[Math.floor(i / 4)]}</b>${fmt(t)} tokens · $${((t * 0.7) / 1e6).toFixed(2)}`;
+      const half = tip.offsetWidth / 2;
+      const x = Math.min(Math.max(b.offsetLeft + b.offsetWidth / 2, half), usage.offsetWidth - half);
+      tip.style.setProperty('--x', `${x}px`);
+      tip.style.setProperty('--y', `${b.offsetHeight}px`);
+      tip.classList.add('is-on');
+    };
+    const countUp = () => {
+      counted = true;
+      if (still) { totalEl.textContent = fmt(total); return; }
+      const t0 = performance.now();
+      const tick = (now: number) => {
+        const k = Math.min(1, (now - t0) / 1400);
+        totalEl.textContent = fmt(total * (1 - Math.pow(1 - k, 3)));
+        if (k < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    };
+    if (still) { countUp(); show(at); }
+    every(1700, () => {
+      if (still || !isLive(usage)) return;
+      if (!counted) { countUp(); return; }
+      total += 2000 + Math.round(Math.random() * 9000);
+      totalEl.textContent = fmt(total);
+      at = (at + 5) % bars.length;
+      show(at);
+    });
+  }
+
+  const snip = document.querySelector<HTMLElement>('[data-snip]');
+  if (snip) {
+    const tabs = [...snip.querySelectorAll<HTMLButtonElement>('[data-snip-tab]')];
+    const panes = [...snip.querySelectorAll<HTMLElement>('.ln-snip-pane')];
+    const ind = snip.querySelector<HTMLElement>('.ln-snip-ind')!;
+    const copy = snip.querySelector<HTMLButtonElement>('[data-snip-copy]')!;
+    let cur = 0;
+    let hold = false;
+    const select = (i: number) => {
+      cur = i;
+      tabs.forEach((t, k) => t.classList.toggle('is-on', k === i));
+      panes.forEach((p, k) => p.classList.toggle('is-on', k === i));
+      ind.style.cssText = `--x:${tabs[i].offsetLeft}px;--w:${tabs[i].offsetWidth}px`;
+    };
+    select(0);
+    document.fonts?.ready.then(() => select(cur));
+    tabs.forEach((t, k) => t.addEventListener('click', () => { hold = true; select(k); }));
+    snip.addEventListener('pointerenter', () => { hold = true; });
+    snip.addEventListener('pointerleave', () => { hold = false; });
+    copy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(panes[cur].textContent ?? '');
+        copy.classList.add('is-done');
+        setTimeout(() => copy.classList.remove('is-done'), 1400);
+      } catch {}
+    });
+    if (!still) every(3800, () => { if (!hold && isLive(snip)) select((cur + 1) % tabs.length); });
+  }
+
+  const stream = document.querySelector<HTMLElement>('[data-stream]');
+  if (stream) {
+    const out = stream.querySelector<HTMLElement>('[data-stream-out]')!;
+    const meta = stream.querySelector<HTMLElement>('[data-stream-meta]')!;
+    const code: [string, string?][] = [
+      ['#include ', 'c-kw'], ['"updater.hpp"', 'c-str'], ['\n'],
+      ['int', 'c-kw'], [' main() {\n  '],
+      ['if', 'c-kw'], [' (!Updater::init()) '], ['return', 'c-kw'], [' '], ['1', 'c-num'], [';\n  '],
+      ['return', 'c-kw'], [' Updater::run();\n}'],
+    ];
+    let tok = 0, ch = 0, rest = 0, ticks = 0;
+    const finish = () => {
+      stream.classList.add('is-done');
+      meta.textContent = `done in ${((ticks * 45) / 1000).toFixed(1)}s`;
+    };
+    const reset = () => {
+      out.textContent = '';
+      tok = ch = ticks = 0;
+      stream.classList.remove('is-done');
+      meta.textContent = 'streaming…';
+    };
+    if (still) {
+      for (const [text, cls] of code) { const s = document.createElement('span'); if (cls) s.className = cls; s.textContent = text; out.append(s); }
+      ticks = 48;
+      finish();
+    } else {
+      reset();
+      every(45, () => {
+        if (!isLive(stream)) return;
+        if (rest) { if (--rest === 0) reset(); return; }
+        ticks++;
+        for (let n = 0; n < 2 && tok < code.length; n++) {
+          const [text, cls] = code[tok];
+          if (ch === 0) { const s = document.createElement('span'); if (cls) s.className = cls; out.append(s); }
+          out.lastElementChild!.textContent += text[ch++];
+          if (ch >= text.length) { tok++; ch = 0; }
+        }
+        if (tok >= code.length) { finish(); rest = 70; }
+      });
+    }
+  }
+
+  const fix = document.querySelector<HTMLElement>('[data-fix]');
+  if (fix) {
+    const labels = ['Sending request', 'TypeError: res.text is undefined', 'Patching line 21', 'Running again', '200 OK · 312 tokens'];
+    const label = fix.querySelector<HTMLElement>('[data-fix-label]')!;
+    const count = fix.querySelector<HTMLElement>('[data-fix-count]')!;
+    let step = 0, wait = 0;
+    const set = (i: number) => {
+      step = i;
+      fix.dataset.step = String(i);
+      fix.style.setProperty('--s', String(i));
+      label.textContent = labels[i];
+      count.textContent = `${i + 1} / ${labels.length}`;
+    };
+    if (still) set(labels.length - 1);
+    else every(1400, () => {
+      if (!isLive(fix)) return;
+      if (wait) { wait--; return; }
+      const next = (step + 1) % labels.length;
+      set(next);
+      if (next === labels.length - 1) wait = 1;
+    });
+  }
+
   const dialog = document.getElementById('signinDialog') as HTMLDialogElement | null;
   document.querySelectorAll<HTMLElement>('[data-open-signin],[data-open-signin-register]').forEach(b =>
     b.addEventListener('click', (e) => { e.preventDefault(); dialog?.showModal(); })
@@ -782,88 +1002,238 @@ response = client.chat.completions.create(
   /* ── Feature Grid ── */
   .ln-feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 44px; }
   .ln-feat {
-    padding: 22px; border-radius: 14px;
+    position: relative; isolation: isolate; overflow: hidden;
+    display: flex; flex-direction: column;
+    padding: 22px; border-radius: 16px;
     background: linear-gradient(180deg, var(--surface-2), var(--surface));
     border: 1px solid var(--border);
-    transition: border-color 0.2s, transform 0.2s;
+    transition: border-color 0.25s, transform 0.25s, opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1), translate 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition-delay: 0s, 0s, calc(var(--n, 0) * 90ms), calc(var(--n, 0) * 90ms);
   }
-  .ln-feat:hover { border-color: var(--accent-line); transform: translateY(-3px); }
-  .ln-feat h3 { font-size: 14px; font-weight: 600; }
-  .ln-feat > p { margin-top: 6px; font-size: 12px; line-height: 1.6; color: var(--muted); }
-  .ln-feat-vis { margin-top: 18px; }
-
-  /* Models preview */
-  .ln-model-row { display: flex; gap: 10px; }
-  .ln-model-icon {
-    display: grid; place-items: center;
-    width: 42px; height: 42px; border-radius: 10px;
-    background: var(--surface); border: 1px solid var(--border); color: var(--muted);
-    transition: border-color 0.2s;
+  .ln-feat-grid.js .ln-feat:not(.is-in) { opacity: 0; translate: 0 24px; }
+  .ln-feat::before {
+    content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(340px circle at var(--mx, 50%) var(--my, 0%), rgb(34 211 238 / 0.08), transparent 60%);
+    opacity: 0; transition: opacity 0.3s;
   }
-  .ln-model-icon--brand { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); }
-  .ln-feat:hover .ln-model-icon { border-color: var(--border-2); }
+  .ln-feat::after {
+    content: ''; position: absolute; inset: 0 0 auto; height: 1px; pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgb(34 211 238 / 0.4), transparent);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .ln-feat:hover { border-color: var(--border-2); transform: translateY(-2px); }
+  .ln-feat:hover::before, .ln-feat:hover::after { opacity: 1; }
+  .ln-feat-ico {
+    display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px;
+    color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line);
+  }
+  .ln-feat h3 { margin-top: 18px; font-size: 15.5px; font-weight: 600; letter-spacing: -0.01em; }
+  .ln-feat > p { margin-top: 6px; font-size: 13px; line-height: 1.55; color: var(--muted); }
+  .ln-feat-vis { position: relative; margin-top: auto; padding-top: 20px; height: 216px; display: grid; place-items: center; }
+  /* Offscreen cards stop animating */
+  .ln-feat-grid.js .ln-feat:not(.is-live) .ln-feat-vis *,
+  .ln-feat-grid.js .ln-feat:not(.is-live) .ln-feat-vis *::before,
+  .ln-feat-grid.js .ln-feat:not(.is-live) .ln-feat-vis *::after { animation-play-state: paused !important; }
 
-  /* Keys preview */
-  .ln-keys { display: flex; flex-direction: column; gap: 4px; }
-  .ln-key {
-    display: flex; align-items: center; gap: 8px;
-    padding: 7px 10px; border-radius: 6px; font-size: 11px;
+  /* 1 · Model hub */
+  .ln-hub { position: relative; width: 280px; height: 176px; }
+  .ln-hub-svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .ln-hub-orbit { fill: none; stroke: rgb(34 211 238 / 0.28); stroke-dasharray: 2 5; transform-origin: 140px 88px; animation: ln-spin 24s linear infinite; }
+  .ln-hub-line { fill: none; stroke: var(--border-2); stroke-dasharray: 3 4; animation: ln-flow 1s linear infinite; }
+  @keyframes ln-spin { to { transform: rotate(360deg); } }
+  @keyframes ln-flow { to { stroke-dashoffset: -7; } }
+  .ln-pkt {
+    position: absolute; left: 0; top: 0; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--c); box-shadow: 0 0 10px var(--c), 0 0 2px var(--c);
+    offset-path: var(--path); offset-rotate: 0deg;
+    animation: ln-pkt 2.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) var(--d) infinite both;
+  }
+  @keyframes ln-pkt {
+    0% { offset-distance: 22%; opacity: 0; }
+    10% { opacity: 1; }
+    62% { offset-distance: 72%; opacity: 1; }
+    68%, 100% { offset-distance: 76%; opacity: 0; }
+  }
+  .ln-hub-node {
+    position: absolute; z-index: 1; translate: -50% -50%;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    width: 62px; padding: 9px 0 7px; border-radius: 12px;
+    color: var(--muted); background: var(--surface-2); border: 1px solid var(--border);
+    animation: ln-hit 2.8s ease var(--d) infinite both;
+  }
+  .ln-hub-node small { font-size: 9.5px; font-weight: 500; color: var(--muted); }
+  @keyframes ln-hit {
+    0%, 56%, 100% { color: var(--muted); border-color: var(--border); box-shadow: none; }
+    66% { color: var(--c); border-color: color-mix(in srgb, var(--c) 55%, transparent); box-shadow: 0 0 22px -4px color-mix(in srgb, var(--c) 60%, transparent); }
+    88% { color: var(--c); border-color: color-mix(in srgb, var(--c) 25%, transparent); box-shadow: none; }
+  }
+  .ln-hub-core {
+    position: absolute; z-index: 1; left: 140px; top: 88px; translate: -50% -50%;
+    display: grid; place-items: center; width: 52px; height: 52px; border-radius: 15px;
+    color: var(--accent); background: radial-gradient(circle at 50% 25%, #0f2a31, var(--surface));
+    border: 1px solid var(--accent-line);
+    box-shadow: 0 0 32px -6px rgb(34 211 238 / 0.55), inset 0 1px 0 rgb(255 255 255 / 0.06);
+  }
+  .ln-hub-core::before {
+    content: ''; position: absolute; inset: -1px; border-radius: inherit; border: 1px solid var(--accent);
+    animation: ln-core 1.4s ease-out infinite;
+  }
+  @keyframes ln-core { from { transform: scale(1); opacity: 0.6; } to { transform: scale(1.6); opacity: 0; } }
+
+  /* 2 · Keys */
+  .ln-keyset { position: relative; width: 100%; display: flex; flex-direction: column; gap: 8px; }
+  .ln-krow {
+    display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 12px; border-radius: 12px;
     background: var(--surface); border: 1px solid var(--border);
   }
-  .ln-key-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border-2); flex: none; }
-  .ln-key-dot--on { background: rgb(74 222 128); box-shadow: 0 0 4px rgb(74 222 128 / 0.4); }
-  .ln-tag { margin-left: auto; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 6px; border-radius: 4px; color: var(--muted); background: var(--surface-2); }
-  .ln-tag--green { color: rgb(74 222 128); background: rgb(74 222 128 / 0.1); }
+  .ln-keyset-sel {
+    position: absolute; z-index: 2; left: 0; right: 0; top: 0; height: 52px; border-radius: 12px; pointer-events: none;
+    border: 1px solid var(--accent-line); background: rgb(34 211 238 / 0.05);
+    box-shadow: 0 0 26px -10px rgb(34 211 238 / 0.6);
+    animation: ln-sel 7.5s cubic-bezier(0.7, 0, 0.2, 1) infinite;
+  }
+  @keyframes ln-sel { 0%, 28% { translate: 0 0; } 33%, 61% { translate: 0 60px; } 66%, 95% { translate: 0 120px; } 100% { translate: 0 0; } }
+  .ln-krow-ico {
+    display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 8px;
+    color: var(--muted); background: var(--surface-2); border: 1px solid var(--border);
+  }
+  .ln-krow-main { display: flex; flex-direction: column; flex: 1; min-width: 0; gap: 1px; }
+  .ln-krow-main b { font-size: 12px; font-weight: 600; }
+  .ln-krow-main .mono, .ln-krow-state { font-size: 10px; color: var(--muted); }
+  .ln-krow-state { display: grid; }
+  .ln-krow-state > span { grid-area: 1 / 1; }
+  .ln-krow-state > span:first-child { color: rgb(251 191 36); animation: ln-st-a 7.5s infinite; }
+  .ln-krow-state > span:last-child { color: var(--accent); animation: ln-st-b 7.5s infinite; }
+  @keyframes ln-st-a { 0%, 72%, 98%, 100% { opacity: 1; } 75%, 95% { opacity: 0; } }
+  @keyframes ln-st-b { 0%, 72%, 98%, 100% { opacity: 0; } 75%, 95% { opacity: 1; } }
+  .ln-krow-budget { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex: none; width: 62px; }
+  .ln-krow-budget i { position: relative; display: block; width: 100%; height: 4px; border-radius: 99px; overflow: hidden; background: var(--border); }
+  .ln-krow-budget i::after {
+    content: ''; position: absolute; inset: 0 auto 0 0; width: var(--p); border-radius: inherit;
+    background: linear-gradient(90deg, rgb(34 211 238 / 0.45), var(--accent));
+    transform-origin: left; transition: transform 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) 0.4s;
+  }
+  .ln-feat-grid.js .ln-feat:not(.is-in) .ln-krow-budget i::after { transform: scaleX(0); }
+  .ln-krow-budget small { font-family: var(--mono); font-size: 9.5px; color: var(--muted); }
+  .ln-krow--flip > :not(.ln-switch) { animation: ln-dim 7.5s infinite; }
+  @keyframes ln-dim { 0%, 72%, 98%, 100% { opacity: 0.55; } 75%, 95% { opacity: 1; } }
+  .ln-switch { position: relative; flex: none; width: 30px; height: 17px; border-radius: 999px; background: var(--border-2); }
+  .ln-switch::after {
+    content: ''; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: #9fb0ba;
+  }
+  .ln-switch.is-on { background: rgb(34 211 238 / 0.35); }
+  .ln-switch.is-on::after { transform: translateX(13px); background: var(--accent); }
+  .ln-krow--flip .ln-switch { animation: ln-sw-bg 7.5s infinite; }
+  .ln-krow--flip .ln-switch::after { animation: ln-sw-knob 7.5s infinite; }
+  @keyframes ln-sw-bg { 0%, 72%, 98%, 100% { background: var(--border-2); } 75%, 95% { background: rgb(34 211 238 / 0.35); } }
+  @keyframes ln-sw-knob { 0%, 72%, 98%, 100% { transform: none; background: #9fb0ba; } 75%, 95% { transform: translateX(13px); background: var(--accent); } }
 
-  /* Chart preview */
-  .ln-chart { display: flex; align-items: flex-end; gap: 6px; height: 70px; }
-  .ln-chart-bar {
-    flex: 1; height: var(--h); border-radius: 3px 3px 0 0;
-    background: linear-gradient(180deg, var(--accent), rgb(34 211 238 / 0.25));
+  /* 3 · Usage */
+  .ln-usage { width: 100%; }
+  .ln-usage-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 11.5px; color: var(--muted); }
+  .ln-usage-top b { font-size: 20px; font-weight: 600; color: var(--fg); letter-spacing: -0.02em; }
+  .ln-ubars { position: relative; display: flex; align-items: flex-end; gap: 3px; height: 116px; margin-top: 14px; border-bottom: 1px solid var(--border); }
+  .ln-ubars > span {
+    flex: 1; height: calc(var(--h) * 0.8); border-radius: 3px 3px 1px 1px;
+    background: linear-gradient(180deg, rgb(34 211 238 / 0.7), rgb(34 211 238 / 0.1));
+    transform-origin: bottom;
+    transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--i) * 22ms), background 0.25s, box-shadow 0.25s;
   }
-  .ln-chart-labels { display: flex; justify-content: space-between; font-size: 9px; font-family: var(--mono); color: var(--muted); margin-top: 6px; }
-  .ln-chart-note { margin-top: 8px; font-size: 10px; color: var(--muted); font-style: italic; }
+  .ln-feat-grid.js .ln-feat:not(.is-in) .ln-ubars > span { transform: scaleY(0); }
+  .ln-ubars > span.is-on { background: linear-gradient(180deg, #a5f3fc, var(--accent)); box-shadow: 0 0 14px rgb(34 211 238 / 0.55); }
+  .ln-utip {
+    position: absolute; left: var(--x, 50%); bottom: calc(var(--y, 40px) + 10px); translate: -50% 0;
+    padding: 5px 9px; border-radius: 8px; white-space: nowrap; pointer-events: none;
+    font-size: 10.5px; color: var(--fg); background: rgb(15 22 28 / 0.94); border: 1px solid var(--border-2);
+    box-shadow: 0 8px 20px -8px #000;
+    opacity: 0; transition: left 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), bottom 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s;
+  }
+  .ln-utip.is-on { opacity: 1; }
+  .ln-utip :global(b) { margin-right: 4px; font-weight: 600; color: var(--accent); }
+  .ln-ubars-x { display: flex; justify-content: space-between; margin-top: 7px; font-family: var(--mono); font-size: 9.5px; color: var(--muted); }
 
-  /* Setup preview */
-  .ln-setup-tabs { display: flex; gap: 2px; margin-bottom: 8px; }
-  .ln-setup-tab {
-    padding: 4px 10px; border-radius: 6px; font-size: 10px; font-family: var(--mono);
-    color: var(--muted); background: var(--surface); cursor: default;
+  /* 4 · Snippets */
+  .ln-snip { width: 100%; overflow: hidden; border-radius: 12px; background: #070b0e; border: 1px solid var(--border); }
+  .ln-snip-tabs { position: relative; display: flex; align-items: center; gap: 2px; padding: 6px; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .ln-snip-tabs button { position: relative; z-index: 1; padding: 5px 10px; border-radius: 7px; font-size: 11px; font-weight: 500; color: var(--muted); transition: color 0.2s; }
+  .ln-snip-tabs button:hover, .ln-snip-tabs button.is-on { color: var(--fg); }
+  .ln-snip-ind {
+    position: absolute; top: 6px; bottom: 6px; left: 0; width: var(--w, 0); translate: var(--x, 0) 0;
+    border-radius: 7px; background: var(--surface-2); border: 1px solid var(--border-2);
+    transition: translate 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
-  .ln-setup-tab--active { color: var(--accent); background: var(--accent-soft); }
-  .ln-setup-code {
-    padding: 10px 12px; border-radius: 8px;
-    background: var(--surface); border: 1px solid var(--border);
-    font-family: var(--mono); font-size: 10px; line-height: 1.6;
+  .ln-snip-tabs .ln-snip-copy { display: grid; place-items: center; width: 26px; height: 26px; margin-left: auto; padding: 0; }
+  .ln-snip-copy :global(svg:last-child) { display: none; color: rgb(74 222 128); }
+  .ln-snip-copy.is-done :global(svg:first-child) { display: none; }
+  .ln-snip-copy.is-done :global(svg:last-child) { display: block; }
+  .ln-snip-panes { display: grid; padding: 14px 12px 16px; }
+  .ln-snip-pane {
+    grid-area: 1 / 1; margin: 0; overflow-x: auto; scrollbar-width: none;
+    font-family: var(--mono); font-size: 9.5px; line-height: 1.8; color: #c7d3da; white-space: pre;
+    opacity: 0; transition: opacity 0.25s;
   }
-  .ln-setup-code code { display: block; white-space: pre; }
+  .ln-snip-pane.is-on { opacity: 1; }
+  .ln-snip-pane code > span { display: inline-block; }
+  .ln-snip-pane.is-on code > span { animation: ln-type 0.55s steps(20, end) calc(var(--l) * 170ms + 120ms) both; }
+  @keyframes ln-type { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
 
-  /* Chat compare preview */
-  .ln-chat-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .ln-chat {
-    padding: 10px; border-radius: 8px;
-    background: var(--surface); border: 1px solid var(--border);
+  /* 5 · Streaming reply */
+  .ln-stream { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+  .ln-deny {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; font-size: 11.5px;
+    background: var(--surface); border: 1px dashed var(--border-2); opacity: 0.75;
   }
-  .ln-chat--fail { opacity: 0.6; }
-  .ln-chat--ok { border-color: var(--accent-line); }
-  .ln-chat-label { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
-  .ln-chat-msg { margin-top: 6px; font-size: 11px; }
-  .ln-chat-msg--err { color: rgb(248 113 113); }
-  .ln-chat-code { display: block; margin-top: 6px; font-size: 9px; line-height: 1.5; white-space: pre; }
+  .ln-deny-x { display: grid; place-items: center; flex: none; width: 18px; height: 18px; border-radius: 50%; color: rgb(248 113 113); background: rgb(248 113 113 / 0.12); }
+  .ln-deny-who { font-weight: 600; }
+  .ln-deny-msg { margin-left: auto; color: var(--muted); text-decoration: line-through; text-decoration-color: rgb(248 113 113 / 0.55); }
+  .ln-reply { overflow: hidden; border-radius: 12px; background: #070b0e; border: 1px solid var(--accent-line); box-shadow: 0 0 30px -14px rgb(34 211 238 / 0.6); }
+  .ln-reply-head { display: flex; align-items: center; gap: 8px; padding: 7px 12px; font-size: 11px; white-space: nowrap; border-bottom: 1px solid var(--border); }
+  .ln-reply-who { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; color: var(--accent); }
+  .ln-reply-model { padding: 2px 6px; border-radius: 5px; font-size: 9.5px; color: var(--muted); background: var(--surface-2); }
+  .ln-reply-meta { margin-left: auto; font-size: 9.5px; color: var(--muted); transition: color 0.3s; }
+  .ln-stream.is-done .ln-reply-meta { color: rgb(74 222 128); }
+  .ln-reply-code { margin: 0; min-height: 101px; padding: 10px 12px 12px; font-family: var(--mono); font-size: 10.5px; line-height: 1.55; color: #c7d3da; white-space: pre; }
+  .ln-reply-code :global(.c-kw) { color: rgb(168 85 247); }
+  .ln-reply-code :global(.c-str) { color: rgb(74 222 128); }
+  .ln-reply-code :global(.c-num) { color: rgb(251 191 36); }
+  .ln-caret { display: inline-block; width: 6px; height: 12px; margin-left: 1px; vertical-align: -2px; background: var(--accent); animation: ln-blink 1s steps(1) infinite; }
+  @keyframes ln-blink { 50% { opacity: 0; } }
 
-  /* Debug preview */
-  .ln-debug {
-    padding: 10px 12px; border-radius: 8px;
-    background: var(--surface); border: 1px solid var(--border);
+  /* 6 · Fix loop */
+  .ln-fix { --s: 0; width: 100%; }
+  .ln-fix-top { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px; }
+  .ln-fix-status { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; transition: color 0.3s; }
+  .ln-fix-status i { width: 8px; height: 8px; border-radius: 50%; background: rgb(251 191 36); box-shadow: 0 0 10px rgb(251 191 36 / 0.6); animation: ln-blink 1s ease-in-out infinite; transition: background 0.3s, box-shadow 0.3s; }
+  .ln-fix-count { font-size: 10px; color: var(--muted); }
+  .ln-fix[data-step="1"] .ln-fix-status { color: #fca5a5; }
+  .ln-fix[data-step="1"] .ln-fix-status i { background: rgb(248 113 113); box-shadow: 0 0 10px rgb(248 113 113 / 0.6); animation: none; }
+  .ln-fix[data-step="2"] .ln-fix-status { color: var(--accent); }
+  .ln-fix[data-step="2"] .ln-fix-status i { background: var(--accent); box-shadow: 0 0 10px rgb(34 211 238 / 0.6); }
+  .ln-fix[data-step="4"] .ln-fix-status { color: #86efac; }
+  .ln-fix[data-step="4"] .ln-fix-status i { background: rgb(74 222 128); box-shadow: 0 0 10px rgb(74 222 128 / 0.6); animation: none; }
+  .ln-fix-file { margin-top: 12px; overflow: hidden; border-radius: 11px; background: #070b0e; border: 1px solid var(--border); }
+  .ln-fix-head { display: flex; align-items: center; gap: 6px; padding: 7px 12px; font-size: 10.5px; color: var(--muted); border-bottom: 1px solid var(--border); }
+  .ln-fix-line {
+    display: block; max-height: 26px; overflow: hidden; padding: 0 12px;
+    font-family: var(--mono); font-size: 10px; line-height: 26px; white-space: pre; color: #c7d3da;
+    border-left: 2px solid transparent;
+    transition: max-height 0.4s, opacity 0.35s, background 0.35s, border-color 0.35s, color 0.35s;
   }
-  .ln-debug-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 10px; }
-  .ln-debug-tag {
-    padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: 600;
-    color: rgb(251 191 36); background: rgb(251 191 36 / 0.1); border: 1px solid rgb(251 191 36 / 0.2);
+  .ln-fix-line em { display: inline-block; width: 22px; font-style: normal; color: #3d4c55; }
+  .ln-fix-new { max-height: 0; opacity: 0; }
+  .ln-fix[data-step="1"] .ln-fix-old { background: rgb(248 113 113 / 0.1); border-left-color: rgb(248 113 113); color: #fca5a5; }
+  .ln-fix[data-step="2"] .ln-fix-old { background: rgb(248 113 113 / 0.05); border-left-color: rgb(248 113 113 / 0.5); color: rgb(248 113 113 / 0.7); text-decoration: line-through; }
+  .ln-fix[data-step="3"] .ln-fix-old, .ln-fix[data-step="4"] .ln-fix-old { max-height: 0; opacity: 0; }
+  .ln-fix[data-step="2"] .ln-fix-new, .ln-fix[data-step="3"] .ln-fix-new, .ln-fix[data-step="4"] .ln-fix-new {
+    max-height: 26px; opacity: 1; background: rgb(74 222 128 / 0.08); border-left-color: rgb(74 222 128); color: #86efac;
   }
-  .ln-debug-diff { font-family: var(--mono); font-size: 10px; line-height: 1.7; }
-  .ln-diff-old { display: block; color: rgb(248 113 113); background: rgb(248 113 113 / 0.06); padding: 2px 6px; border-radius: 3px; }
-  .ln-diff-new { display: block; color: rgb(74 222 128); background: rgb(74 222 128 / 0.06); padding: 2px 6px; border-radius: 3px; margin-top: 2px; }
+  .ln-fix-bar { margin-top: 12px; height: 3px; overflow: hidden; border-radius: 99px; background: var(--border); }
+  .ln-fix-bar i { display: block; width: calc((var(--s) + 1) * 20%); height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), rgb(74 222 128)); transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ln-feat-vis *, .ln-feat-vis *::before, .ln-feat-vis *::after { animation: none !important; }
+    .ln-pkt { display: none; }
+  }
 
   /* Syntax colors */
   .c-kw { color: rgb(168 85 247); }
