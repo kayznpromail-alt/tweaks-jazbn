@@ -10,7 +10,8 @@ import { cliAccounts } from './cli-account.js';
 import { cliReleaseRoutes } from './cli-release.js';
 import { dashboardRoutes } from './dashboard-routes.js';
 import { panelRoutes } from './panel-routes.js';
-import { errorBody, publicError, relay, upstreamModel } from './relay.js';
+import { partnerRelay } from './partner-relay.js';
+import { errorBody, relay, upstreamModel } from './relay.js';
 import {
   hashSecret,
   hashPassword,
@@ -533,36 +534,14 @@ export function createApp({ cfg, db, clock = now }) {
       if (!body || typeof body.model !== 'string')
         return c.json(errorBody(kind, 400, 'invalid_request_error', 'Request body must be JSON with a "model".'), 400);
 
-      // Partner passthrough: direct fetch (not relay) to avoid SSE/header issues.
-      // Force non-streaming and always return application/json to the CLI.
       if (key._partnerKey) {
-        const upModel = upstreamModel(body.model);
-        const { stream: _s, stream_options: _so, ...rest } = body;
-        const upBody = { ...rest, model: upModel, stream: false };
-        console.log('[partner] relaying %s (stream forced off, model %s → %s)', path, body.model, upModel);
-        let pRes;
-        try {
-          pRes = await fetch(`${cfg.partnerBase}/v1${path}`, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json', accept: 'application/json', authorization: `Bearer ${key._partnerKey}` },
-            body: JSON.stringify(upBody),
-            signal: AbortSignal.timeout(120_000),
-          });
-        } catch {
-          return c.json(errorBody(kind, 502, 'upstream_unavailable', 'The model provider did not respond. Try again.'), 502);
+        if (Object.hasOwn(body, 'edgey_mode')) {
+          if (Object.hasOwn(body, 'dawvq_mode'))
+            return c.json(errorBody(kind, 400, 'invalid_request', 'Send only one private mode field.'), 400);
+          body.dawvq_mode = body.edgey_mode;
+          delete body.edgey_mode;
         }
-        const pText = await pRes.text();
-        console.log('[partner] upstream %d, content-type: %s, body length: %d', pRes.status, pRes.headers.get('content-type'), pText.length);
-        if (!pRes.ok) {
-          const out = publicError(kind, pRes.status, pText, cfg);
-          return c.json(out.body, { status: out.status });
-        }
-        const respHeaders = { 'content-type': 'application/json' };
-        const modeVal = pRes.headers.get('x-dawvq-mode') ?? pRes.headers.get('x-edgey-mode');
-        const revVal = pRes.headers.get('x-dawvq-mode-revision') ?? pRes.headers.get('x-edgey-mode-revision');
-        if (modeVal) respHeaders['x-edgey-mode'] = modeVal;
-        if (revVal) respHeaders['x-edgey-mode-revision'] = revVal;
-        return new Response(pText, { status: 200, headers: respHeaders });
+        return partnerRelay({cfg, kind, path, body, incoming: c.req.raw, key: key._partnerKey});
       }
 
       const info = modelInfo(body.model);
