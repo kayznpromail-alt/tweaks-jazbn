@@ -64,7 +64,7 @@ const faqs = [
   { q: 'Can I use my existing account?', a: 'Yes. Sign in with your 16-digit access number. If you already have credits, they\'ll be waiting for you in your workspace.' },
   { q: 'Which models can I use?', a: 'GPT (including GPT-6), Claude (Opus, Sonnet, Haiku, Fable), Gemini, Grok, Deepseek, Qwen, and more. Check the model catalog for the full list and rates.' },
   { q: 'How do top-ups work?', a: 'You buy token packs with crypto (BTC, ETH, LTC, USDT, SOL) via NOWPayments. Your balance is shared across all your API keys. Each model has a rate multiplier.' },
-  { q: 'Where are connection instructions?', a: 'In the Setup page. Point any OpenAI SDK at https://api.edgey.shop/v1 with your sk_edgey_ key. Same format, same streaming, same function calling.' },
+  { q: 'Where are connection instructions?', a: 'In the Setup page. Point any OpenAI SDK at https://gw.edgey.shop/v1 with your sk_edgey_ key. Same format, same streaming, same function calling.' },
   { q: 'How do I contact support?', a: 'Join our Discord server. The support team can help with payments, account access, and API issues. Never share your access number or API key publicly.' },
 ];
 ---
@@ -257,7 +257,7 @@ const faqs = [
               <div class="ln-setup-code">
                 <code><span class="c-kw">from</span> openai <span class="c-kw">import</span> OpenAI</code>
                 <code>client = OpenAI(</code>
-                <code>  <span class="c-key">base_url</span>=<span class="c-str">"api.edgey.shop/v1"</span></code>
+                <code>  <span class="c-key">base_url</span>=<span class="c-str">"gw.edgey.shop/v1"</span></code>
                 <code>)</code>
               </div>
             </div>
@@ -313,7 +313,7 @@ const faqs = [
           <pre class="ln-code"><code><span class="c-kw">from</span> openai <span class="c-kw">import</span> OpenAI
 
 client = OpenAI(
-    <span class="c-key">base_url</span>=<span class="c-str">"https://api.edgey.shop/v1"</span>,
+    <span class="c-key">base_url</span>=<span class="c-str">"https://gw.edgey.shop/v1"</span>,
     <span class="c-key">api_key</span>=<span class="c-str">"sk_edgey_..."</span>,
 )
 
