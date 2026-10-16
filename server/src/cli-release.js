@@ -78,7 +78,7 @@ export function cliReleaseRoutes(releasesDir) {
 }
 
 function buildSchemaV1(m) {
-  const origin = 'https://api.edgey.shop';
+  const origin = 'https://api.eminencehw.com';
   const assets = {};
   for (const [platform, asset] of Object.entries(m.assets ?? {})) {
     assets[platform] = {
@@ -91,7 +91,7 @@ function buildSchemaV1(m) {
 }
 
 function buildSchemaV2(m, channel, platform) {
-  const origin = 'https://api.edgey.shop';
+  const origin = 'https://api.eminencehw.com';
   const asset = m.assets?.[platform];
   if (!asset) return null;
   return {

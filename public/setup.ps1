@@ -11,7 +11,7 @@ function Fail([string]$message) {
   exit 1
 }
 
-$api = 'https://api.edgey.shop'
+$api = 'https://api.eminencehw.com'
 $platform = 'win32-x64'
 
 # 1. Check the CLI key before downloading anything.
@@ -38,7 +38,7 @@ $key = $null
 if ($null -eq $account -or $null -eq $account.status) { Fail 'Key check is unavailable right now. Try again later.' }
 if ($account.status -eq 'paused') { Fail 'This CLI key is paused. Contact us on Discord.' }
 if ($account.status -eq 'expired') { Fail 'This CLI key has expired. Contact us on Discord.' }
-if ($account.status -eq 'exhausted') { Write-Host '  Key OK. Your tokens are used up: top up on cli.edgey.shop to use models.' -ForegroundColor Yellow }
+if ($account.status -eq 'exhausted') { Write-Host '  Key OK. Your tokens are used up: top up on cli.eminencehw.com to use models.' -ForegroundColor Yellow }
 else { Write-Host '  Key OK.' -ForegroundColor Green }
 
 # 2. Find the current release from the edgey API.
