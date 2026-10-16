@@ -16,6 +16,7 @@ export function errorBody(kind, status, type, message) {
 }
 
 const PASS_HEADERS = ['anthropic-version', 'anthropic-beta', 'accept'];
+const FORWARD_HEADERS = ['x-edgey-mode', 'x-edgey-mode-revision'];
 
 // Errors about the request itself keep their (scrubbed) message; anything about our own upstream
 // account, limits or outages becomes a neutral message, so customers never see the provider.
@@ -141,10 +142,9 @@ export async function relay({ cfg, kind, path, body, incoming, onDone, upstreamK
         return reader.cancel(reason);
       },
     });
-    return new Response(out, {
-      status: res.status,
-      headers: { 'content-type': ctype, 'cache-control': 'no-cache', 'x-accel-buffering': 'no' },
-    });
+    const streamHeaders = { 'content-type': ctype, 'cache-control': 'no-cache', 'x-accel-buffering': 'no' };
+    for (const h of FORWARD_HEADERS) { const v = res.headers.get(h); if (v) streamHeaders[h] = v; }
+    return new Response(out, { status: res.status, headers: streamHeaders });
   }
 
   const text = await res.text();
@@ -160,5 +160,7 @@ export async function relay({ cfg, kind, path, body, incoming, onDone, upstreamK
     json = JSON.parse(text);
   } catch {}
   settle(usageFromJson(kind, json), res.status);
-  return new Response(text, { status: res.status, headers: { 'content-type': ctype } });
+  const jsonHeaders = { 'content-type': ctype };
+  for (const h of FORWARD_HEADERS) { const v = res.headers.get(h); if (v) jsonHeaders[h] = v; }
+  return new Response(text, { status: res.status, headers: jsonHeaders });
 }
