@@ -10,51 +10,51 @@ const providerCount = providers.length;
 
 const features = [
   {
-    title: 'Your models. One place.',
-    desc: 'Explore the model catalog and choose the right fit for your next project.',
+    title: 'Every model on tap.',
+    desc: 'Browse the catalog, compare rates, and switch models by changing a single string.',
   },
   {
-    title: 'Keys that work your way.',
-    desc: 'Keep projects separate with API keys, model access and individual limits.',
+    title: 'A key for every project.',
+    desc: 'Give each app its own key, budget and model access. Pause any of them in one click.',
   },
   {
-    title: 'See where your usage goes.',
-    desc: 'Follow your requests, token usage and costs from your workspace.',
+    title: 'Spend you can actually read.',
+    desc: 'Requests, tokens and cost per key, broken down day by day.',
   },
   {
-    title: 'Made for your workflow.',
-    desc: 'Find connection details and setup instructions for your clients and CLI tools.',
+    title: 'Fits the tools you use.',
+    desc: 'Copy-paste setup for the OpenAI SDK, curl and the edgey CLI.',
   },
   {
-    title: 'Keep building.',
-    desc: 'From your idea to the first lines of code. Drop-in OpenAI-compatible endpoint.',
+    title: 'Keep the momentum.',
+    desc: 'From the idea to the first lines of code, through one OpenAI-compatible endpoint.',
   },
   {
-    title: 'Follow every step.',
-    desc: 'A small walkthrough: spot an issue, change a line, and run it again.',
+    title: 'Fix it, run it again.',
+    desc: 'Spot the issue, patch one line, rerun. That is the whole loop.',
   },
 ];
 
 const steps = [
   {
-    tag: 'Your account', num: '01',
-    title: 'Make yourself at home.',
-    desc: 'Create an account or sign in with the credentials you already have.',
-    checks: ['Your personal workspace', 'Building accounts welcome', 'Support in one place'],
+    tag: 'Account', num: '01',
+    title: 'Sign in.',
+    desc: 'Create an account, or use the access number you already have.',
+    checks: ['Your own workspace', 'Existing credits stay with you', 'Support on Discord'],
     btn: 'Create account', action: 'register',
   },
   {
-    tag: 'Your access', num: '02',
-    title: 'Choose how you build.',
-    desc: 'Check model access and rates, then top up your panel when you\'re ready.',
-    checks: ['Current model access', 'A shared wallet for your keys', 'Payment history in your panel'],
-    btn: 'Explore workspace', href: '/overview', highlight: true,
+    tag: 'Credits', num: '02',
+    title: 'Top up.',
+    desc: 'Check the model rates, then add credits with crypto when you\'re ready.',
+    checks: ['Live model rates', 'One wallet for all your keys', 'Full payment history'],
+    btn: 'Open dashboard', href: '/overview', highlight: true,
   },
   {
-    tag: 'Your workflow', num: '03',
-    title: 'Connect your tools.',
-    desc: 'Create an API key and use the setup instructions to connect your tools.',
-    checks: ['API key management', 'OpenAI CLI setup', 'Request and usage tracking'],
+    tag: 'Build', num: '03',
+    title: 'Plug in.',
+    desc: 'Create an API key, follow the setup guide, and send your first request.',
+    checks: ['Per-key limits', 'OpenAI SDK and CLI guides', 'Usage tracking'],
     btn: 'Open setup', href: '/setup',
   },
 ];
@@ -68,7 +68,12 @@ const faqs = [
   { q: 'How do I contact support?', a: 'Join our Discord server. The support team can help with payments, account access, and API issues. Never share your access number or API key publicly.' },
 ];
 ---
-<Shell title="Your AI Workspace">
+<Shell title="Every model, one key">
+  <Fragment slot="head">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@400..600&display=swap" />
+  </Fragment>
   <div class="landing">
 
     <!-- Nav -->
@@ -84,7 +89,7 @@ const faqs = [
           <a href="#faq">FAQ</a>
         </nav>
         <div class="ln-nav-right">
-          <button class="ln-signin-btn" data-open-signin>Sign in <Icon name="arrowRight" size={12} /></button>
+          <button class="ln-signin-btn" data-open-signin>Sign in <Icon name="arrowUpRight" size={12} /></button>
         </div>
       </div>
     </header>
@@ -92,37 +97,38 @@ const faqs = [
     <!-- Hero -->
     <section class="ln-hero">
       <div class="ln-container">
-        <p class="ln-kicker"><span class="ln-dot"></span> YOUR AI WORKSPACE</p>
+        <p class="ln-kicker ln-rise" style="--i:0"><span class="ln-dot"></span> {modelCount}+ MODELS · ONE API KEY</p>
         <h1 class="ln-title">
-          More models.<br />
-          <span class="accent">One workspace.</span>
+          <span class="ln-rise" style="--i:1">Every model.</span>
+          <span class="ln-rise accent" style="--i:2">One key away.</span>
         </h1>
-        <p class="ln-sub">
-          Connect to AI models through one API.<br />
-          Manage keys, usage limits and token costs in one place.
+        <p class="ln-sub ln-rise" style="--i:3">
+          GPT, Claude, Grok and more through a single OpenAI-compatible endpoint.{' '}<br />
+          Keys, limits and spend, all in one clean dashboard.
         </p>
 
-        <div class="ln-providers">
-          <span class="ln-prov"><span class="ln-prov-icon"><span class="ln-mark ln-mark--openai" style="--s:16px"></span></span> OpenAI</span>
-          <span class="ln-prov"><span class="ln-prov-icon"><span class="ln-mark ln-mark--claude" style="--s:16px"></span></span> Claude</span>
-          <span class="ln-prov ln-prov--hl"><span class="ln-prov-icon ln-prov-icon--brand"><Icon name="terminal" size={14} /></span> edgey</span>
-          <span class="ln-prov"><span class="ln-prov-icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M3 3l7.5 9L3 21h2l6.5-7.8L18 21h3l-8-9.5L20.5 3h-2L12 10.3 6 3H3z"/></svg></span> Grok</span>
+        <div class="ln-providers ln-rise" style="--i:4" data-finder>
+          <span class="ln-finder" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <span class="ln-prov is-active" data-prov style="--brand:#10a37f"><span class="ln-mark ln-mark--openai" style="--s:17px"></span>OpenAI</span>
+          <span class="ln-prov" data-prov style="--brand:#d97757"><span class="ln-mark ln-mark--claude" style="--s:17px"></span>Claude</span>
+          <span class="ln-prov" data-prov style="--brand:var(--accent)"><Icon name="terminal" size={16} />edgey</span>
+          <span class="ln-prov" data-prov style="--brand:#f4f7f8"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M3 3l7.5 9L3 21h2l6.5-7.8L18 21h3l-8-9.5L20.5 3h-2L12 10.3 6 3H3z"/></svg>Grok</span>
         </div>
 
-        <div class="ln-hero-btns">
-          <button class="ln-btn ln-btn--primary" data-open-signin>Start building <Icon name="arrowRight" size={14} /></button>
-          <a href="/overview" class="ln-btn">Open workspace <Icon name="arrowUpRight" size={13} /></a>
+        <div class="ln-hero-btns ln-rise" style="--i:5">
+          <button class="ln-btn ln-btn--primary" data-open-signin>Get started <span class="ln-arrow"><Icon name="arrowRight" size={14} /></span></button>
+          <a href="/overview" class="ln-btn ln-btn--ghost">See the dashboard <Icon name="arrowUpRight" size={13} /></a>
         </div>
 
-        <p class="ln-already">Already with us? <button class="ln-text-btn" data-open-signin>Use your existing account.</button></p>
+        <p class="ln-already ln-rise" style="--i:6">Got an access number? <button class="ln-text-btn" data-open-signin>Sign in here.</button></p>
       </div>
     </section>
 
     <!-- Model Activity -->
     <section class="ln-section" id="models">
       <div class="ln-container">
-        <h2 class="ln-heading">Find your rhythm.<br /><span class="accent">Build with your favorites.</span></h2>
-        <p class="ln-lead">A closer look at how your model usage comes together.</p>
+        <h2 class="ln-heading">Watch the traffic.<br /><span class="accent">Model by model.</span></h2>
+        <p class="ln-lead">A live look at where your requests go and which models carry the load.</p>
 
         <div class="ln-activity">
           <div class="ln-activity-top">
@@ -193,12 +199,12 @@ const faqs = [
     <section class="ln-section" id="features">
       <div class="ln-container">
         <div class="ln-rule"></div>
-        <p class="ln-eyebrow">BUILT AROUND YOUR WORKFLOW.</p>
+        <p class="ln-eyebrow">WHAT YOU GET</p>
         <h2 class="ln-heading ln-heading--sm">
-          Everything in reach.<br />
-          <span class="accent">Nothing in your way.</span>
+          Less setup.<br />
+          <span class="accent">More shipping.</span>
         </h2>
-        <p class="ln-lead">From your first API key to your next project.<br />A workspace that keeps the details together.</p>
+        <p class="ln-lead">Keys, models, usage and setup guides.<br />Everything you need to go from idea to production, nothing you don't.</p>
 
         <div class="ln-feat-grid">
           <!-- 1: Models -->
@@ -307,9 +313,9 @@ const faqs = [
     <section class="ln-section" id="how">
       <div class="ln-container">
         <div class="ln-rule"></div>
-        <p class="ln-eyebrow">DROP-IN COMPATIBLE.</p>
-        <h2 class="ln-heading ln-heading--sm">One line changed.<br /><span class="accent">Every model unlocked.</span></h2>
-        <p class="ln-lead">Same OpenAI SDK. Same format. Just point the base URL to edgey and use any model in the catalog.</p>
+        <p class="ln-eyebrow">DROP-IN COMPATIBLE</p>
+        <h2 class="ln-heading ln-heading--sm">Swap the base URL.<br /><span class="accent">Keep your code.</span></h2>
+        <p class="ln-lead">Already on the OpenAI SDK? Point it at edgey and call any model in the catalog.<br />Same format, same streaming, same tool calls.</p>
 
         <div class="ln-code-card">
           <div class="ln-code-top"><div class="ln-dots"><span></span><span></span><span></span></div><span class="dim mono text-xs">python</span></div>
@@ -336,9 +342,9 @@ response = client.chat.completions.create(
     <section class="ln-section">
       <div class="ln-container">
         <div class="ln-rule"></div>
-        <p class="ln-eyebrow">A SIMPLE WAY TO GET STARTED.</p>
-        <h2 class="ln-heading ln-heading--sm">Your next idea<br /><span class="accent">starts here.</span></h2>
-        <p class="ln-lead">Sign in, set up your access, and make it yours.</p>
+        <p class="ln-eyebrow">THREE STEPS</p>
+        <h2 class="ln-heading ln-heading--sm">From zero to first request.<br /><span class="accent">In minutes.</span></h2>
+        <p class="ln-lead">Sign in, top up, plug in your key.</p>
 
         <div class="ln-steps">
           {steps.map((s) => (
@@ -363,7 +369,7 @@ response = client.chat.completions.create(
           ))}
         </div>
 
-        <p class="ln-note">Flexible credits. Let's just take one moment in your workspace.</p>
+        <p class="ln-note">Pay as you go with crypto top-ups. No subscription.</p>
       </div>
     </section>
 
@@ -371,9 +377,9 @@ response = client.chat.completions.create(
     <section class="ln-section" id="faq">
       <div class="ln-container ln-container--narrow">
         <div class="ln-rule"></div>
-        <p class="ln-eyebrow">A FEW TO HELP TO START.</p>
-        <h2 class="ln-heading">Good questions.<br /><span class="accent">Clear answers.</span></h2>
-        <p class="ln-lead">Getting started with edgey</p>
+        <p class="ln-eyebrow">FAQ</p>
+        <h2 class="ln-heading">Questions?<br /><span class="accent">Answered.</span></h2>
+        <p class="ln-lead">The short version of everything you need to know.</p>
 
         <div class="ln-faq-list">
           {faqs.map((f) => (
@@ -384,7 +390,7 @@ response = client.chat.completions.create(
           ))}
         </div>
 
-        <p class="ln-faq-more">Something else on your mind? <a href={DISCORD_URL} target="_blank" rel="noopener">Talk to support <Icon name="arrowUpRight" size={12} /></a></p>
+        <p class="ln-faq-more">Still stuck? <a href={DISCORD_URL} target="_blank" rel="noopener">Talk to support <Icon name="arrowUpRight" size={12} /></a></p>
       </div>
     </section>
 
@@ -392,10 +398,10 @@ response = client.chat.completions.create(
     <section class="ln-section">
       <div class="ln-container">
         <div class="ln-rule"></div>
-        <p class="ln-eyebrow">LESS FRICTION. MORE BUILDING.</p>
-        <h2 class="ln-heading">Make room for<br />your next idea.</h2>
+        <p class="ln-eyebrow">READY WHEN YOU ARE</p>
+        <h2 class="ln-heading">Your next build<br /><span class="accent">starts with one key.</span></h2>
         <div class="ln-cta-btns">
-          <button class="ln-btn ln-btn--primary" data-open-signin>Start building <Icon name="arrowRight" size={14} /></button>
+          <button class="ln-btn ln-btn--primary" data-open-signin>Get started <span class="ln-arrow"><Icon name="arrowRight" size={14} /></span></button>
         </div>
       </div>
     </section>
@@ -410,7 +416,7 @@ response = client.chat.completions.create(
               <span class="ln-logo"><Icon name="terminal" size={14} /></span>
               <span class="ln-brand-name">edgey<span class="dim">.shop</span></span>
             </a>
-            <p>Your AI models, API keys<br />and usage in one place.</p>
+            <p>Every model, one API key.<br />Usage and spend in one dashboard.</p>
             <p class="ln-copy">&copy; {year} cli.edgey.shop</p>
           </div>
           <div class="ln-foot-col">
@@ -448,8 +454,32 @@ response = client.chat.completions.create(
 <script>
   const nav = document.getElementById('lnNav');
   if (nav) {
-    const ob = new IntersectionObserver(([e]) => nav.classList.toggle('scrolled', !e.isIntersecting), { threshold: [1], rootMargin: '-1px 0px 0px 0px' });
-    ob.observe(nav);
+    const onScroll = () => nav.classList.toggle('scrolled', scrollY > 8);
+    addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
+
+  const row = document.querySelector<HTMLElement>('[data-finder]');
+  const finder = row?.querySelector<HTMLElement>('.ln-finder');
+  if (row && finder) {
+    const items = [...row.querySelectorAll<HTMLElement>('[data-prov]')];
+    let idx = 0;
+    let hovering = false;
+    const place = (i: number) => {
+      idx = i;
+      items.forEach((el, k) => el.classList.toggle('is-active', k === i));
+      const el = items[i];
+      finder.style.cssText = `--x:${el.offsetLeft}px;--y:${el.offsetTop}px;--w:${el.offsetWidth}px;--h:${el.offsetHeight}px`;
+    };
+    place(0);
+    requestAnimationFrame(() => finder.classList.add('ready'));
+    document.fonts?.ready.then(() => place(idx));
+    addEventListener('resize', () => place(idx));
+    items.forEach((el, k) => el.addEventListener('mouseenter', () => { hovering = true; place(k); }));
+    row.addEventListener('mouseleave', () => { hovering = false; });
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setInterval(() => { if (!hovering && !document.hidden) place((idx + 1) % items.length); }, 2400);
+    }
   }
   const dialog = document.getElementById('signinDialog') as HTMLDialogElement | null;
   document.querySelectorAll<HTMLElement>('[data-open-signin],[data-open-signin-register]').forEach(b =>
@@ -469,7 +499,12 @@ response = client.chat.completions.create(
 
 <style>
   /* ── Base ── */
-  .landing { min-height: 100svh; }
+  .landing {
+    min-height: 100svh;
+    font-family: 'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --mono: 'Geist Mono', ui-monospace, 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
+    font-feature-settings: 'ss01';
+  }
   .ln-container { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
   .ln-container--narrow { max-width: 800px; }
   .accent { color: var(--accent); }
@@ -480,79 +515,153 @@ response = client.chat.completions.create(
   /* ── Nav ── */
   .ln-nav {
     position: sticky; top: 0; z-index: 50;
-    height: 64px; display: flex; align-items: center;
-    background: rgb(5 8 11 / 0.85);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid transparent; transition: border-color 0.2s;
+    height: 68px; display: flex; align-items: center;
+    background: transparent;
+    border-bottom: 1px solid transparent;
+    transition: background-color 0.25s, border-color 0.25s;
   }
-  .ln-nav.scrolled { border-color: var(--border); }
-  .ln-nav .ln-container { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-  .ln-brand { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; }
+  .ln-nav.scrolled {
+    background: rgb(5 8 11 / 0.78); border-color: var(--border);
+    backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%);
+  }
+  .ln-nav .ln-container { display: flex; align-items: center; gap: 44px; width: 100%; }
+  .ln-nav-right { margin-left: auto; }
+  .ln-brand { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 600; letter-spacing: -0.02em; }
   .ln-logo {
     display: grid; place-items: center;
     width: 28px; height: 28px; border-radius: 8px;
     color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line);
   }
-  .ln-links { display: flex; gap: 28px; font-size: 13px; color: var(--muted); }
+  .ln-links { display: flex; gap: 30px; font-size: 13.5px; color: var(--muted); }
+  .ln-links a { transition: color 0.15s; }
   .ln-links a:hover { color: var(--fg); }
   .ln-signin-btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    height: 36px; padding: 0 16px; border-radius: 8px;
-    font-size: 13px; font-weight: 600;
-    border: 1px solid var(--border-2); background: var(--bg); color: var(--fg);
-    cursor: pointer; transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 7px;
+    height: 38px; padding: 0 18px; border-radius: 999px;
+    font-size: 13.5px; font-weight: 500;
+    background: var(--fg); color: #05080b;
+    box-shadow: inset 0 -1px 0 rgb(0 0 0 / 0.12);
+    cursor: pointer; transition: background-color 0.15s, box-shadow 0.2s, transform 0.15s;
   }
-  .ln-signin-btn:hover { border-color: var(--accent-line); color: var(--accent); }
+  .ln-signin-btn:hover { background: #fff; box-shadow: 0 0 0 4px rgb(255 255 255 / 0.08); }
 
   /* ── Buttons ── */
   .ln-btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    height: 44px; padding: 0 20px; border-radius: 10px;
-    font-size: 14px; font-weight: 600; white-space: nowrap;
-    border: 1px solid var(--border-2); background: var(--bg); color: var(--fg);
-    cursor: pointer; transition: all 0.15s;
+    height: 46px; padding: 0 22px; border-radius: 999px;
+    font-size: 14.5px; font-weight: 500; white-space: nowrap;
+    border: 1px solid var(--border-2); background: var(--surface); color: var(--fg);
+    cursor: pointer; transition: color 0.15s, border-color 0.15s, background-color 0.15s, box-shadow 0.25s, transform 0.15s;
   }
   .ln-btn:hover { border-color: var(--accent-line); color: var(--accent); }
-  .ln-btn--primary { background: var(--accent); border-color: var(--accent); color: #031217; }
-  .ln-btn--primary:hover { filter: brightness(1.1); color: #031217; }
-  .ln-btn--sm { height: 36px; padding: 0 14px; font-size: 12px; border-radius: 8px; }
-  .ln-text-btn { color: var(--fg); font-weight: 600; background: none; border: 0; cursor: pointer; font: inherit; transition: color 0.15s; text-decoration: underline; text-underline-offset: 3px; }
+  .ln-btn--primary {
+    background: var(--accent); border-color: transparent; color: #031217; font-weight: 600;
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 10px 30px -10px rgb(34 211 238 / 0.65);
+  }
+  .ln-btn--primary:hover {
+    color: #031217; border-color: transparent; transform: translateY(-1px);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 0 0 4px rgb(34 211 238 / 0.14), 0 14px 36px -10px rgb(34 211 238 / 0.8);
+  }
+  .ln-btn--primary:active { transform: translateY(0); }
+  .ln-arrow { display: inline-flex; transition: transform 0.2s; }
+  .ln-btn:hover .ln-arrow { transform: translateX(3px); }
+  .ln-btn--ghost { background: transparent; border-color: transparent; color: var(--fg); }
+  .ln-btn--ghost:hover { background: rgb(255 255 255 / 0.04); border-color: transparent; color: var(--fg); }
+  .ln-btn--sm { height: 36px; padding: 0 16px; font-size: 12.5px; }
+  .ln-text-btn { color: var(--fg); font-weight: 500; background: none; border: 0; cursor: pointer; font: inherit; transition: color 0.15s; }
   .ln-text-btn:hover { color: var(--accent); }
 
   /* ── Hero ── */
-  .ln-hero { padding: 100px 0 80px; text-align: center; }
+  .ln-hero { position: relative; isolation: isolate; padding: 96px 0 88px; text-align: center; }
+  .ln-hero::before {
+    content: ''; position: absolute; inset: -68px 0 0; z-index: -1; pointer-events: none;
+    background-image:
+      linear-gradient(rgb(255 255 255 / 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 255 255 / 0.04) 1px, transparent 1px);
+    background-size: 64px 64px; background-position: center top;
+    -webkit-mask-image: radial-gradient(ellipse 60% 70% at 50% 25%, #000 20%, transparent 72%);
+    mask-image: radial-gradient(ellipse 60% 70% at 50% 25%, #000 20%, transparent 72%);
+  }
+  .ln-hero::after {
+    content: ''; position: absolute; z-index: -1; pointer-events: none;
+    left: 50%; top: -120px; width: min(900px, 100%); height: 520px; translate: -50% 0;
+    background: radial-gradient(closest-side, rgb(34 211 238 / 0.13), transparent);
+    filter: blur(20px);
+  }
   .ln-kicker {
-    display: inline-flex; align-items: center; gap: 10px;
-    font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em; color: var(--accent);
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 6px 14px 6px 12px; border-radius: 999px;
+    font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.14em; color: var(--accent);
+    background: rgb(34 211 238 / 0.05); border: 1px solid var(--accent-line);
   }
-  .ln-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+  .ln-dot { position: relative; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .ln-dot::after {
+    content: ''; position: absolute; inset: 0; border-radius: 50%; background: var(--accent);
+    animation: ln-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+  @keyframes ln-ping { 75%, 100% { transform: scale(2.6); opacity: 0; } }
   .ln-title {
-    margin-top: 28px;
-    font-size: clamp(48px, 8vw, 80px);
-    font-weight: 700; line-height: 1.04; letter-spacing: -0.045em;
+    margin-top: 30px;
+    font-size: clamp(46px, 7.4vw, 88px);
+    font-weight: 600; line-height: 1.02; letter-spacing: -0.035em;
   }
-  .ln-sub { margin-top: 20px; font-size: 16px; line-height: 1.7; color: var(--muted); }
+  .ln-title > span { display: block; }
+  .ln-title .accent, .ln-heading .accent {
+    color: transparent;
+    background: linear-gradient(100deg, #6c939d 0%, #8fb7c1 35%, #c8f4fb 50%, #8fb7c1 65%, #6c939d 100%);
+    background-size: 260% 100%; background-position: 100% 0;
+    -webkit-background-clip: text; background-clip: text;
+  }
+  .ln-title .accent { animation: ln-rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--i, 0) * 90ms + 80ms) both, ln-sheen 6s ease-in-out 1.6s infinite; }
+  @keyframes ln-sheen { 0%, 100% { background-position: 100% 0; } 50% { background-position: 0% 0; } }
+  .ln-sub { max-width: 560px; margin: 24px auto 0; font-size: 16.5px; line-height: 1.65; color: var(--muted); text-wrap: balance; }
+
+  /* Providers with a gliding viewfinder */
   .ln-providers {
-    display: flex; justify-content: center; gap: 22px; flex-wrap: wrap;
-    margin-top: 36px;
+    position: relative; display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
+    margin-top: 38px;
   }
-  .ln-prov { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
-  .ln-prov--hl { color: var(--fg); }
-  .ln-prov-icon {
-    display: grid; place-items: center;
-    width: 28px; height: 28px; border-radius: 7px;
-    background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
+  .ln-prov {
+    display: inline-flex; align-items: center; gap: 9px;
+    padding: 9px 14px; font-size: 14px; font-weight: 500; color: var(--muted);
+    cursor: default; transition: color 0.3s;
   }
-  .ln-prov-icon--brand { color: var(--accent); background: var(--accent-soft); border-color: var(--accent-line); }
-  .ln-hero-btns { display: flex; justify-content: center; gap: 12px; margin-top: 36px; }
-  .ln-already { margin-top: 18px; font-size: 13px; color: var(--muted); }
+  .ln-prov > :first-child { transition: color 0.3s, filter 0.3s; }
+  .ln-prov.is-active { color: var(--fg); }
+  .ln-prov.is-active > :first-child { color: var(--brand); filter: drop-shadow(0 0 8px color-mix(in srgb, var(--brand) 45%, transparent)); }
+  .ln-finder {
+    position: absolute; left: 0; top: 0; pointer-events: none;
+    width: var(--w, 0); height: var(--h, 0);
+    transform: translate(var(--x, 0), var(--y, 0));
+    border-radius: 6px;
+    background: radial-gradient(120% 140% at 50% 50%, rgb(34 211 238 / 0.06), transparent 70%);
+  }
+  .ln-finder.ready { transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.5s; }
+  .ln-finder i { position: absolute; width: 9px; height: 9px; border: 0 solid var(--accent); }
+  .ln-finder i:nth-child(1) { left: 0; top: 0; border-left-width: 1.5px; border-top-width: 1.5px; border-top-left-radius: 3px; }
+  .ln-finder i:nth-child(2) { right: 0; top: 0; border-right-width: 1.5px; border-top-width: 1.5px; border-top-right-radius: 3px; }
+  .ln-finder i:nth-child(3) { left: 0; bottom: 0; border-left-width: 1.5px; border-bottom-width: 1.5px; border-bottom-left-radius: 3px; }
+  .ln-finder i:nth-child(4) { right: 0; bottom: 0; border-right-width: 1.5px; border-bottom-width: 1.5px; border-bottom-right-radius: 3px; }
+
+  .ln-hero-btns { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 34px; }
+  .ln-already { margin-top: 22px; font-size: 13px; color: var(--muted); }
+
+  /* Entrance: waits for the opening intro, with a fallback if its script never runs */
+  .ln-rise { animation: ln-rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) calc(var(--i, 0) * 90ms + 80ms) both; }
+  :global(html.intro-on) .ln-rise, :global(html.intro-on) .ln-title .accent { animation: ln-rise-late 0.6s ease 10.4s both; }
+  @keyframes ln-rise { from { opacity: 0; transform: translateY(16px); filter: blur(8px); } to { opacity: 1; transform: none; filter: none; } }
+  @keyframes ln-rise-late { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .ln-rise, .ln-title .accent, .ln-dot::after { animation: none; }
+    .ln-finder.ready { transition: none; }
+  }
 
   /* ── Sections ── */
   .ln-section { padding: 64px 0; }
   .ln-rule { height: 1px; margin-bottom: 52px; background: linear-gradient(90deg, transparent, var(--border), transparent); }
-  .ln-eyebrow { text-align: center; font-family: var(--mono); font-size: 10px; letter-spacing: 0.22em; color: var(--muted); margin-bottom: 14px; }
-  .ln-heading { text-align: center; font-size: clamp(34px, 5vw, 52px); font-weight: 700; line-height: 1.1; letter-spacing: -0.04em; }
-  .ln-heading--sm { font-size: clamp(28px, 4vw, 40px); }
+  .ln-eyebrow { text-align: center; font-family: var(--mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.2em; color: var(--muted); margin-bottom: 14px; }
+  .ln-heading { text-align: center; font-size: clamp(34px, 5vw, 54px); font-weight: 600; line-height: 1.08; letter-spacing: -0.03em; }
+  .ln-heading--sm { font-size: clamp(28px, 4vw, 42px); }
   .ln-lead { text-align: center; margin-top: 14px; font-size: 15px; line-height: 1.6; color: var(--muted); }
   .ln-note { text-align: center; margin-top: 20px; font-size: 12px; color: #3d4c55; font-style: italic; }
 
@@ -874,10 +983,12 @@ response = client.chat.completions.create(
   @media (max-width: 640px) {
     .ln-hero { padding: 72px 0 56px; }
     .ln-hero-btns { flex-direction: column; align-items: center; }
+    .ln-sub br { display: none; }
+    .ln-providers { gap: 0; }
+    .ln-prov { padding: 8px 10px; gap: 7px; font-size: 13px; }
     .ln-links { display: none; }
     .ln-feat-grid { grid-template-columns: 1fr; }
     .ln-foot-grid { grid-template-columns: 1fr; }
-    .ln-providers { gap: 14px; }
     .ln-legend { flex-wrap: wrap; gap: 10px; }
   }
 </style>
