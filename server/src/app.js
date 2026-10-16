@@ -493,9 +493,9 @@ export function createApp({ cfg, db, clock = now }) {
     if (row._partnerAccount) {
       const tokens = row._partnerAccount.remaining_tokens ?? 0;
       return c.json({
-        version: 1, unit: 'tokens', updatedAt: new Date(clock()).toISOString(),
+        version: 1, unit: 'weighted_provider_units', updatedAt: new Date(clock()).toISOString(),
         status: tokens > 0 ? 'active' : 'exhausted', plan: 'edgey', expiresAt: null,
-        limit: tokens, used: 0, reserved: 0, available: tokens, estimatedRequests: null,
+        limit: tokens, used: 0, reserved: 0, available: tokens, estimatedRequests: 0,
       });
     }
     const used = db.prepare('SELECT IFNULL(SUM(charged), 0) AS n FROM usage WHERE account_id = ?').get(row.account_id).n;
@@ -511,7 +511,7 @@ export function createApp({ cfg, db, clock = now }) {
       used,
       reserved: 0,
       available,
-      estimatedRequests: null,
+      estimatedRequests: 0,
     });
   });
 
@@ -524,9 +524,12 @@ export function createApp({ cfg, db, clock = now }) {
         return c.json(errorBody(kind, 400, 'invalid_request_error', 'Request body must be JSON with a "model".'), 400);
 
       // Partner passthrough: use the customer's own partner key, relay via partner endpoint, skip local billing.
+      // Force non-streaming: the partner endpoint may not support stream_options and its SSE format
+      // may differ from what the CLI expects. The CLI handles JSON responses transparently.
       if (key._partnerKey) {
         const upModel = upstreamModel(body.model);
-        const upBody = upModel !== body.model ? { ...body, model: upModel } : body;
+        const { stream: _s, stream_options: _so, ...rest } = body;
+        const upBody = { ...rest, model: upModel, stream: false };
         return relay({ cfg, kind, path, body: upBody, incoming: c.req.raw, upstreamKey: key._partnerKey, upstreamBase: cfg.partnerBase, onDone: () => {} });
       }
 
