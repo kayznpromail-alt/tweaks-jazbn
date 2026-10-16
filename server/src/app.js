@@ -541,7 +541,9 @@ export function createApp({ cfg, db, clock = now }) {
         const { stream: _s, stream_options: _so, ...rest } = body;
         const upBody = { ...rest, model: upModel, stream: false };
         console.log('[partner] relaying %s (stream forced off, model %s → %s)', path, body.model, upModel);
-        return relay({ cfg, kind, path, body: upBody, incoming: c.req.raw, upstreamKey: key._partnerKey, upstreamBase: cfg.partnerBase, onDone: (usage, status) => {
+        const partnerReq = new Request(c.req.raw, { headers: new Headers(c.req.raw.headers) });
+        partnerReq.headers.set('accept', 'application/json');
+        return relay({ cfg, kind, path, body: upBody, incoming: partnerReq, upstreamKey: key._partnerKey, upstreamBase: cfg.partnerBase, onDone: (usage, status) => {
           console.log('[partner] relay done, status %d, usage %s', status, JSON.stringify(usage));
         } });
       }
