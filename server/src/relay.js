@@ -113,6 +113,7 @@ export async function relay({ cfg, kind, path, body, incoming, onDone, upstreamK
   }
 
   const ctype = res.headers.get('content-type') ?? 'application/json';
+  if (upstreamBase) console.log('[relay] upstream %d, content-type: %s, stream: %s', res.status, ctype, body?.stream);
   if (res.ok && ctype.includes('text/event-stream') && res.body) {
     const tracker = createUsageTracker(kind);
     const decoder = new TextDecoder();
