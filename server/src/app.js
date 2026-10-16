@@ -6,7 +6,7 @@ import { creditPayment, now, tx } from './db.js';
 import { createInvoice, verifyIpn } from './nowpayments.js';
 import { createLimiter } from './ratelimit.js';
 import { adminRoutes } from './admin-routes.js';
-import { cliAccounts, fetchUpstreamAccount } from './cli-account.js';
+import { cliAccounts } from './cli-account.js';
 import { cliReleaseRoutes } from './cli-release.js';
 import { dashboardRoutes } from './dashboard-routes.js';
 import { panelRoutes } from './panel-routes.js';
@@ -388,9 +388,24 @@ export function createApp({ cfg, db, clock = now }) {
     return c.req.header('x-api-key') ?? bearer ?? '';
   };
 
-  // Cache validated dawvq keys for 60s to avoid hitting upstream on every request.
-  const _dawvqKeyCache = new Map();
-  const DAWVQ_KEY_TTL = 60_000;
+  // Cache validated partner keys for 60s to avoid hitting the partner endpoint on every request.
+  const _partnerKeyCache = new Map();
+  const PARTNER_KEY_TTL = 60_000;
+
+  async function validatePartnerKey(key) {
+    if (!cfg.partnerBase) return null;
+    try {
+      const res = await fetch(`${cfg.partnerBase}/v1/account`, {
+        headers: { authorization: `Bearer ${key}` },
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (res.status === 401 || res.status === 403) return null;
+      if (!res.ok) return null;
+      return await res.json().catch(() => null);
+    } catch {
+      return null;
+    }
+  }
 
   const apiAuth = (kind) => async (c, next) => {
     const key = keyFrom(c);
@@ -400,23 +415,25 @@ export function createApp({ cfg, db, clock = now }) {
       c.set('key', row);
       return next();
     }
-    // Try dawvq upstream validation for non-local keys (skip sk_edgey_ format).
+    // Try partner endpoint validation for non-local keys.
     if (!isApiKey(key) && key.length >= 8 && key.length <= 4096 && !/\s/.test(key)) {
       const cacheKey = hash(key);
-      const cached = _dawvqKeyCache.get(cacheKey);
-      if (cached && clock() - cached.at < DAWVQ_KEY_TTL) {
-        c.set('key', { ...cached.row, _dawvqKey: key });
+      const cached = _partnerKeyCache.get(cacheKey);
+      if (cached && clock() - cached.at < PARTNER_KEY_TTL) {
+        c.set('key', { ...cached.row, _partnerKey: key });
         return next();
       }
-      const result = await fetchUpstreamAccount(cfg, key);
-      if (result.ok) {
+      const account = await validatePartnerKey(key);
+      if (account) {
+        const tokens = account.remaining_tokens ?? 0;
         const virtual = {
           key_id: null, account_id: null, enabled: 1, disabled: 0,
           masked: key.length > 12 ? `${key.slice(0, 6)}…${key.slice(-4)}` : '••••',
-          balance: Infinity, _dawvqAccount: result.account,
+          balance: Infinity,
+          _partnerAccount: account,
         };
-        _dawvqKeyCache.set(cacheKey, { row: virtual, at: clock() });
-        c.set('key', { ...virtual, _dawvqKey: key });
+        _partnerKeyCache.set(cacheKey, { row: virtual, at: clock() });
+        c.set('key', { ...virtual, _partnerKey: key });
         return next();
       }
     }
@@ -433,10 +450,10 @@ export function createApp({ cfg, db, clock = now }) {
   // CLI capabilities: tells the client which modes are available (e.g. opus-private for JB).
   app.get('/v1/cli-capabilities', apiAuth('openai'), async (c) => {
     const key = c.get('key');
-    // Dawvq key: proxy capabilities from upstream directly.
-    if (key._dawvqKey) {
+    // Partner key: proxy capabilities from the partner endpoint.
+    if (key._partnerKey) {
       try {
-        const res = await fetch(`${cfg.upstreamBase}/v1/cli-capabilities`, { headers: { authorization: `Bearer ${key._dawvqKey}` }, signal: AbortSignal.timeout(10_000) });
+        const res = await fetch(`${cfg.partnerBase}/v1/cli-capabilities`, { headers: { authorization: `Bearer ${key._partnerKey}` }, signal: AbortSignal.timeout(10_000) });
         if (res.ok) return c.json(await res.json());
       } catch {}
       return c.json({ privateModes: [] });
@@ -472,8 +489,15 @@ export function createApp({ cfg, db, clock = now }) {
   // so CLIs that read it show the edgey balance.
   app.get('/v1/account', apiAuth('openai'), (c) => {
     const row = c.get('key');
-    // Dawvq key: return the upstream account info directly.
-    if (row._dawvqAccount) return c.json({ ...row._dawvqAccount, version: 1, unit: 'weighted_provider_units', updatedAt: new Date(clock()).toISOString() });
+    // Partner key: map the partner response to the CLI expected format.
+    if (row._partnerAccount) {
+      const tokens = row._partnerAccount.remaining_tokens ?? 0;
+      return c.json({
+        version: 1, unit: 'tokens', updatedAt: new Date(clock()).toISOString(),
+        status: tokens > 0 ? 'active' : 'exhausted', plan: 'edgey', expiresAt: null,
+        limit: tokens, used: 0, reserved: 0, available: tokens, estimatedRequests: null,
+      });
+    }
     const used = db.prepare('SELECT IFNULL(SUM(charged), 0) AS n FROM usage WHERE account_id = ?').get(row.account_id).n;
     const available = Math.max(0, row.balance);
     return c.json({
@@ -499,11 +523,11 @@ export function createApp({ cfg, db, clock = now }) {
       if (!body || typeof body.model !== 'string')
         return c.json(errorBody(kind, 400, 'invalid_request_error', 'Request body must be JSON with a "model".'), 400);
 
-      // Dawvq passthrough: use the customer's own dawvq key, skip local billing.
-      if (key._dawvqKey) {
+      // Partner passthrough: use the customer's own partner key, relay via partner endpoint, skip local billing.
+      if (key._partnerKey) {
         const upModel = upstreamModel(body.model);
         const upBody = upModel !== body.model ? { ...body, model: upModel } : body;
-        return relay({ cfg, kind, path, body: upBody, incoming: c.req.raw, upstreamKey: key._dawvqKey, onDone: () => {} });
+        return relay({ cfg, kind, path, body: upBody, incoming: c.req.raw, upstreamKey: key._partnerKey, upstreamBase: cfg.partnerBase, onDone: () => {} });
       }
 
       const info = modelInfo(body.model);
